@@ -1,56 +1,63 @@
-export default function Benefits() {
-  const benefits = [
-    {
-      title: "24/7 odgovara",
-      text: "Tvoj AI agent odgovara kupcima danju i noću bez pauze.",
-      icon: "🕒",
-    },
-    {
-      title: "Ne propušta klijente",
-      text: "Svaka poruka dobije odgovor u roku od nekoliko sekundi.",
-      icon: "⚡",
-    },
-    {
-      title: "Prodaje umjesto tebe",
-      text: "Rezervacije, upiti i prodaja potpuno automatski.",
-      icon: "💰",
-    },
-    {
-      title: "Radi na svim platformama",
-      text: "Instagram, WhatsApp, Messenger i web stranica.",
-      icon: "🌐",
-    },
-  ];
+"use client";
 
+import { motion } from "framer-motion";
+
+// Ovo je "mozak" animacije
+const containerVariants: any = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2 },
+  },
+};
+
+const cardVariants: any = {
+  hidden: { opacity: 0, scale: 0.95 },
+  show: { 
+    opacity: 1, 
+    scale: 1,
+    transition: { type: "spring", stiffness: 100, damping: 15 } 
+  },
+};
+
+const benefits = [
+  { icon: "🤝", title: "Čuva ti leđa 24/7", desc: "Jaran radi dok ti odmaraš." },
+  { icon: "💬", title: "Priča kao čovjek", desc: "Prirodan ton bez robotike." },
+  { icon: "🔥", title: "Brzina", desc: "Rješava upite u sekundi." },
+  { icon: "💼", title: "Besplatan radnik", desc: "Automatski ti donosi posao." },
+];
+
+export default function Benefits() {
   return (
-    <section className="py-28 px-6">
+    <section id="benefits" className="py-24 px-6 bg-transparent">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-center text-5xl font-black text-white">
-          Zašto izabrati <span className="text-blue-500">AI JARAN?</span>
+        <h2 className="text-center text-4xl md:text-5xl font-extrabold text-white mb-20">
+          Zašto baš <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">AI JARAN?</span>
         </h2>
 
-        <p className="mt-5 text-center text-gray-400 max-w-2xl mx-auto">
-          Više vremena za posao, manje vremena za odgovaranje na poruke.
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-8 mt-16">
-          {benefits.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-8 hover:border-blue-500/50 transition"
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: false, amount: 0.1 }} // SADA SE ANIMIRA SVAKI PUT KAD SKROLAŠ DO NJE
+          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+        >
+          {benefits.map((benefit, index) => (
+            <motion.div
+              key={index}
+              variants={cardVariants}
+              className="rounded-3xl border border-white/10 bg-white/[0.02] p-8"
             >
-              <div className="text-5xl">{item.icon}</div>
-
-              <h3 className="mt-6 text-2xl font-bold text-white">
-                {item.title}
-              </h3>
-
-              <p className="mt-3 text-gray-400">
-                {item.text}
-              </p>
-            </div>
+              <div className="flex items-start gap-6">
+                <div className="text-4xl">{benefit.icon}</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">{benefit.title}</h3>
+                  <p className="text-gray-400">{benefit.desc}</p>
+                </div>
+              </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

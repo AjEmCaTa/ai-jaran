@@ -1,141 +1,167 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 interface PricingProps {
   onSelectPlan: (planName: string) => void;
 }
 
-const containerVariants: any = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.2 },
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
   },
 };
 
-const cardVariants: any = {
-  hidden: { opacity: 0, scale: 0.95 },
+const cardVariants: Variants = {
+  hidden: { opacity: 0 },
   show: { 
     opacity: 1, 
-    scale: 1,
-    transition: { type: "spring", stiffness: 100, damping: 15 } 
+    transition: { duration: 0.4, ease: "easeOut" } 
   },
 };
 
 const plans = [
   {
-    name: "Jaran Starter",
-    price: "50 KM",
-    period: "/ mjesečno",
-    description: "Savršeno za male biznise i zanatlije koji tek počinju.",
+    name: "Starter Jaran",
+    badge: "Mali biznis / Samostalni radnik",
+    price: "Jednokratno",
+    description: "Idealno za pojedince i male obrte. Jaran preuzima Instagram DM, samostalno dogovara termine i upisuje ih u tvoj kalendar.",
     features: [
-      "Povezivanje na 1 platformu (Instagram ili WhatsApp)",
-      "Unos osnovnih podataka o biznisu",
-      "Do 500 razgovora mjesečno",
-      "Standardna tehnička podrška",
+      "Povezivanje na Instagram DM i tvoj kalendar",
+      "Automatsko odgovaranje na upite i cijene 24/7",
+      "Direktno zakazivanje termina bez tvog uplitanja",
+      "Instant obavijest na mobitel kada se klijent upiše",
+      "Gotovo i pušteno u rad za 2 do 3 radna dana",
+      "Jednokratna cijena – bez mjesečnih pretplata",
     ],
-    buttonText: "Kreni sa Starterom",
+    buttonText: "Izaberi Starter",
     popular: false,
-    value: "Jaran Starter (50 KM/mj)",
+    value: "Starter Jaran (Mali biznis)",
   },
   {
-    name: "Jaran Pro",
-    price: "120 KM",
-    period: "/ mjesečno",
-    description: "Najbolji izbor za restorane, rent-a-car i vile sa bazenima.",
+    name: "Business Jaran",
+    badge: "Srednji biznis (2-3 zaposlenika)",
+    price: "Jednokratno",
+    description: "Za salone, servise i biznise sa više usluga. Moćniji AI sistem koji upravlja rasporedom i šalje precizne notifikacije tvojoj ekipi.",
     features: [
-      "Instagram DM + WhatsApp istovremeno",
-      "Pametna baza podataka (uči sve o biznisu)",
-      "Automatsko zakazivanje termina",
-      "Neograničen broj razgovora",
-      "Prioritetna podrška 24/7",
+      "Napredna Instagram DM automatizacija",
+      "Pametna baza podataka sa svim cijenama i uslugama",
+      "Sinhronizacija sa kalendarom cijelog tima",
+      "Automatske notifikacije na mobitel za svaki novi termin",
+      "Prioritetno postavljanje i podešavanje (2-3 dana)",
+      "Potpuno vlasništvo bez skrivenih troškova",
     ],
-    buttonText: "Izaberi Pro paket",
+    buttonText: "Izaberi Business",
     popular: true,
-    value: "Jaran Pro (120 KM/mj)",
+    value: "Business Jaran (Srednji biznis)",
   },
   {
-    name: "Jaran Custom",
+    name: "Pro System Jaran",
+    badge: "Veći sistemi i kompanije",
     price: "Po dogovoru",
-    period: "",
-    description: "Za veće sisteme i firme kojima trebaju napredne integracije.",
+    description: "Kompletno prilagođeno rješenje za veće obime posla, više kanala i specifične poslovne integracije sa tvojim internim alatima.",
     features: [
-      "Povezivanje sa vašim sistemima/bazama",
-      "Prilagođen ton komunikacije",
-      "Integracija na web sajt",
-      "Namjenski server za brzinu",
-      "Doživotno održavanje",
+      "Multi-kanalna AI podrška i custom integracije",
+      "Povezivanje sa naprednim kalendarima i bazama",
+      "Prilagođen ton komunikacije i pravila zakazivanja",
+      "Namjenski server za maksimalnu brzinu i stabilnost",
+      "Dugoročna tehnička podrška i dorade",
+      "Jednokratna investicija bez poreznih komplikacija",
     ],
-    buttonText: "Kontaktiraj nas",
+    buttonText: "Zatraži Custom Ponudu",
     popular: false,
-    value: "Jaran Custom (Po dogovoru)",
+    value: "Pro System Jaran (Veći sistemi)",
   },
 ];
 
 export default function Pricing({ onSelectPlan }: PricingProps) {
   return (
     <section id="pricing" className="relative z-20 bg-[#030712] py-24">
-      <div className="mx-auto max-w-6xl px-8">
+      <div className="mx-auto max-w-4xl px-6">
+        
+        {/* Naslov sekcije */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
-            Izaberi paket za svog <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">JARANA</span>
-          </h2>
+          <motion.h2 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4"
+          >
+            Investiraj u svog <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">DIGITALNOG RADNIKA</span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+            className="text-gray-400 text-lg max-w-xl mx-auto"
+          >
+            Jednokratna izrada i spajanje sa tvojim kalendarom za samo 2 do 3 radna dana. Nema mjesečnih pretplata ni skrivenih troškova.
+          </motion.p>
         </div>
 
+        {/* Vertikalni raspored paketa */}
         <motion.div 
           variants={containerVariants}
           initial="hidden"
-          whileInView="show"
-          viewport={{ once: false, amount: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch"
+          animate="show"
+          className="flex flex-col gap-8"
         >
           {plans.map((plan, index) => (
             <motion.div
               key={index}
               variants={cardVariants}
-              className={`relative flex flex-col justify-between rounded-3xl p-8 border transition-all duration-300 ${
+              className={`relative flex flex-col md:flex-row justify-between items-start md:items-center rounded-3xl p-8 md:p-10 border transition-all duration-300 gap-8 ${
                 plan.popular 
-                  ? "bg-[#090d1a] border-blue-500 shadow-[0_0_30px_-10px_rgba(59,130,246,0.3)] scale-105" 
+                  ? "bg-[#090d1a] border-blue-500/80 shadow-[0_0_30px_-10px_rgba(59,130,246,0.25)]" 
                   : "bg-[#050914] border-white/10 hover:border-white/20"
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full">
-                  NAJPOPULARNIJE
+                <div className="absolute -top-3.5 left-8 md:left-10 bg-blue-600 text-white text-[11px] font-bold tracking-widest uppercase px-4 py-1 rounded-full shadow-md">
+                  NAJTRAŽENIJI PAKET
                 </div>
               )}
-              
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                <p className="text-sm text-gray-400 mb-6">{plan.description}</p>
-                <div className="flex items-baseline mb-8">
-                  <span className="text-4xl md:text-5xl font-extrabold text-white">{plan.price}</span>
-                  <span className="text-gray-400 text-sm ml-2">{plan.period}</span>
+
+              {/* Lijeva strana - Detalji */}
+              <div className="flex-1">
+                <div className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-3 py-1 rounded-md mb-3 border border-blue-500/20">
+                  {plan.badge}
                 </div>
-                <ul className="space-y-4 mb-8">
+                <h3 className="text-3xl font-bold text-white mb-2">{plan.name}</h3>
+                <p className="text-gray-400 text-sm mb-6 max-w-xl leading-relaxed">{plan.description}</p>
+                
+                <ul className="space-y-3">
                   {plan.features.map((feature, fIndex) => (
-                    <li key={fIndex} className="flex items-start gap-3 text-sm text-gray-300">
-                      <span className="text-blue-500">✓</span>
+                    <li key={fIndex} className="flex items-center gap-3 text-sm text-gray-300">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold">✓</span>
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <button
-                onClick={() => onSelectPlan(plan.value)}
-                className={`w-full py-4 rounded-2xl font-semibold transition-all ${
-                  plan.popular
-                    ? "bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20"
-                    : "bg-white/5 text-white hover:bg-white/10"
-                }`}
-              >
-                {plan.buttonText}
-              </button>
+              {/* Desna strana - Cijena i Akcija */}
+              <div className="w-full md:w-auto flex flex-col items-start md:items-end justify-center border-t md:border-t-0 md:border-l border-white/10 pt-6 md:pt-0 md:pl-8 min-w-[220px]">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Model plaćanja</span>
+                <span className="text-2xl font-extrabold text-white mb-6">{plan.price}</span>
+
+                <button
+                  onClick={() => onSelectPlan(plan.value)}
+                  className={`w-full py-4 px-6 rounded-2xl font-bold transition-all text-sm tracking-wide ${
+                    plan.popular
+                      ? "bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-600/20"
+                      : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                  }`}
+                >
+                  {plan.buttonText} 🚀
+                </button>
+              </div>
             </motion.div>
           ))}
         </motion.div>
+
       </div>
     </section>
   );

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 interface NavbarProps {
   onOpenContact: () => void;
-  onResetHero: () => void; // Dodao sam ovo
+  onResetHero: () => void;
 }
 
 export default function Navbar({ onOpenContact, onResetHero }: NavbarProps) {
@@ -14,9 +14,9 @@ export default function Navbar({ onOpenContact, onResetHero }: NavbarProps) {
 
   return (
     <motion.nav 
-      initial={{ y: -100, opacity: 0 }}
+      initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.2 }}
+      transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
       className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5"
     >
       <div className="max-w-6xl mx-auto px-8 h-20 flex items-center justify-between">
@@ -48,7 +48,7 @@ export default function Navbar({ onOpenContact, onResetHero }: NavbarProps) {
               href={item.id} 
               onClick={() => {
                 if (item.name === "Početna") {
-                  onResetHero(); // Ovo resetuje animaciju!
+                  onResetHero();
                 }
               }}
               className="text-sm text-gray-400 hover:text-white transition-colors duration-200"
@@ -79,6 +79,7 @@ export default function Navbar({ onOpenContact, onResetHero }: NavbarProps) {
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="md:hidden bg-[#030712] border-b border-white/5 px-8 py-6 flex flex-col gap-6"
         >
           {[

@@ -1,26 +1,26 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 interface HeroProps {
   onStartFree: () => void;
-  animationKey: number; // Dodao sam ovo
+  animationKey?: number;
 }
 
-const containerVariants: any = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.2 },
+    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
   },
 };
 
-const itemVariants: any = {
-  hidden: { opacity: 0, y: 20 },
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
   show: { 
     opacity: 1, 
     y: 0,
-    transition: { type: "spring", stiffness: 100, damping: 15 } 
+    transition: { duration: 0.4, ease: "easeOut" } 
   },
 };
 
@@ -32,7 +32,7 @@ export default function Hero({ onStartFree, animationKey }: HeroProps) {
       </div>
 
       <motion.div 
-        key={animationKey} // Ovdje se dešava magija animacije
+        key={animationKey}
         variants={containerVariants}
         initial="hidden"
         animate="show"
@@ -63,9 +63,8 @@ export default function Hero({ onStartFree, animationKey }: HeroProps) {
           Dok ti odmaraš ili radiš, tvoj AI Jaran odgovara na Instagramu i WhatsAppu, dogovara termine i prodaje tvoje usluge.
         </motion.p>
 
-        {/* OVDJE SU TVOJA DUGMAD KOJA SU FALILA */}
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button onClick={onStartFree} className="px-8 py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all">
+          <button onClick={onStartFree} className="px-8 py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
             Isprobaj besplatno 🚀
           </button>
           <a href="#how-it-works" className="px-8 py-4 rounded-xl border border-white/10 bg-white/5 text-white font-semibold hover:bg-white/10 transition-all">

@@ -8,7 +8,7 @@ import Features from "../components/Features";
 import Benefits from "../components/Benefits";
 import ChatDemo from "../components/ChatDemo";
 import Pricing from "../components/Pricing";
-import HowItWorks from "../components/HowItWorks";
+import Comparison from "../components/Comparison";
 import FAQ from "../components/FAQ";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
@@ -31,7 +31,6 @@ export default function Home() {
       <Preloader />
       <Background />
 
-      {/* OVDJE JE DODANO onResetHero DA NE IZBACUJE VIŠE GREŠKU */}
       <Navbar 
         onOpenContact={() => openContact("Opšta pitanja / Konsultacije")} 
         onResetHero={() => setHeroKey(prev => prev + 1)}
@@ -45,7 +44,7 @@ export default function Home() {
       <Features />
       <Benefits />
       <ChatDemo />
-      <HowItWorks />
+      <Comparison />
       <Pricing onSelectPlan={openContact} />
       <FAQ />
       <Footer />

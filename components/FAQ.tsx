@@ -3,6 +3,10 @@
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useState } from "react";
 
+interface FAQProps {
+  t?: any;
+}
+
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
@@ -19,31 +23,31 @@ const itemVariants: Variants = {
   },
 };
 
-const faqs = [
-  { 
-    q: "Kako AI Jaran uči o mom biznisu?", 
-    a: "Tvoj Jaran dobija pristup tvojim cjenovnicima, uslugama i radnom vremenu. Na osnovu toga automatski odgovara klijentima i usklađuje termine." 
-  },
-  { 
-    q: "Da li ja moram ručno odgovarati na poruke?", 
-    a: "Ne. Jaran potpuno samostalno vodi razgovor u Instagram DM-u, dogovara termine i upisuje ih direktno u tvoj kalendar bez tvog uplitanja." 
-  },
-  { 
-    q: "Šta se dešava kada se termin zakazuje?", 
-    a: "Kada klijent potvrdi termin, Jaran ga upisuje u kalendar, a tebi odmah stiže čista obavijest na mobitel da znaš tačno vrijeme." 
-  },
-  { 
-    q: "Koliko traje podešavanje i puštanje u rad?", 
-    a: "Kompletno podešavanje, učenje baze i spajanje sa tvojim kalendarom traje između 2 i 3 radna dana." 
-  },
-  { 
-    q: "Postoje li ikakvi mjesečni troškovi ili pretplate?", 
-    a: "Ne. Izrada i postavljanje sistema je jednokratna investicija, čime izbjegavaš bilo kakve mjesečne naknade i komplikacije." 
-  },
-];
-
-export default function FAQ() {
+export default function FAQ({ t }: FAQProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const faqs = t?.items || [
+    { 
+      q: "Kako AI Jaran uči o mom biznisu?", 
+      a: "Tvoj Jaran dobija pristup tvojim cjenovnicima, uslugama i radnom vremenu. Na osnovu toga automatski odgovara klijentima i usklađuje termine." 
+    },
+    { 
+      q: "Da li ja moram ručno odgovarati na poruke?", 
+      a: "Ne. Jaran potpuno samostalno vodi razgovor u Instagram DM-u, dogovara termine i upisuje ih direktno u tvoj kalendar bez tvog uplitanja." 
+    },
+    { 
+      q: "Šta se dešava kada se termin zakazuje?", 
+      a: "Kada klijent potvrdi termin, Jaran ga upisuje u kalendar, a tebi odmah stiže čista obavijest na mobitel da znaš tačno vrijeme." 
+    },
+    { 
+      q: "Koliko traje podešavanje i puštanje u rad?", 
+      a: "Kompletno podešavanje, učenje baze i spajanje sa tvojim kalendarom traje između 2 i 3 radna dana." 
+    },
+    { 
+      q: "Postoje li ikakvi mjesečni troškovi ili pretplate?", 
+      a: "Ne. Izrada i postavljanje sistema je jednokratna investicija, čime izbjegavaš bilo kakve mjesečne naknade i komplikacije." 
+    },
+  ];
 
   return (
     <section id="faq" className="py-24 px-8 bg-transparent">
@@ -54,7 +58,7 @@ export default function FAQ() {
           transition={{ duration: 0.4, ease: "easeOut" }}
           className="text-center text-4xl font-extrabold text-white mb-16"
         >
-          Često postavljana pitanja
+          {t?.title || "Često postavljana pitanja"}
         </motion.h2>
         
         <motion.div 
@@ -63,7 +67,7 @@ export default function FAQ() {
           animate="show"
           className="space-y-4"
         >
-          {faqs.map((faq, index) => {
+          {faqs.map((faq: any, index: number) => {
             const isOpen = activeIndex === index;
 
             return (

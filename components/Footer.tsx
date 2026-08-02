@@ -3,7 +3,13 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function Footer() {
+interface FooterProps {
+  t?: any;
+  brandName?: string;
+  onOpenPrivacy?: () => void;
+}
+
+export default function Footer({ t, brandName = "AI JARAN", onOpenPrivacy }: FooterProps) {
   return (
     <motion.footer 
       initial={{ opacity: 0 }}
@@ -16,23 +22,28 @@ export default function Footer() {
         <div className="flex items-center gap-3">
           <Image
             src="/logo.png"
-            alt="AI Jaran Logo"
+            alt={`${brandName} Logo`}
             width={40}
             height={40}
             className="rounded-xl"
             style={{ mixBlendMode: "screen" }}
           />
-          <span className="font-extrabold tracking-wider text-white text-lg">AI JARAN</span>
+          <span className="font-extrabold tracking-wider text-white text-lg">{brandName}</span>
         </div>
 
         <p className="text-xs md:text-sm text-gray-500 text-center">
-          &copy; {new Date().getFullYear()} AI Jaran. Sva prava zadržana. Razvijeno za moderne biznise.
+          &copy; {new Date().getFullYear()} {brandName}. {t?.rights || "Sva prava zadržana. Razvijeno za moderne biznise."}
         </p>
 
-        <div className="flex gap-6 text-sm text-gray-400">
-          <a href="#features" className="hover:text-white transition-colors">Mogućnosti</a>
-          <a href="#pricing" className="hover:text-white transition-colors">Cijene</a>
-          <a href="#how-it-works" className="hover:text-white transition-colors">Kako radi</a>
+        <div className="flex items-center gap-6 text-sm text-gray-400">
+          <a href="#features" className="hover:text-white transition-colors">{t?.features || "Mogućnosti"}</a>
+          <a href="#pricing" className="hover:text-white transition-colors">{t?.pricing || "Cijene"}</a>
+          <button 
+            onClick={onOpenPrivacy}
+            className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-sm text-gray-400"
+          >
+            {t?.privacy || "Politika privatnosti"}
+          </button>
         </div>
       </div>
     </motion.footer>

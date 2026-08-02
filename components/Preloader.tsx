@@ -17,7 +17,7 @@ export default function Preloader() {
 
       const timer = setTimeout(() => {
         setIsVisible(false);
-      }, 1800);
+      }, 2600); // Traje ~2.6 sekundi
 
       return () => clearTimeout(timer);
     }
@@ -30,8 +30,9 @@ export default function Preloader() {
       <motion.div
         initial={{ opacity: 1 }}
         exit={{ 
-          y: "-100%", 
-          transition: { duration: 0.7, ease: [0.76, 0, 0.24, 1] } 
+          opacity: 0, 
+          scale: 1.05,
+          transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } 
         }}
         className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#030712]"
       >

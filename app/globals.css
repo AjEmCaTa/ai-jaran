@@ -5,6 +5,11 @@
   --foreground: #ededed;
 }
 
+/* Omogućava glatko skrolanje kada se klikne na linkove u navbaru */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: #030712;
   color: #ededed;

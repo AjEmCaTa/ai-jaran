@@ -1,27 +1,22 @@
 import { NextResponse } from 'next/server';
-const db = require('../../../db');
+const path = require('path');
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { name, email, phone, package: selectedPackage, message } = body;
 
-    // 1. Automatski upis u SQLite bazu
-    await new Promise((resolve, reject) => {
-      const query = `INSERT INTO narudzbe_firmi (naziv_firme, opis_firme, izabrani_paket, kontakt) VALUES (?, ?, ?, ?)`;
-      const kontaktPodaci = `Email: ${email || '-'} | Tel: ${phone || '-'}`;
-      
-      db.run(query, [name, message, selectedPackage, kontaktPodaci], function(this: { lastID: number }, err: Error | null) {
-        if (err) {
-          console.error('Greška pri upisu u bazu:', err.message);
-          reject(err);
-        } else {
-          resolve(this.lastID);
-        }
-      });
-    });
+    const dbPath = path.join(process.cwd(), 'ai_jaran.db');
+    const Database = eval('require')('better-sqlite3');
+    const db = new Database(dbPath);
 
-    // 2. Formatirana poruka za Telegram (glavna obavijest)
+    const query = `INSERT INTO narudzbe_firmi (naziv_firme, opis_firme, izabrani_paket, kontakt) VALUES (?, ?, ?, ?)`;
+    const kontaktPodaci = `Email: ${email || '-'} | Tel: ${phone || '-'}`;
+    
+    const stmt = db.prepare(query);
+    const result = stmt.run(name, message, selectedPackage, kontaktPodaci);
+    db.close();
+
     const telegramMessage = `
 🔔 **Novi zahtjev sa platforme!**
 
@@ -49,7 +44,7 @@ export async function POST(request: Request) {
       throw new Error('Greška pri slanju Telegram obavještenja.');
     }
 
-    return NextResponse.json({ success: true, telegram: true });
+    return NextResponse.json({ success: true, telegram: true, id: result.lastInsertRowid });
   } catch (error: any) {
     console.error('API Error:', error);
     return NextResponse.json({ success: false, error: error.message || 'Greška pri obradi zahtjeva.' }, { status: 500 });

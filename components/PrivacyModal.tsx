@@ -1,7 +1,5 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-
 interface PrivacyModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,67 +33,54 @@ export default function PrivacyModal({ isOpen, onClose, lang = "BS", t }: Privac
     closeBtn: "Razumijem",
   });
 
+  if (!isOpen) return null;
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0b0f19] border border-white/10 rounded-3xl p-8 shadow-2xl text-gray-300">
+        {/* Dugme za zatvaranje */}
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 text-gray-400 hover:text-white p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
         >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0b0f19] border border-white/10 rounded-3xl p-8 shadow-2xl text-gray-300"
+          ✕
+        </button>
+
+        <h2 className="text-2xl font-extrabold text-white mb-6 tracking-tight">
+          {content.title}
+        </h2>
+
+        <div className="space-y-6 text-sm leading-relaxed">
+          <div>
+            <h3 className="text-white font-semibold text-base mb-2">{content.sec1Title}</h3>
+            <p>{content.sec1Desc}</p>
+          </div>
+
+          <div>
+            <h3 className="text-white font-semibold text-base mb-2">{content.sec2Title}</h3>
+            <p>{content.sec2Desc}</p>
+          </div>
+
+          <div>
+            <h3 className="text-white font-semibold text-base mb-2">{content.sec3Title}</h3>
+            <p>{content.sec3Desc}</p>
+          </div>
+
+          <div>
+            <h3 className="text-white font-semibold text-base mb-24 md:mb-6">{content.sec4Title}</h3>
+            <p>{content.sec4Desc}</p>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 pt-4 bg-[#0b0f19] border-t border-white/5 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
           >
-            {/* Dugme za zatvaranje */}
-            <button
-              onClick={onClose}
-              className="absolute top-6 right-6 text-gray-400 hover:text-white p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              ✕
-            </button>
-
-            <h2 className="text-2xl font-extrabold text-white mb-6 tracking-tight">
-              {content.title}
-            </h2>
-
-            <div className="space-y-6 text-sm leading-relaxed">
-              <div>
-                <h3 className="text-white font-semibold text-base mb-2">{content.sec1Title}</h3>
-                <p>{content.sec1Desc}</p>
-              </div>
-
-              <div>
-                <h3 className="text-white font-semibold text-base mb-2">{content.sec2Title}</h3>
-                <p>{content.sec2Desc}</p>
-              </div>
-
-              <div>
-                <h3 className="text-white font-semibold text-base mb-2">{content.sec3Title}</h3>
-                <p>{content.sec3Desc}</p>
-              </div>
-
-              <div>
-                <h3 className="text-white font-semibold text-base mb-24 md:mb-6">{content.sec4Title}</h3>
-                <p>{content.sec4Desc}</p>
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 pt-4 bg-[#0b0f19] border-t border-white/5 flex justify-end">
-              <button
-                onClick={onClose}
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
-              >
-                {content.closeBtn}
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            {content.closeBtn}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

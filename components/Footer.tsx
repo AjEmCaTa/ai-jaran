@@ -1,7 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import { motion } from "framer-motion";
 
 interface FooterProps {
   t?: any;
@@ -11,12 +8,7 @@ interface FooterProps {
 
 export default function Footer({ t, brandName = "AI JARAN", onOpenPrivacy }: FooterProps) {
   return (
-    <motion.footer 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="relative z-20 bg-[#02050f] border-t border-white/5 py-16 pb-20"
-    >
+    <footer className="relative z-20 bg-[#02050f] border-t border-white/5 py-16 pb-20">
       <div className="mx-auto max-w-6xl px-8 flex flex-col md:flex-row items-center justify-between gap-6">
         
         <div className="flex items-center gap-3">
@@ -46,6 +38,6 @@ export default function Footer({ t, brandName = "AI JARAN", onOpenPrivacy }: Foo
           </button>
         </div>
       </div>
-    </motion.footer>
+    </footer>
   );
 }

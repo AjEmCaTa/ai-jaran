@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface NavbarProps {
   onOpenContact: () => void;
@@ -40,12 +39,7 @@ export default function Navbar({ onOpenContact, onResetHero, brandName, lang, se
   };
 
   return (
-    <motion.nav 
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5"
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5">
       <div className="max-w-6xl mx-auto px-8 h-20 flex items-center justify-between">
         
         {/* Logo */}
@@ -141,34 +135,26 @@ export default function Navbar({ onOpenContact, onResetHero, brandName, lang, se
       </div>
 
       {/* Mobilni Meni */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden bg-[#030712] border-b border-white/5 px-8 py-6 flex flex-col gap-6 overflow-hidden shadow-2xl"
-          >
-            {navLinks.map((item) => (
-              <a 
-                key={item.name} 
-                href={item.id} 
-                onClick={(e) => handleNavClick(e, item.id, item.name)} 
-                className="text-gray-300 hover:text-white text-base font-medium transition-colors"
-              >
-                {item.name}
-              </a>
-            ))}
-            <button 
-              onClick={() => { setIsOpen(false); onOpenContact(); }} 
-              className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/20 cursor-pointer"
+      {isOpen && (
+        <div className="md:hidden bg-[#030712] border-b border-white/5 px-8 py-6 flex flex-col gap-6 shadow-2xl">
+          {navLinks.map((item) => (
+            <a 
+              key={item.name} 
+              href={item.id} 
+              onClick={(e) => handleNavClick(e, item.id, item.name)} 
+              className="text-gray-300 hover:text-white text-base font-medium transition-colors"
             >
-              {lang === "BS" ? "Kontaktirajte nas" : "Contact Us"}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+              {item.name}
+            </a>
+          ))}
+          <button 
+            onClick={() => { setIsOpen(false); onOpenContact(); }} 
+            className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/20 cursor-pointer"
+          >
+            {lang === "BS" ? "Kontaktirajte nas" : "Contact Us"}
+          </button>
+        </div>
+      )}
+    </nav>
   );
 }

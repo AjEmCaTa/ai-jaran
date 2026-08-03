@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { translations } from "./translations";
-import Preloader from "../components/Preloader";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Features from "../components/Features";
@@ -33,7 +32,6 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden">
-      <Preloader />
       <Background />
 
       <Navbar 

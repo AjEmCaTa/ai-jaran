@@ -1,27 +1,10 @@
 "use client";
 
-import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useState } from "react";
 
 interface FAQProps {
   t?: any;
 }
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { 
-    opacity: 1, 
-    transition: { duration: 0.4, ease: "easeOut" } 
-  },
-};
 
 export default function FAQ({ t }: FAQProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -52,28 +35,17 @@ export default function FAQ({ t }: FAQProps) {
   return (
     <section id="faq" className="py-24 px-8 bg-transparent">
       <div className="max-w-3xl mx-auto">
-        <motion.h2 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="text-center text-4xl font-extrabold text-white mb-16"
-        >
+        <h2 className="text-center text-4xl font-extrabold text-white mb-16">
           {t?.title || "Često postavljana pitanja"}
-        </motion.h2>
+        </h2>
         
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           {faqs.map((faq: any, index: number) => {
             const isOpen = activeIndex === index;
 
             return (
-              <motion.div 
+              <div 
                 key={index} 
-                variants={itemVariants} 
                 className="border border-white/10 rounded-2xl bg-white/[0.02] overflow-hidden"
               >
                 <button
@@ -86,24 +58,15 @@ export default function FAQ({ t }: FAQProps) {
                   </span>
                 </button>
                 
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                    >
-                      <div className="px-6 pb-6 text-gray-400 text-sm leading-relaxed">
-                        {faq.a}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                {isOpen && (
+                  <div className="px-6 pb-6 text-gray-400 text-sm leading-relaxed">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

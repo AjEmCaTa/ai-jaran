@@ -1,27 +1,7 @@
-"use client";
-
-import { motion, Variants } from "framer-motion";
-
 interface PricingProps {
   t?: any;
   onSelectPlan: (planName: string) => void;
 }
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: { 
-    opacity: 1, 
-    transition: { duration: 0.4, ease: "easeOut" } 
-  },
-};
 
 export default function Pricing({ t, onSelectPlan }: PricingProps) {
   const plans = t?.plans || [
@@ -84,35 +64,19 @@ export default function Pricing({ t, onSelectPlan }: PricingProps) {
         
         {/* Naslov sekcije */}
         <div className="text-center mb-16">
-          <motion.h2 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4"
-          >
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
             {t?.titleMain || "Investiraj u svog"} <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">{t?.titleHighlight || "DIGITALNOG RADNIKA"}</span>
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
-            className="text-gray-400 text-lg max-w-xl mx-auto"
-          >
+          </h2>
+          <p className="text-gray-400 text-lg max-w-xl mx-auto">
             {t?.subtitle || "Brza izrada i spajanje sa tvojim kalendarom za samo 2 do 3 radna dana. Uslovi i obim posla dogovaraju se direktno."}
-          </motion.p>
+          </p>
         </div>
 
         {/* Vertikalni raspored paketa */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="flex flex-col gap-8"
-        >
+        <div className="flex flex-col gap-8">
           {plans.map((plan: any, index: number) => (
-            <motion.div
+            <div
               key={index}
-              variants={cardVariants}
               className={`relative flex flex-col md:flex-row justify-between items-start md:items-center rounded-3xl p-8 md:p-10 border transition-all duration-300 gap-8 ${
                 plan.popular 
                   ? "bg-[#090d1a] border-blue-500/80 shadow-[0_0_30px_-10px_rgba(59,130,246,0.25)]" 
@@ -159,9 +123,9 @@ export default function Pricing({ t, onSelectPlan }: PricingProps) {
                   {plan.buttonText} 🚀
                 </button>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
       </div>
     </section>

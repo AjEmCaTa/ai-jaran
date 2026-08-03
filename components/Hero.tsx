@@ -1,5 +1,6 @@
 interface HeroProps {
   onStartFree: () => void;
+  onHowItWorks?: () => void;
   animationKey?: number;
   t: {
     badge: string;
@@ -11,7 +12,7 @@ interface HeroProps {
   };
 }
 
-export default function Hero({ onStartFree, animationKey, t }: HeroProps) {
+export default function Hero({ onStartFree, onHowItWorks, animationKey, t }: HeroProps) {
   return (
     <section id="početna" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden py-20">
       <div className="absolute inset-0 pointer-events-none">
@@ -39,9 +40,13 @@ export default function Hero({ onStartFree, animationKey, t }: HeroProps) {
           <button onClick={onStartFree} className="px-8 py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 cursor-pointer">
             {t.ctaPrimary}
           </button>
-          <a href="#how-it-works" className="px-8 py-4 rounded-xl border border-white/10 bg-white/5 text-white font-semibold hover:bg-white/10 transition-all">
+          
+          <button 
+            onClick={onHowItWorks || (() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" }))} 
+            className="px-8 py-4 rounded-xl border border-white/10 bg-white/5 text-white font-semibold hover:bg-white/10 transition-all cursor-pointer"
+          >
             {t.ctaSecondary}
-          </a>
+          </button>
         </div>
       </div>
     </section>

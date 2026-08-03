@@ -42,18 +42,36 @@ export default function Home() {
         onResetHero={() => setHeroKey(prev => prev + 1)}
       />
 
+      {/* 1. Upoznaj AI Jarana */}
       <Hero 
         t={t.hero}
         animationKey={heroKey}
-        onStartFree={() => openContact("Jaran Starter (50 KM/mj)")} 
+        onStartFree={() => openContact("Jaran Starter (50 KM/mj)")}
+        onHowItWorks={() => {
+          document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
+        }}
       />
 
+      {/* 2. Šta nudi */}
       <Features t={t.features} />
+
+      {/* 3. Zašto baš AI Jaran */}
       <Benefits t={t.benefits} />
-      <ChatDemo t={t.chatDemo} />
+
+      {/* 4. Razlika koja donosi novac */}
       <Comparison t={t.comparison} />
+
+      {/* 5. Kako AI Jaran radi u pozadini (ChatDemo) */}
+      <div id="demo">
+        <ChatDemo t={t.chatDemo} />
+      </div>
+
+      {/* 6. Cijene */}
       <Pricing t={t.pricing} onSelectPlan={openContact} />
+
+      {/* 7. FAQ */}
       <FAQ t={t.faq} />
+      
       <Footer 
         t={t.footer} 
         brandName={t.nav.brandName} 

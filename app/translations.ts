@@ -56,17 +56,31 @@ export const translations = {
       ],
     },
     chatDemo: {
-      title: "Isprobaj",
-      titleEnd: "u akciji",
-      subtitle: "Pošalji poruku i uvjeri se kako Jaran odgovara prirodno, brzo i tačno.",
-      onlineStatus: "Online • Spremno za razgovor",
-      initialMessage: "Ćao! Ja sam AI Jaran. Kako ti mogu pomoći oko rezervacija ili upita danas?",
-      defaultReply: "To zvuči odlično! Mogu li te zabilježiti za termin ili imaš još neko pitanje?",
-      replyBooking: "Može, dogovoreno! Upisujem termin u kalendar, a potvrda stiže u sekundi.",
-      replyPricing: "Imamo odlične ponude i slobodne termine u bazi. Cijene se prilagođavaju vašim željama, želite li da provjerimo dostupnost?",
-      replyHello: "Ćao! Tu sam da preuzmem brigu oko poruka i preporuka iz baze dok ti odmaraš.",
-      placeholder: "Npr. Koje vikendice imate slobodne?",
-      sendBtn: "Pošalji",
+      titleMain: "Kako",
+      titleHighlight: "AI Jaran",
+      titleSuffix: "radi u pozadini",
+      description: "Pogledaj kako sistem automatski preuzima upit, provjerava termine i rješava rezervaciju bez tvog prisustva.",
+      steps: [
+        {
+          title: "1. Klijent šalje poruku",
+          subtitle: "Instagram DM",
+          content: "Zdravo! Imate li slobodan termin za vikendicu ove subote?",
+          badge: "Nova poruka stigla"
+        },
+        {
+          title: "2. AI Jaran obrađuje upit",
+          subtitle: "Baza & Dostupnost",
+          content: "Provjeravam kalendar... Subota je slobodna! Cijena je 250 KM.",
+          badge: "AI analizira bazu"
+        },
+        {
+          title: "3. Automatska potvrda i termin",
+          subtitle: "Google Calendar & Telegram",
+          content: "Termin uspješno rezervisan! Obavještenje poslato na Telegram vlasniku.",
+          badge: "Završeno automatski"
+        }
+      ],
+      footerRealtime: "Automatizacija u realnom vremenu"
     },
     comparison: {
       title: "Razlika koja",
@@ -270,17 +284,31 @@ export const translations = {
       ],
     },
     chatDemo: {
-      title: "Try",
-      titleEnd: "in action",
-      subtitle: "Send a message and see how Buddy replies naturally, fast, and accurately.",
-      onlineStatus: "Online • Ready to chat",
-      initialMessage: "Hi! I'm AI Buddy. How can I help you with bookings or inquiries today?",
-      defaultReply: "That sounds great! Can I log you in for a slot or do you have any other questions?",
-      replyBooking: "Sure, agreed! Logging the appointment into the calendar, confirmation arriving in a second.",
-      replyPricing: "We have great offers and available dates in our database. Prices are tailored to your needs, would you like us to check availability?",
-      replyHello: "Hi! I'm here to handle messages and database recommendations while you rest.",
-      placeholder: "E.g. Which cottages do you have available?",
-      sendBtn: "Send",
+      titleMain: "How",
+      titleHighlight: "AI Buddy",
+      titleSuffix: "works behind the scenes",
+      description: "See how the system automatically handles inquiries, checks availability, and secures bookings without your presence.",
+      steps: [
+        {
+          title: "1. Client sends a message",
+          subtitle: "Instagram DM",
+          content: "Hello! Do you have a free spot for the cottage this Saturday?",
+          badge: "New message received"
+        },
+        {
+          title: "2. AI Buddy processes query",
+          subtitle: "Database & Availability",
+          content: "Checking calendar... Saturday is available! Price is 250 KM.",
+          badge: "AI analyzing database"
+        },
+        {
+          title: "3. Automatic confirmation",
+          subtitle: "Google Calendar & Telegram",
+          content: "Slot successfully booked! Notification sent to owner's Telegram.",
+          badge: "Completed automatically"
+        }
+      ],
+      footerRealtime: "Real-time automation"
     },
     comparison: {
       title: "The difference that",

@@ -2,52 +2,81 @@
 
 import { useState, useEffect } from "react";
 
-export default function ChatDemo({ t }: { t?: any }) {
+interface ChatDemoProps {
+  t?: {
+    titleMain: string;
+    titleHighlight: string;
+    titleSuffix: string;
+    description: string;
+    steps: Array<{
+      title: string;
+      subtitle: string;
+      content: string;
+      badge: string;
+    }>;
+    footerRealtime: string;
+  };
+}
+
+export default function ChatDemo({ t }: ChatDemoProps) {
   const [activeStep, setActiveStep] = useState(0);
 
-  const steps = [
-    {
-      title: "1. Klijent šalje poruku",
-      subtitle: "Instagram DM",
-      icon: "💬",
-      content: "Zdravo! Imate li slobodan termin za vikendicu ove subote?",
-      badge: "Nova poruka stigla",
-      badgeColor: "bg-purple-500/10 text-purple-400 border-purple-500/20"
-    },
-    {
-      title: "2. AI Jaran obrađuje upit",
-      subtitle: "Baza & Dostupnost",
-      icon: "🤖",
-      content: "Provjeravam kalendar... Subota je slobodna! Cijena je 250 KM.",
-      badge: "AI analizira bazu",
-      badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20"
-    },
-    {
-      title: "3. Automatska potvrda i termin",
-      subtitle: "Google Calendar & Telegram",
-      icon: "⚡",
-      content: "Termin uspješno rezervisan! Obavještenje poslato na Telegram vlasniku.",
-      badge: "Završeno automatski",
-      badgeColor: "bg-green-500/10 text-green-400 border-green-500/20"
-    }
+  // Fallback objekat ako t slučajno ne stigne
+  const content = t || {
+    titleMain: "Kako",
+    titleHighlight: "AI Jaran",
+    titleSuffix: "radi u pozadini",
+    description: "Pogledaj kako sistem automatski preuzima upit, provjerava termine i rješava rezervaciju bez tvog prisustva.",
+    steps: [
+      {
+        title: "1. Klijent šalje poruku",
+        subtitle: "Instagram DM",
+        content: "Zdravo! Imate li slobodan termin za vikendicu ove subote?",
+        badge: "Nova poruka stigla"
+      },
+      {
+        title: "2. AI Jaran obrađuje upit",
+        subtitle: "Baza & Dostupnost",
+        content: "Provjeravam kalendar... Subota je slobodna! Cijena je 250 KM.",
+        badge: "AI analizira bazu"
+      },
+      {
+        title: "3. Automatska potvrda i termin",
+        subtitle: "Google Calendar & Telegram",
+        content: "Termin uspješno rezervisan! Obavještenje poslato na Telegram vlasniku.",
+        badge: "Završeno automatski"
+      }
+    ],
+    footerRealtime: "Automatizacija u realnom vremenu"
+  };
+
+  const icons = ["💬", "🤖", "⚡"];
+  const badgeColors = [
+    "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    "bg-green-500/10 text-green-400 border-green-500/20"
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % steps.length);
+      setActiveStep((prev) => (prev + 1) % content.steps.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, [steps.length]);
+  }, [content.steps.length]);
 
   return (
     <section id="chat-demo" className="py-24 px-6 bg-transparent">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            Kako <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">AI Jaran</span> radi u pozadini
+            {content.titleMain}{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+              {content.titleHighlight}
+            </span>{" "}
+            {content.titleSuffix}
           </h2>
           <p className="text-gray-400 text-lg">
-            Pogledaj kako sistem automatski preuzima upit, provjerava termine i rješava rezervaciju bez tvog prisustva.
+            {content.description}
           </p>
         </div>
 
@@ -56,7 +85,7 @@ export default function ChatDemo({ t }: { t?: any }) {
           
           {/* Progress Steps Header */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {steps.map((step, idx) => (
+            {content.steps.map((step, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveStep(idx)}
@@ -67,8 +96,8 @@ export default function ChatDemo({ t }: { t?: any }) {
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">{step.icon}</span>
-                  <span className={`text-xs px-2.5 py-1 rounded-full border ${step.badgeColor}`}>
+                  <span className="text-2xl">{icons[idx]}</span>
+                  <span className={`text-xs px-2.5 py-1 rounded-full border ${badgeColors[idx]}`}>
                     Korak {idx + 1}
                   </span>
                 </div>
@@ -89,19 +118,19 @@ export default function ChatDemo({ t }: { t?: any }) {
                 <div className="w-3 h-3 rounded-full bg-green-500/80" />
                 <span className="text-xs text-gray-500 ml-2 font-mono">ai-jaran-live-stream.exe</span>
               </div>
-              <span className={`text-xs px-3 py-1 rounded-full border ${steps[activeStep].badgeColor}`}>
-                {steps[activeStep].badge}
+              <span className={`text-xs px-3 py-1 rounded-full border ${badgeColors[activeStep]}`}>
+                {content.steps[activeStep].badge}
               </span>
             </div>
 
             <div className="my-auto">
               <p className="text-lg md:text-2xl text-gray-200 font-medium leading-relaxed">
-                "{steps[activeStep].content}"
+                "{content.steps[activeStep].content}"
               </p>
             </div>
 
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5 text-xs text-gray-500">
-              <span>Automatizacija u realnom vremenu</span>
+              <span>{content.footerRealtime}</span>
               <span>AI Jaran Core v2.4</span>
             </div>
           </div>

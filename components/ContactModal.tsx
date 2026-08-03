@@ -18,6 +18,13 @@ export default function ContactModal({ isOpen, onClose, defaultSubject = "Starte
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const packages = [
+    { id: "Starter Jaran (Mali biznis)", label: "Starter" },
+    { id: "Business Jaran (Srednji biznis)", label: "Business" },
+    { id: "Pro System Jaran (Veći sistemi)", label: "Pro" },
+    { id: "Opšta pitanja / Konsultacije", label: "Upit" },
+  ];
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,7 +66,7 @@ export default function ContactModal({ isOpen, onClose, defaultSubject = "Starte
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md overflow-y-auto">
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -67,16 +74,18 @@ export default function ContactModal({ isOpen, onClose, defaultSubject = "Starte
       />
 
       {/* Modal Box */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#090d1a] p-8 shadow-2xl z-10">
+      <div className="relative w-full max-w-xl bg-[#090d1a] border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl z-10 my-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer text-base"
         >
           ✕
         </button>
 
-        <h3 className="text-2xl font-bold text-white mb-2">{t?.modalTitle || "Uglavi svog Jarana"}</h3>
-        <p className="text-sm text-gray-400 mb-6">{t?.modalSubtitle || "Unesi podatke i naš tim će ti se javiti u najkraćem roku za podešavanje sistema."}</p>
+        <div className="mb-5 pr-6">
+          <h3 className="text-xl md:text-2xl font-bold text-white mb-1">{t?.modalTitle || "Uglavi svog Jarana"}</h3>
+          <p className="text-xs md:text-sm text-gray-400">{t?.modalSubtitle || "Unesi podatke i naš tim će ti se javiti u najkraćem roku."}</p>
+        </div>
 
         {success ? (
           <div className="py-12 text-center">
@@ -85,35 +94,56 @@ export default function ContactModal({ isOpen, onClose, defaultSubject = "Starte
             <p className="text-sm text-gray-400">{t?.successDesc || "Podaci su spremljeni, a obavještenje je poslano."}</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t?.labelName || "Ime ili naziv biznisa"}</label>
-              <input type="text" required placeholder={t?.placeholderName || "Npr. Salon ljepote Ana"} value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t?.labelPhone || "Broj telefona (WhatsApp/Viber)"}</label>
-              <input type="tel" required placeholder={t?.placeholderPhone || "Npr. 061 123 456"} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t?.labelEmail || "Email adresa (opcionalno)"}</label>
-              <input type="email" placeholder={t?.placeholderEmail || "Npr. info@biznis.com"} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t?.labelPackage || "Izaberi paket"}</label>
-              <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-[#090d1a] px-4 py-3 text-white focus:border-blue-500 focus:outline-none transition-colors">
-                <option value="Starter Jaran (Mali biznis)">{t?.opt1 || "Starter Jaran (Mali biznis)"}</option>
-                <option value="Business Jaran (Srednji biznis)">{t?.opt2 || "Business Jaran (Srednji biznis)"}</option>
-                <option value="Pro System Jaran (Veći sistemi)">{t?.opt3 || "Pro System Jaran (Veći sistemi)"}</option>
-                <option value="Opšta pitanja / Konsultacije">{t?.opt4 || "Samo želim pitati nešto"}</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t?.labelMessage || "Kratka poruka (opcionalno)"}</label>
-              <textarea placeholder={t?.placeholderMessage || "Napiši ako imaš nekih specifičnih želja..."} rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors resize-none" />
+          <form onSubmit={handleSubmit} className="space-y-3.5 text-xs md:text-sm">
+            
+            {/* Grid za Ime i Telefon */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Ime ili naziv biznisa</label>
+                <input type="text" required placeholder="Npr. Salon ljepote Ana" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors text-xs md:text-sm" />
+              </div>
+              <div>
+                <label className="block text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Broj telefona (WhatsApp/Viber)</label>
+                <input type="tel" required placeholder="Npr. 061 123 456" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors text-xs md:text-sm" />
+              </div>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-blue-600 font-semibold text-white hover:bg-blue-500 shadow-lg shadow-blue-600/20 transition-all duration-300 mt-2 disabled:opacity-50 cursor-pointer">
-              {loading ? (t?.loadingBtn || "Slanje...") : (t?.submitBtn || "Pošalji zahtjev jaranu")}
+            {/* Email */}
+            <div>
+              <label className="block text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email adresa (opcionalno)</label>
+              <input type="email" placeholder="Npr. info@biznis.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors text-xs md:text-sm" />
+            </div>
+
+            {/* Interaktivne kartice umjesto select dropdowna */}
+            <div>
+              <label className="block text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Izaberi paket / Opciju</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {packages.map((pkg) => (
+                  <button
+                    type="button"
+                    key={pkg.id}
+                    onClick={() => setSubject(pkg.id)}
+                    className={`py-2 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer border text-center truncate ${
+                      subject === pkg.id
+                        ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/30"
+                        : "bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    {pkg.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Poruka */}
+            <div>
+              <label className="block text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Kratka poruka (opcionalno)</label>
+              <textarea placeholder="Napiši ako imaš nekih specifičnih želja..." rows={2} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors resize-none text-xs md:text-sm" />
+            </div>
+
+            {/* Submit dugme */}
+            <button type="submit" disabled={loading} className="w-full py-3 md:py-3.5 rounded-xl bg-blue-600 font-semibold text-white hover:bg-blue-500 shadow-lg shadow-blue-600/20 transition-all duration-300 mt-2 disabled:opacity-50 cursor-pointer text-xs md:text-sm">
+              {loading ? "Slanje..." : "Pošalji zahtjev jaranu"}
             </button>
           </form>
         )}

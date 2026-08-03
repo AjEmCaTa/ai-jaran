@@ -5,9 +5,10 @@
   --foreground: #ededed;
 }
 
-/* Omogućava glatko skrolanje kada se klikne na linkove u navbaru */
+/* Omogućava glatko skrolanje i sprečava skakanje sadržaja */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Štiti da navigacija ne pokrije sekciju pri kliku */
 }
 
 body {
@@ -18,9 +19,12 @@ body {
   padding: 0;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Omogućava fluidno inercijsko skrolovanje na mobilnim uređajima (iOS/Android) */
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -30,6 +34,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #1f2937;
   border-radius: 4px;
+  transition: background 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #374151;

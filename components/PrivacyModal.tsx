@@ -36,46 +36,46 @@ export default function PrivacyModal({ isOpen, onClose, lang = "BS", t }: Privac
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0b0f19] border border-white/10 rounded-3xl p-8 shadow-2xl text-gray-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0b0f19] border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl text-gray-300">
         {/* Dugme za zatvaranje */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 text-gray-400 hover:text-white p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer text-base"
         >
           ✕
         </button>
 
-        <h2 className="text-2xl font-extrabold text-white mb-6 tracking-tight">
+        <h2 className="text-xl md:text-2xl font-extrabold text-white mb-6 tracking-tight pr-6">
           {content.title}
         </h2>
 
-        <div className="space-y-6 text-sm leading-relaxed">
+        <div className="space-y-5 text-xs md:text-sm leading-relaxed">
           <div>
-            <h3 className="text-white font-semibold text-base mb-2">{content.sec1Title}</h3>
+            <h3 className="text-white font-semibold text-sm md:text-base mb-1.5">{content.sec1Title}</h3>
             <p>{content.sec1Desc}</p>
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-base mb-2">{content.sec2Title}</h3>
+            <h3 className="text-white font-semibold text-sm md:text-base mb-1.5">{content.sec2Title}</h3>
             <p>{content.sec2Desc}</p>
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-base mb-2">{content.sec3Title}</h3>
+            <h3 className="text-white font-semibold text-sm md:text-base mb-1.5">{content.sec3Title}</h3>
             <p>{content.sec3Desc}</p>
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-base mb-24 md:mb-6">{content.sec4Title}</h3>
+            <h3 className="text-white font-semibold text-sm md:text-base mb-1.5">{content.sec4Title}</h3>
             <p>{content.sec4Desc}</p>
           </div>
         </div>
 
-        <div className="sticky bottom-0 pt-4 bg-[#0b0f19] border-t border-white/5 flex justify-end">
+        <div className="sticky bottom-0 pt-4 mt-6 bg-[#0b0f19] border-t border-white/5 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
+            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer text-xs md:text-sm"
           >
             {content.closeBtn}
           </button>

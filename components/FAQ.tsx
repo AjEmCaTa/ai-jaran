@@ -33,7 +33,7 @@ export default function FAQ({ t }: FAQProps) {
   ];
 
   return (
-    <section id="faq" className="py-24 px-8 bg-transparent">
+    <section id="faq" className="py-24 px-8 bg-[#030712]">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-center text-4xl font-extrabold text-white mb-16">
           {typeof t?.titleMain === "string" ? (

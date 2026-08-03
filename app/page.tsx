@@ -91,7 +91,10 @@ export default function Home() {
         t={t.privacy}
       />
 
-      <CookieBanner t={t.cookie} />
+      <CookieBanner 
+        t={t.cookie} 
+        onOpenPrivacy={() => setIsPrivacyOpen(true)} 
+      />
     </main>
   );
 }

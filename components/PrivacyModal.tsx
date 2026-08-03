@@ -37,7 +37,7 @@ export default function PrivacyModal({ isOpen, onClose, lang = "BS", t }: Privac
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0b0f19] border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl text-gray-300">
+      <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto bg-[#030712] border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl text-gray-300">
         {/* Dugme za zatvaranje */}
         <button
           onClick={onClose}
@@ -72,7 +72,7 @@ export default function PrivacyModal({ isOpen, onClose, lang = "BS", t }: Privac
           </div>
         </div>
 
-        <div className="sticky bottom-0 pt-4 mt-6 bg-[#0b0f19] border-t border-white/5 flex justify-end">
+        <div className="sticky bottom-0 pt-4 mt-6 bg-[#030712] border-t border-white/5 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer text-xs md:text-sm"

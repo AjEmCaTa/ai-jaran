@@ -15,7 +15,7 @@ const icons = ["📅", "🌐", "⚡", "🎯"];
 
 export default function Features({ t }: FeaturesProps) {
   return (
-    <section id="features" className="bg-transparent py-24">
+    <section id="features" className="bg-[#030712] py-24">
       <div className="max-w-6xl mx-auto px-8">
         <h2 className="text-center text-5xl font-bold text-white mb-16">
           {t.titleMain}{" "}

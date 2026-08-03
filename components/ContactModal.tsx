@@ -95,7 +95,7 @@ export default function ContactModal({ isOpen, onClose, defaultSubject = "Starte
       />
 
       {/* Modal Box */}
-      <div className="relative w-full max-w-xl bg-[#090d1a] border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl z-10 my-auto">
+      <div className="relative w-full max-w-xl bg-[#030712] border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl z-10 my-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer text-base"

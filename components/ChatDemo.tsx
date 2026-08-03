@@ -65,7 +65,7 @@ export default function ChatDemo({ t }: ChatDemoProps) {
   }, [content.steps.length]);
 
   return (
-    <section id="chat-demo" className="py-24 px-6 bg-transparent">
+    <section id="chat-demo" className="py-24 px-6 bg-[#030712]">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">

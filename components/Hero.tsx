@@ -14,7 +14,7 @@ interface HeroProps {
 
 export default function Hero({ onStartFree, onHowItWorks, animationKey, t }: HeroProps) {
   return (
-    <section id="početna" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden py-20">
+    <section id="početna" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden py-20 bg-[#030712]">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full" />
       </div>

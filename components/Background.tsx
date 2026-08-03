@@ -1,6 +1,6 @@
 export default function Background() {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-[#050816]">
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-[#030712]">
 
       {/* GRID */}
       <div
@@ -23,7 +23,7 @@ export default function Background() {
       <div className="absolute left-1/2 top-[65%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[160px]" />
 
       {/* VINJETA */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_35%,#050816_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_35%,#030712_100%)]" />
 
     </div>
   );

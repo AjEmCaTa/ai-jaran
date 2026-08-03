@@ -15,7 +15,7 @@ const icons = ["🤝", "💬", "🔥", "💼"];
 
 export default function Benefits({ t }: BenefitsProps) {
   return (
-    <section id="benefits" className="py-24 px-6 bg-transparent">
+    <section id="benefits" className="py-24 px-6 bg-[#030712]">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-center text-4xl md:text-5xl font-extrabold text-white mb-20">
           {t.titleMain}{" "}

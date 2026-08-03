@@ -18,7 +18,10 @@ export default function Features({ t }: FeaturesProps) {
     <section id="features" className="bg-transparent py-24">
       <div className="max-w-6xl mx-auto px-8">
         <h2 className="text-center text-5xl font-bold text-white mb-16">
-          {t.titleMain} <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">{t.titleHighlight}</span>
+          {t.titleMain}{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
+            {t.titleHighlight}
+          </span>
         </h2>
 
         <div className="grid md:grid-cols-2 gap-8 items-stretch">

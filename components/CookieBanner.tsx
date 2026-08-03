@@ -50,7 +50,7 @@ export default function CookieBanner({ onOpenPrivacy, t }: CookieBannerProps) {
       <div className="flex items-center justify-start">
         <button
           onClick={acceptCookies}
-          className="px-5 py-2 rounded-xl bg-[#6b0909] hover:bg-[#850b0b] text-white text-xs font-semibold transition-all shadow-lg cursor-pointer"
+          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
         >
           {t?.cookieBtn || "Prihvatam"}
         </button>

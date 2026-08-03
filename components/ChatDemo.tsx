@@ -70,7 +70,7 @@ export default function ChatDemo({ t }: ChatDemoProps) {
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
             {content.titleMain}{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
               {content.titleHighlight}
             </span>{" "}
             {content.titleSuffix}

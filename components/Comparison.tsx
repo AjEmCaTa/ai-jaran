@@ -5,7 +5,10 @@ export default function Comparison({ t }: { t?: any }) {
         
         <div className="text-center max-w-2xl mx-auto mb-20">
           <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
-            {t?.title || "Razlika koja"} <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">{t?.titleHighlight || "donosi novac"}</span>
+            {t?.title || "Razlika koja"}{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
+              {t?.titleHighlight || "donosi novac"}
+            </span>
           </h2>
           <p className="text-gray-400 text-base md:text-lg">
             {t?.subtitle || "Pogledaj kako izgleda vođenje posla bez sistema i sa Jaranom u ekipi."}

@@ -36,7 +36,16 @@ export default function FAQ({ t }: FAQProps) {
     <section id="faq" className="py-24 px-8 bg-transparent">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-center text-4xl font-extrabold text-white mb-16">
-          {t?.title || "Često postavljana pitanja"}
+          {typeof t?.titleMain === "string" ? (
+            <>
+              {t.titleMain}{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
+                {t.titleHighlight}
+              </span>
+            </>
+          ) : (
+            t?.title || "Često postavljana pitanja"
+          )}
         </h2>
         
         <div className="space-y-4">

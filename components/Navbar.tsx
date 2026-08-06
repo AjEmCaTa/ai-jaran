@@ -6,12 +6,13 @@ import { useState } from "react";
 interface NavbarProps {
   onOpenContact: () => void;
   onResetHero: () => void;
+  onOpenCatalog?: () => void;
   brandName: string;
   lang: "BS" | "EN";
   setLang: (lang: "BS" | "EN") => void;
 }
 
-export default function Navbar({ onOpenContact, onResetHero, brandName, lang, setLang }: NavbarProps) {
+export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, brandName, lang, setLang }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
@@ -71,6 +72,14 @@ export default function Navbar({ onOpenContact, onResetHero, brandName, lang, se
               {item.name}
             </a>
           ))}
+
+          {/* Dugme za Biznise - DIREKTNO VIDLJIVO */}
+          <button
+            onClick={onOpenCatalog}
+            className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-200 cursor-pointer flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl shadow-lg shadow-emerald-500/10"
+          >
+            <span>{lang === "BS" ? "Biznisi" : "Businesses"}</span>
+          </button>
           
           {/* Elegantni prekidač za jezik */}
           <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
@@ -147,6 +156,14 @@ export default function Navbar({ onOpenContact, onResetHero, brandName, lang, se
               {item.name}
             </a>
           ))}
+          
+          <button 
+            onClick={() => { setIsOpen(false); if(onOpenCatalog) onOpenCatalog(); }} 
+            className="w-full py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold cursor-pointer"
+          >
+            {lang === "BS" ? "Katalog Biznisa" : "Business Directory"}
+          </button>
+
           <button 
             onClick={() => { setIsOpen(false); onOpenContact(); }} 
             className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/20 cursor-pointer"

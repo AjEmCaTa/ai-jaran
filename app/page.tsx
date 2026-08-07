@@ -183,8 +183,8 @@ export default function Home() {
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       
-      {/* GASIMO KOCKICE KADA SE OTVORI KATALOG BIZNISA */}
-      {!isCatalogOpen && <Background />}
+      {/* TOTALNO UKLANJANJE POZADINSKOG GRIDA KADA JE KATALOG OTVOREN */}
+      {isCatalogOpen ? null : <Background />}
 
       <Navbar 
         lang={lang}
@@ -380,10 +380,15 @@ export default function Home() {
             t={t.benefits} 
             lang={lang} 
             onOpenCatalog={() => { 
-              setIsCatalogOpen(true); 
-              setSelectedCategory(null); 
-              setSelectedCity("all"); 
+              // Prvo skrolaj odmah na vrh da mobitel ne ostane na dnu
               window.scrollTo({ top: 0, behavior: 'smooth' });
+              
+              // Malo odgodi otvaranje kataloga da se skrol stigne izvršiti
+              setTimeout(() => {
+                setIsCatalogOpen(true); 
+                setSelectedCategory(null); 
+                setSelectedCity("all"); 
+              }, 150);
             }} 
           />
           <Comparison t={t.comparison} />

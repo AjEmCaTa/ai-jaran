@@ -224,7 +224,10 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
                   <button 
-                    onClick={() => setSelectedCategory('autopraonice')}
+                    onClick={() => {
+                      setSelectedCategory('autopraonice');
+                      window.scrollTo(0, 0);
+                    }}
                     className="p-6 bg-blue-600/10 border border-blue-500/30 rounded-2xl font-semibold hover:bg-blue-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
                   >
                     <span className="text-xl group-hover:translate-x-1 transition-transform">🧼 {lang === "BS" ? "Dubinsko čišćenje / Autopraonice" : "Deep Cleaning / Car Wash"}</span>
@@ -232,7 +235,10 @@ export default function Home() {
                   </button>
 
                   <button 
-                    onClick={() => setSelectedCategory('restorani')}
+                    onClick={() => {
+                      setSelectedCategory('restorani');
+                      window.scrollTo(0, 0);
+                    }}
                     className="p-6 bg-amber-600/10 border border-amber-500/30 rounded-2xl font-semibold hover:bg-amber-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
                   >
                     <span className="text-xl group-hover:translate-x-1 transition-transform">🍽️ {lang === "BS" ? "Restorani / Kafići" : "Restaurants / Cafes"}</span>
@@ -240,7 +246,10 @@ export default function Home() {
                   </button>
 
                   <button 
-                    onClick={() => setSelectedCategory('vile')}
+                    onClick={() => {
+                      setSelectedCategory('vile');
+                      window.scrollTo(0, 0);
+                    }}
                     className="p-6 bg-purple-600/10 border border-purple-500/30 rounded-2xl font-semibold hover:bg-purple-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
                   >
                     <span className="text-xl group-hover:translate-x-1 transition-transform">🏡 {lang === "BS" ? "Vile s bazenom / Vikendice" : "Villas / Cottages"}</span>
@@ -248,7 +257,10 @@ export default function Home() {
                   </button>
 
                   <button 
-                    onClick={() => setSelectedCategory('frizerski')}
+                    onClick={() => {
+                      setSelectedCategory('frizerski');
+                      window.scrollTo(0, 0);
+                    }}
                     className="p-6 bg-pink-600/10 border border-pink-500/30 rounded-2xl font-semibold hover:bg-pink-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
                   >
                     <span className="text-xl group-hover:translate-x-1 transition-transform">💇‍♂️ {lang === "BS" ? "Frizerski / Saloni ljepote" : "Barbers / Salons"}</span>
@@ -260,7 +272,12 @@ export default function Home() {
               <div className="flex flex-col py-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                   <button 
-                    onClick={() => { setSelectedCategory(null); setSelectedCity("all"); setIsDropdownOpen(false); }}
+                    onClick={() => { 
+                      setSelectedCategory(null); 
+                      setSelectedCity("all"); 
+                      setIsDropdownOpen(false); 
+                      window.scrollTo(0, 0);
+                    }}
                     className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition text-sm cursor-pointer flex items-center gap-2 text-gray-300"
                   >
                     ← {lang === "BS" ? "Nazad na kategorije" : "Back to categories"}

@@ -5,7 +5,6 @@ import { translations } from "./translations";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Features from "../components/Features";
-import Benefits from "../components/Benefits";
 import ChatDemo from "../components/ChatDemo";
 import Comparison from "../components/Comparison";
 import Pricing from "../components/Pricing";
@@ -183,7 +182,7 @@ export default function Home() {
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       
-      {/* TOTALNO UKLANJANJE POZADINSKOG GRIDA KADA JE KATALOG OTVOREN */}
+      {/* GASIMO KOCKICE KADA SE OTVORI KATALOG BIZNISA */}
       {isCatalogOpen ? null : <Background />}
 
       <Navbar 
@@ -196,13 +195,11 @@ export default function Home() {
           setSelectedCategory(null); 
           setSelectedCity("all"); 
           setHeroKey(prev => prev + 1); 
-          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         onOpenCatalog={() => { 
           setIsCatalogOpen(true); 
           setSelectedCategory(null); 
           setSelectedCity("all"); 
-          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
 
@@ -376,15 +373,7 @@ export default function Home() {
           />
 
           <Features t={t.features} />
-          <Benefits 
-            t={t.benefits} 
-            lang={lang} 
-            onOpenCatalog={() => { 
-              setIsCatalogOpen(true); 
-              setSelectedCategory(null); 
-              setSelectedCity("all"); 
-            }} 
-          />
+    
           <Comparison t={t.comparison} />
 
           <div id="demo">
@@ -396,7 +385,22 @@ export default function Home() {
         </>
       )}
 
-      {/* MODAL ZA KALENDAR (WINDOWS STYLE GRID) I ZAKAZIVANJE */}
+      {/* LEBDEĆE DUGME ZA KATALOG U DONJEM DESNOM UGLU */}
+      {!isCatalogOpen && (
+        <button
+          onClick={() => {
+            setIsCatalogOpen(true);
+            setSelectedCategory(null);
+            setSelectedCity("all");
+          }}
+          className="fixed bottom-6 right-6 z-40 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full shadow-2xl shadow-blue-600/50 transition-transform hover:scale-110 cursor-pointer flex items-center justify-center border border-white/20"
+          title="Otvori katalog"
+        >
+          <span className="text-2xl">🚀</span>
+        </button>
+      )}
+
+      {/* MODAL ZA KALENDAR I ZAKAZIVANJE */}
       {isBookingOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#0b1329] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -468,7 +472,7 @@ export default function Home() {
                 {/* WINDOWS STYLE KALENDAR MREŽA (GRID) */}
                 <div className="flex flex-col gap-2 bg-[#030712] border border-white/10 rounded-2xl p-4">
                   
-                  {/* Zaglavlje kalendara (Mjesec i dugmadi za listanje) */}
+                  {/* Zaglavlje kalendara */}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-bold capitalize text-white">
                       {monthNames[currentMonth]} {currentYear}
@@ -502,14 +506,12 @@ export default function Home() {
                     <span>ne</span>
                   </div>
 
-                  {/* Dani u mjesecu (Mreža) */}
+                  {/* Dani u mjesecu */}
                   <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                    {/* Prazna polja prije prvog dana u mjesecu */}
                     {Array.from({ length: getFirstDayOfMonth(currentYear, currentMonth) }).map((_, index) => (
                       <div key={`empty-${index}`} />
                     ))}
 
-                    {/* Stvarni dani u mjesecu */}
                     {Array.from({ length: getDaysInMonth(currentYear, currentMonth) }).map((_, index) => {
                       const dayNum = index + 1;
                       const formattedDay = dayNum < 10 ? `0${dayNum}` : `${dayNum}`;
@@ -536,7 +538,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Izabran datum prikaz */}
                 <div className="text-xs text-blue-400 font-medium text-center">
                   {lang === "BS" ? "Izabrani datum:" : "Selected date:"} <span className="font-bold text-white">{selectedDate}</span>
                 </div>

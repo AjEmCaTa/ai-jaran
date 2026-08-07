@@ -363,7 +363,11 @@ export default function Home() {
           />
 
           <Features t={t.features} />
-          <Benefits t={t.benefits} />
+          <Benefits 
+            t={t.benefits} 
+            lang={lang} 
+            onOpenCatalog={() => { setIsCatalogOpen(true); setSelectedCategory(null); setSelectedCity("all"); }} 
+          />
           <Comparison t={t.comparison} />
 
           <div id="demo">

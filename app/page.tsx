@@ -197,7 +197,7 @@ export default function Home() {
 
       {/* AKO JE KATALOG OTVOREN */}
       {isCatalogOpen ? (
-        <div className="pt-28 pb-16 px-6 max-w-6xl mx-auto min-h-screen">
+        <div className="pt-28 pb-16 px-6 max-w-6xl mx-auto min-h-screen relative z-20">
           {!selectedCategory ? (
             <div className="flex flex-col items-center justify-center py-12">
               <h1 className="text-3xl md:text-4xl font-extrabold mb-4 text-center tracking-tight">

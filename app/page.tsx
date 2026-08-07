@@ -380,15 +380,9 @@ export default function Home() {
             t={t.benefits} 
             lang={lang} 
             onOpenCatalog={() => { 
-              // Prvo skrolaj odmah na vrh da mobitel ne ostane na dnu
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              
-              // Malo odgodi otvaranje kataloga da se skrol stigne izvršiti
-              setTimeout(() => {
-                setIsCatalogOpen(true); 
-                setSelectedCategory(null); 
-                setSelectedCity("all"); 
-              }, 150);
+              setIsCatalogOpen(true); 
+              setSelectedCategory(null); 
+              setSelectedCity("all"); 
             }} 
           />
           <Comparison t={t.comparison} />

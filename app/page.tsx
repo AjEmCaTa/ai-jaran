@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useLayoutEffect } from "react";
 import { translations } from "./translations";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
@@ -51,6 +51,12 @@ export default function Home() {
     "2026-08-07": ["14:00"],
     "2026-08-08": ["12:00"]
   });
+
+  useLayoutEffect(() => {
+    if (isCatalogOpen) {
+      window.scrollTo(0, 0);
+    }
+  }, [isCatalogOpen]);
 
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -182,7 +188,7 @@ export default function Home() {
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       
-      {/* GASIMO KOCKICE KADA SE OTVORI KATALOG BIZNISA */}
+      {/* TOTALNO UKLANJANJE POZADINSKOG GRIDA KADA JE KATALOG OTVOREN */}
       {isCatalogOpen ? null : <Background />}
 
       <Navbar 
@@ -373,7 +379,6 @@ export default function Home() {
           />
 
           <Features t={t.features} />
-    
           <Comparison t={t.comparison} />
 
           <div id="demo">

@@ -18,7 +18,7 @@ export default function Benefits({ lang = "BS", onOpenCatalog }: BenefitsProps) 
     <section id="benefits" className="py-24 px-6 bg-[#030712] relative z-10">
       <div className="max-w-5xl mx-auto text-center">
         
-        {/* NASLOV BEZ ONOG DOSADNOG TAGA */}
+        {/* NASLOV */}
         <div className="mb-12">
           <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
             {lang === 'EN' ? "What is hidden behind this?" : "Šta se krije iza ovoga?"}
@@ -30,7 +30,7 @@ export default function Benefits({ lang = "BS", onOpenCatalog }: BenefitsProps) 
           </p>
         </div>
 
-        {/* GLAVNO MOĆNO DUGME / PORTAL ZA KATALOG SA SUPTILNIJOM, TAMNIJOM POZADINOM */}
+        {/* GLAVNO MOĆNO DUGME / PORTAL ZA KATALOG */}
         <div className="relative group p-[1px] rounded-3xl bg-gradient-to-r from-blue-900/40 via-slate-800 to-indigo-950/40 max-w-2xl mx-auto shadow-2xl">
           <div className="bg-[#060b19] rounded-[23px] p-8 md:p-12 flex flex-col items-center justify-center gap-6 transition-transform group-hover:scale-[0.99]">
             
@@ -54,6 +54,8 @@ export default function Benefits({ lang = "BS", onOpenCatalog }: BenefitsProps) 
                 if (onOpenCatalog) {
                   onOpenCatalog();
                 }
+                // AUTOMATSKI VRAĆA EKRAN NA VRH KAD SE OTVORI KATALOG
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="mt-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl text-base transition-all duration-300 shadow-lg shadow-blue-600/30 cursor-pointer flex items-center gap-3 group-hover:scale-105"
             >

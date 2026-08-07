@@ -191,8 +191,19 @@ export default function Home() {
         setLang={setLang}
         brandName={t.nav.brandName}
         onOpenContact={() => openContact("Opšta pitanja / Konsultacije")} 
-        onResetHero={() => { setIsCatalogOpen(false); setSelectedCategory(null); setSelectedCity("all"); setHeroKey(prev => prev + 1); }}
-        onOpenCatalog={() => { setIsCatalogOpen(true); setSelectedCategory(null); setSelectedCity("all"); }}
+        onResetHero={() => { 
+          setIsCatalogOpen(false); 
+          setSelectedCategory(null); 
+          setSelectedCity("all"); 
+          setHeroKey(prev => prev + 1); 
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onOpenCatalog={() => { 
+          setIsCatalogOpen(true); 
+          setSelectedCategory(null); 
+          setSelectedCity("all"); 
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
       {/* AKO JE KATALOG OTVOREN */}
@@ -368,7 +379,12 @@ export default function Home() {
           <Benefits 
             t={t.benefits} 
             lang={lang} 
-            onOpenCatalog={() => { setIsCatalogOpen(true); setSelectedCategory(null); setSelectedCity("all"); }} 
+            onOpenCatalog={() => { 
+              setIsCatalogOpen(true); 
+              setSelectedCategory(null); 
+              setSelectedCity("all"); 
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} 
           />
           <Comparison t={t.comparison} />
 

@@ -41,7 +41,8 @@ export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, bran
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-8 h-24 flex items-center justify-between">
+      {/* w-full i px-8 osiguravaju da ide od skroz lijevog do skroz desnog ruba ekrana */}
+      <div className="w-full px-8 h-24 flex items-center justify-between">
         
         {/* LOGO - SKROZ LIJEVO */}
         <a 
@@ -60,7 +61,7 @@ export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, bran
           <span className="font-extrabold tracking-wider text-white text-xl">{brandName}</span>
         </a>
 
-        {/* DESNI DIO: Linkovi + Biznisi + Jezik + Kontakt */}
+        {/* DESNI DIO: Linkovi + Biznisi + Jezik + Kontakt - SKROZ DESNO */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((item) => (
             <a 

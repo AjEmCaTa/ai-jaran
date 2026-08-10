@@ -9,7 +9,7 @@ interface FooterProps {
 export default function Footer({ t, brandName = "AI JARAN", onOpenPrivacy }: FooterProps) {
   return (
     <footer className="relative z-20 bg-[#030712] border-t border-white/5 py-16 pb-20">
-      <div className="mx-auto max-w-6xl px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="w-full px-8 md:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
         
         <div className="flex items-center gap-3">
           <Image

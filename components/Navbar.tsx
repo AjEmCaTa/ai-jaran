@@ -41,51 +41,51 @@ export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, bran
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-6xl mx-auto px-8 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-8 h-24 flex items-center justify-between">
         
-        {/* Logo */}
+        {/* LOGO - SKROZ LIJEVO */}
         <a 
           href="#" 
           onClick={(e) => handleNavClick(e, "#", lang === "BS" ? "Početna" : "Home")} 
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-3.5 cursor-pointer"
         >
           <Image
             src="/logo.png"
             alt="AI Jaran Logo"
-            width={40}
-            height={40}
-            className="rounded-xl"
+            width={48}
+            height={48}
+            className="rounded-2xl"
             style={{ mixBlendMode: "screen" }}
           />
-          <span className="font-extrabold tracking-wider text-white text-lg">{brandName}</span>
+          <span className="font-extrabold tracking-wider text-white text-xl">{brandName}</span>
         </a>
 
-        {/* Desktop Linkovi */}
+        {/* DESNI DIO: Linkovi + Biznisi + Jezik + Kontakt */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((item) => (
             <a 
               key={item.name} 
               href={item.id} 
               onClick={(e) => handleNavClick(e, item.id, item.name)}
-              className="text-sm text-gray-400 hover:text-white transition-colors duration-200 cursor-pointer"
+              className="text-base font-medium text-gray-300 hover:text-white transition-colors duration-200 cursor-pointer"
             >
               {item.name}
             </a>
           ))}
 
-          {/* Dugme za Biznise - DIREKTNO VIDLJIVO */}
+          {/* Dugme za Biznise */}
           <button
             onClick={onOpenCatalog}
-            className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-200 cursor-pointer flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl shadow-lg shadow-emerald-500/10"
+            className="text-base font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-200 cursor-pointer flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2 rounded-xl shadow-lg shadow-emerald-500/10"
           >
             <span>{lang === "BS" ? "Biznisi" : "Businesses"}</span>
           </button>
           
-          {/* Elegantni prekidač za jezik */}
+          {/* Prekidač za jezik */}
           <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
             <button
               onClick={() => setLang("BS")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                 lang === "BS" 
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30" 
                   : "text-gray-400 hover:text-white"
@@ -95,7 +95,7 @@ export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, bran
             </button>
             <button
               onClick={() => setLang("EN")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                 lang === "EN" 
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30" 
                   : "text-gray-400 hover:text-white"
@@ -105,9 +105,10 @@ export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, bran
             </button>
           </div>
 
+          {/* Kontakt dugme */}
           <button
             onClick={onOpenContact}
-            className="px-6 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 cursor-pointer"
+            className="px-7 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 cursor-pointer text-base"
           >
             {lang === "BS" ? "Kontakt" : "Contact"}
           </button>

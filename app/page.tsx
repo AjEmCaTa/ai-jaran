@@ -211,27 +211,27 @@ export default function Home() {
 
       {/* AKO JE KATALOG OTVOREN */}
       {isCatalogOpen ? (
-        <div className="pt-28 pb-16 px-6 w-full min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0b1633] via-[#030712] to-[#030712] relative z-20">
-          <div className="max-w-6xl mx-auto">
+        <div className="pt-28 pb-16 px-6 md:px-12 w-full min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0b1633] via-[#030712] to-[#030712] relative z-20">
+          <div className="max-w-6xl md:max-w-7xl mx-auto">
             {!selectedCategory ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <h1 className="text-3xl md:text-4xl font-extrabold mb-4 text-center tracking-tight">
+                <h1 className="text-3xl md:text-5xl font-extrabold mb-4 text-center tracking-tight">
                   {lang === "BS" ? "Katalog Biznisa" : "Business Directory"}
                 </h1>
-                <p className="text-gray-400 mb-10 text-center max-w-md">
+                <p className="text-gray-400 mb-12 text-center max-w-xl text-base md:text-lg">
                   {lang === "BS" ? "Izaberi nišu i istraži aktivne partnere i usluge." : "Choose a niche and explore active partners and services."}
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
                   <button 
                     onClick={() => {
                       setSelectedCategory('autopraonice');
                       window.scrollTo(0, 0);
                     }}
-                    className="p-6 bg-blue-600/10 border border-blue-500/30 rounded-2xl font-semibold hover:bg-blue-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
+                    className="p-8 md:p-10 bg-blue-600/10 border border-blue-500/30 rounded-3xl font-semibold hover:bg-blue-600/20 transition text-left cursor-pointer flex flex-col gap-3 group"
                   >
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">🧼 {lang === "BS" ? "Dubinsko čišćenje / Autopraonice" : "Deep Cleaning / Car Wash"}</span>
-                    <span className="text-xs text-gray-400 font-normal">{lang === "BS" ? "Zakazivanje termina i čišćenje vozila" : "Appointment scheduling and vehicle cleaning"}</span>
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">🧼 {lang === "BS" ? "Dubinsko čišćenje / Autopraonice" : "Deep Cleaning / Car Wash"}</span>
+                    <span className="text-sm text-gray-400 font-normal">{lang === "BS" ? "Zakazivanje termina i čišćenje vozila" : "Appointment scheduling and vehicle cleaning"}</span>
                   </button>
 
                   <button 
@@ -239,10 +239,10 @@ export default function Home() {
                       setSelectedCategory('restorani');
                       window.scrollTo(0, 0);
                     }}
-                    className="p-6 bg-amber-600/10 border border-amber-500/30 rounded-2xl font-semibold hover:bg-amber-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
+                    className="p-8 md:p-10 bg-amber-600/10 border border-amber-500/30 rounded-3xl font-semibold hover:bg-amber-600/20 transition text-left cursor-pointer flex flex-col gap-3 group"
                   >
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">🍽️ {lang === "BS" ? "Restorani / Kafići" : "Restaurants / Cafes"}</span>
-                    <span className="text-xs text-gray-400 font-normal">{lang === "BS" ? "Rezervacije stolova i meni" : "Table reservations and menu"}</span>
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">🍽️ {lang === "BS" ? "Restorani / Kafići" : "Restaurants / Cafes"}</span>
+                    <span className="text-sm text-gray-400 font-normal">{lang === "BS" ? "Rezervacije stolova i meni" : "Table reservations and menu"}</span>
                   </button>
 
                   <button 
@@ -250,10 +250,10 @@ export default function Home() {
                       setSelectedCategory('vile');
                       window.scrollTo(0, 0);
                     }}
-                    className="p-6 bg-purple-600/10 border border-purple-500/30 rounded-2xl font-semibold hover:bg-purple-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
+                    className="p-8 md:p-10 bg-purple-600/10 border border-purple-500/30 rounded-3xl font-semibold hover:bg-purple-600/20 transition text-left cursor-pointer flex flex-col gap-3 group"
                   >
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">🏡 {lang === "BS" ? "Vile s bazenom / Vikendice" : "Villas / Cottages"}</span>
-                    <span className="text-xs text-gray-400 font-normal">{lang === "BS" ? "Iznajmljivanje i smještaj" : "Rental and accommodation"}</span>
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">🏡 {lang === "BS" ? "Vile s bazenom / Vikendice" : "Villas / Cottages"}</span>
+                    <span className="text-sm text-gray-400 font-normal">{lang === "BS" ? "Iznajmljivanje i smještaj" : "Rental and accommodation"}</span>
                   </button>
 
                   <button 
@@ -261,10 +261,10 @@ export default function Home() {
                       setSelectedCategory('frizerski');
                       window.scrollTo(0, 0);
                     }}
-                    className="p-6 bg-pink-600/10 border border-pink-500/30 rounded-2xl font-semibold hover:bg-pink-600/20 transition text-left cursor-pointer flex flex-col gap-2 group"
+                    className="p-8 md:p-10 bg-pink-600/10 border border-pink-500/30 rounded-3xl font-semibold hover:bg-pink-600/20 transition text-left cursor-pointer flex flex-col gap-3 group"
                   >
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">💇‍♂️ {lang === "BS" ? "Frizerski / Saloni ljepote" : "Barbers / Salons"}</span>
-                    <span className="text-xs text-gray-400 font-normal">{lang === "BS" ? "Uređivanje i termini" : "Styling and appointments"}</span>
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">💇‍♂️ {lang === "BS" ? "Frizerski / Saloni ljepote" : "Barbers / Salons"}</span>
+                    <span className="text-sm text-gray-400 font-normal">{lang === "BS" ? "Uređivanje i termini" : "Styling and appointments"}</span>
                   </button>
                 </div>
               </div>
@@ -278,28 +278,28 @@ export default function Home() {
                       setIsDropdownOpen(false); 
                       window.scrollTo(0, 0);
                     }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition text-sm cursor-pointer flex items-center gap-2 text-gray-300"
+                    className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition text-sm cursor-pointer flex items-center gap-2 text-gray-300"
                   >
                     ← {lang === "BS" ? "Nazad na kategorije" : "Back to categories"}
                   </button>
 
                   <button
                     onClick={() => setIsManageModalOpen(true)}
-                    className="px-4 py-2 bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/20 text-blue-400 rounded-xl text-sm font-semibold transition cursor-pointer flex items-center gap-2"
+                    className="px-5 py-2.5 bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/20 text-blue-400 rounded-xl text-sm font-semibold transition cursor-pointer flex items-center gap-2"
                   >
                     📅 {lang === "BS" ? "Moji zakazani termini" : "My Appointments"}
                   </button>
                 </div>
 
-                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
+                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-10 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
                   <div>
-                    <h2 className="text-3xl font-bold capitalize mb-2 text-white">
+                    <h2 className="text-3xl md:text-4xl font-bold capitalize mb-2 text-white">
                       {selectedCategory === 'autopraonice' && (lang === "BS" ? "Dubinsko čišćenje & Autopraonice" : "Deep Cleaning & Car Wash")}
                       {selectedCategory === 'restorani' && (lang === "BS" ? "Restorani i Kafići" : "Restaurants & Cafes")}
                       {selectedCategory === 'vile' && (lang === "BS" ? "Vile s bazenom i Vikendice" : "Villas & Cottages")}
                       {selectedCategory === 'frizerski' && (lang === "BS" ? "Frizerski i Saloni Ljepote" : "Barbers & Salons")}
                     </h2>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-gray-400 text-base">
                       {lang === "BS" ? "Pregledaj dostupne partnere i filtriraj po lokaciji." : "Browse available partners and filter by location."}
                     </p>
                   </div>
@@ -312,7 +312,7 @@ export default function Home() {
                     <div className="relative">
                       <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="bg-[#0b1329] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 flex items-center justify-between gap-6 focus:outline-none focus:border-blue-500 transition cursor-pointer min-w-[200px]"
+                        className="bg-[#0b1329] border border-white/10 text-white text-sm rounded-xl px-5 py-3 flex items-center justify-between gap-6 focus:outline-none focus:border-blue-500 transition cursor-pointer min-w-[220px]"
                       >
                         <span>
                           {selectedCity === "all" 
@@ -326,7 +326,7 @@ export default function Home() {
                         <div className="absolute right-0 mt-2 w-full bg-[#0b1329] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
                           <button
                             onClick={() => { setSelectedCity("all"); setIsDropdownOpen(false); }}
-                            className={`w-full text-left px-4 py-2.5 text-sm transition hover:bg-white/5 cursor-pointer flex items-center gap-2 ${
+                            className={`w-full text-left px-4 py-3 text-sm transition hover:bg-white/5 cursor-pointer flex items-center gap-2 ${
                               selectedCity === "all" ? "text-blue-400 font-semibold bg-white/5" : "text-gray-300"
                             }`}
                           >
@@ -336,7 +336,7 @@ export default function Home() {
                             <button
                               key={city.id}
                               onClick={() => { setSelectedCity(city.id); setIsDropdownOpen(false); }}
-                              className={`w-full text-left px-4 py-2.5 text-sm transition hover:bg-white/5 cursor-pointer flex items-center gap-2 ${
+                              className={`w-full text-left px-4 py-3 text-sm transition hover:bg-white/5 cursor-pointer flex items-center gap-2 ${
                                 selectedCity === city.id ? "text-blue-400 font-semibold bg-white/5" : "text-gray-300"
                               }`}
                             >
@@ -349,33 +349,33 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {selectedCategory === 'autopraonice' && (selectedCity === 'all' || selectedCity === 'mostar') ? (
-                    <div className="p-6 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex flex-col justify-between">
+                    <div className="p-8 md:p-10 bg-blue-500/10 border border-blue-500/20 rounded-3xl flex flex-col justify-between">
                       <div>
-                        <div className="flex justify-between items-center mb-3">
-                          <h3 className="text-lg font-semibold text-blue-400">🚗 Dubinsko Ćatić</h3>
-                          <span className="text-xs bg-blue-500/20 border border-blue-500/30 px-2.5 py-1 rounded-full text-blue-300">Mostar</span>
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-xl md:text-2xl font-semibold text-blue-400">🚗 Dubinsko Ćatić</h3>
+                          <span className="text-xs bg-blue-500/20 border border-blue-500/30 px-3 py-1 rounded-full text-blue-300">Mostar</span>
                         </div>
-                        <p className="text-sm text-gray-300 mb-4">
+                        <p className="text-base text-gray-300 mb-6">
                           {lang === "BS" 
                             ? "Profesionalno pranje, dubinsko čišćenje automobila, sjedišta i namještaja uz izbor paketa i zakazivanje termina." 
                             : "Professional car wash, deep cleaning of seats and furniture with package selection and scheduling."}
                         </p>
                         
-                        <div className="flex items-center gap-2 mb-6 text-xs text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl w-fit">
+                        <div className="flex items-center gap-2 mb-8 text-sm text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-2xl w-fit">
                           <span>🏷️ Basic: 20-25 KM | Premium: 120-150 KM</span>
                         </div>
                       </div>
                       <button 
                         onClick={() => setIsBookingOpen(true)}
-                        className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition cursor-pointer text-center shadow-lg shadow-blue-600/20"
+                        className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl text-base transition cursor-pointer text-center shadow-lg shadow-blue-600/20"
                       >
                         {lang === "BS" ? "Zakaži termin" : "Book appointment"}
                       </button>
                     </div>
                   ) : (
-                    <div className="col-span-full text-gray-500 italic py-12 text-center bg-white/[0.01] border border-white/5 rounded-2xl">
+                    <div className="col-span-full text-gray-500 italic py-16 text-center bg-white/[0.01] border border-white/5 rounded-3xl text-base">
                       {lang === "BS" ? "Nema pronađenih biznisa za izabrani grad..." : "No businesses found for the selected city..."}
                     </div>
                   )}

@@ -47,7 +47,7 @@ export default function Home() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
-  const [clientEmail, setClientEmail] = useState(""); // Dodat email za zakazivanje
+  const [clientEmail, setClientEmail] = useState("");
   const [clientCar, setClientCar] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
@@ -169,7 +169,7 @@ export default function Home() {
         body: JSON.stringify({
           name: clientName,
           phone: clientPhone,
-          email: clientEmail, // Slanje unesenog emaila za Resend i Telegram
+          email: clientEmail,
           package: `Dubinsko Ćatić - ${packageNameText}`,
           message: `📅 Datum: ${selectedDate} | ⏰ Vrijeme: ${selectedTimeSlot} | 🚗 Vozilo: ${clientCar || "Nije navedeno"}`
         })
@@ -220,9 +220,36 @@ export default function Home() {
     }, 2500);
   };
 
-  const handleCancelAppointment = (id: number) => {
-    setMyAppointments(prev => prev.filter(app => app.id !== id));
-    alert(lang === "BS" ? "Termin je uspješno otkazan." : "Appointment successfully cancelled.");
+  const handleCancelAppointment = async (app: any) => {
+    try {
+      await fetch('/api/cancel-appointment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: app.name,
+          email: app.email,
+          date: app.date,
+          time: app.time,
+          service: app.packageName
+        })
+      });
+
+      // 1. Ukloni iz sesije
+      setMyAppointments(prev => prev.filter(item => item.id !== app.id));
+
+      // 2. Vrati termin u slobodne (odblokiraj u kalendaru)
+      const dayBookings = bookedSlots[app.date] || [];
+      const newDayBookings = dayBookings.filter(slot => slot !== app.time);
+      
+      setBookedSlots({
+        ...bookedSlots,
+        [app.date]: newDayBookings
+      });
+
+      alert(lang === "BS" ? "Termin je uspješno otkazan i vraćen u slobodne." : "Appointment successfully cancelled and freed up.");
+    } catch (error) {
+      console.error("Greška pri otkazivanju:", error);
+    }
   };
 
   return (
@@ -846,7 +873,7 @@ export default function Home() {
                     </div>
 
                     <button
-                      onClick={() => handleCancelAppointment(app.id)}
+                      onClick={() => handleCancelAppointment(app)}
                       className="self-end px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-xs font-semibold transition cursor-pointer"
                     >
                       {lang === "BS" ? "Otkaži termin" : "Cancel appointment"}

@@ -27,19 +27,19 @@ export default function Comparison({ t }: { t?: any }) {
             <ul className="space-y-4 text-gray-400 text-sm md:text-base">
               <li className="flex items-start gap-3">
                 <span className="text-red-400 font-bold mt-0.5">✕</span>
-                <span>{t?.old1 || "Poruke u 23:00 ostaju nepročitane, klijent ujutro odustane i ode kod konkurencije."}</span>
+                <span>{t?.old1 || "Poruke kasno navečer ostanu nepročitane, klijent ujutro odustane i ode kod konkurencije."}</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-red-400 font-bold mt-0.5">✕</span>
-                <span>{t?.old2 || "Vječito kuckanje iste cijene, lokacije i slobodnih termina po sto puta dnevno."}</span>
+                <span>{t?.old2 || "Vječito kuckanje iste cijene i uslova dok su ti ruke mokre i radiš na terenu."}</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-red-400 font-bold mt-0.5">✕</span>
-                <span>{t?.old3 || "Dupla rezervacija istog termina jer se zaboravilo upisati u svesku ili Excel."}</span>
+                <span>{t?.old3 || "Zaboravi se ko je zvao i šta je tražio, jer se sve bilježi na papiriće ili u glavu."}</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-red-400 font-bold mt-0.5">✕</span>
-                <span>{t?.old4 || "Zveči telefon dok si na terenu ili odmaraš s porodicom."}</span>
+                <span>{t?.old4 || "Zveči telefon dok odmaraš s porodicom ili vodiš poslove radione."}</span>
               </li>
             </ul>
           </div>
@@ -55,19 +55,19 @@ export default function Comparison({ t }: { t?: any }) {
             <ul className="space-y-4 text-gray-300 text-sm md:text-base">
               <li className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold mt-0.5">✓</span>
-                <span>{t?.new1 || "Instant odgovor u sekundi, bez obzira je li 3 ujutro ili subota popodne."}</span>
+                <span>{t?.new1 || "Trenutni odgovor klijentu u bilo koje doba dana i noći, bez propuštenih upita."}</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold mt-0.5">✓</span>
-                <span>{t?.new2 || "Jaran samostalno vodi razgovor prema tvojoj bazi znanja i cjenovniku."}</span>
+                <span>{t?.new2 || "Sistem automatski preuzima podatke, a tvoj tim preuzima klijente i rješava detalje."}</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold mt-0.5">✓</span>
-                <span>{t?.new3 || "Termin se automatski upisuje u kalendar, a tebi stiže čista notifikacija."}</span>
+                <span>{t?.new3 || "Sve rezervacije i upiti stižu direktno u kalendar i na Telegram obavijest."}</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold mt-0.5">✓</span>
-                <span>{t?.new4 || "Ti imaš punu kontrolu i slobodno vrijeme za ono što je stvarno bitno."}</span>
+                <span>{t?.new4 || "Ti imaš čist pregled poslovanja i mirnu glavu dok sistem radi za tebe."}</span>
               </li>
             </ul>
           </div>

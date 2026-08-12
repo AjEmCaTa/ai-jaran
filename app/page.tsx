@@ -28,6 +28,13 @@ export default function Home() {
   const [selectedPlan, setSelectedPlan] = useState("Opšta pitanja / Konsultacije");
   const [heroKey, setHeroKey] = useState(0);
 
+  // Stanja za prijavu novog biznisa u katalog (slobodan opis)
+  const [isRegisterBusinessOpen, setIsRegisterBusinessOpen] = useState(false);
+  const [regBizName, setRegBizName] = useState("");
+  const [regBizPhone, setRegBizPhone] = useState("");
+  const [regBizDesc, setRegBizDesc] = useState("");
+  const [regBizSuccess, setRegBizSuccess] = useState(false);
+
   // Stanja za rezervacije
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<"basic" | "premium">("basic");
@@ -116,6 +123,36 @@ export default function Home() {
     return false;
   };
 
+  const handleRegisterBusiness = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regBizName || !regBizPhone) return;
+
+    try {
+      await fetch('/api/send-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: regBizName,
+          phone: regBizPhone,
+          email: "Prijava novog biznisa u katalog",
+          package: `Katalog Partner (Slobodan opis)`,
+          message: `🚀 Novi zahtjev za katalog!\nNaziv: ${regBizName}\nTelefon: ${regBizPhone}\nOpis biznisa: ${regBizDesc || "Nije uneseno"}`
+        })
+      });
+    } catch (error) {
+      console.error("Greška pri slanju na Telegram:", error);
+    }
+
+    setRegBizSuccess(true);
+    setTimeout(() => {
+      setRegBizSuccess(false);
+      setIsRegisterBusinessOpen(false);
+      setRegBizName("");
+      setRegBizPhone("");
+      setRegBizDesc("");
+    }, 2500);
+  };
+
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTimeSlot || !clientName || !clientPhone) return;
@@ -188,7 +225,6 @@ export default function Home() {
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       
-      {/* TOTALNO UKLANJANJE POZADINSKOG GRIDA KADA JE KATALOG OTVOREN */}
       {isCatalogOpen ? null : <Background />}
 
       <Navbar 
@@ -209,7 +245,6 @@ export default function Home() {
         }}
       />
 
-      {/* AKO JE KATALOG OTVOREN */}
       {isCatalogOpen ? (
         <div className="pt-28 pb-16 px-6 md:px-12 w-full min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0b1633] via-[#030712] to-[#030712] relative z-20">
           <div className="max-w-6xl md:max-w-7xl mx-auto">
@@ -218,9 +253,28 @@ export default function Home() {
                 <h1 className="text-3xl md:text-5xl font-extrabold mb-4 text-center tracking-tight">
                   {lang === "BS" ? "Katalog Biznisa" : "Business Directory"}
                 </h1>
-                <p className="text-gray-400 mb-12 text-center max-w-xl text-base md:text-lg">
+                <p className="text-gray-400 mb-8 text-center max-w-xl text-base md:text-lg">
                   {lang === "BS" ? "Izaberi nišu i istraži aktivne partnere i usluge." : "Choose a niche and explore active partners and services."}
                 </p>
+
+                <div className="mb-12 w-full max-w-4xl bg-gradient-to-r from-blue-900/30 via-indigo-900/30 to-blue-900/30 border border-blue-500/30 rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      {lang === "BS" ? "🚀 Želiš svoj biznis u našem katalogu?" : "🚀 Want your business in our directory?"}
+                    </h3>
+                    <p className="text-gray-300 text-sm max-w-xl">
+                      {lang === "BS" 
+                        ? "Bilo čime da se baviš, predstavi svoj biznis pred hiljadama novih klijenata uz AI sistem za rezervacije. Prijavi se ispod!"
+                        : "No matter your industry, feature your business to thousands of new clients with AI booking. Register below!"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsRegisterBusinessOpen(true)}
+                    className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition shadow-lg shadow-blue-600/30 cursor-pointer shrink-0"
+                  >
+                    {lang === "BS" ? "Prijavi svoj biznis" : "Register Business"}
+                  </button>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
                   <button 
@@ -389,7 +443,13 @@ export default function Home() {
           <Hero 
             t={t.hero}
             animationKey={heroKey}
+            lang={lang}
             onStartFree={() => openContact("Jaran Starter (50 KM/mj)")}
+            onCatalogJoin={() => {
+              setIsCatalogOpen(true);
+              setSelectedCategory(null);
+              setSelectedCity("all");
+            }}
             onHowItWorks={() => {
               document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
             }}
@@ -407,7 +467,6 @@ export default function Home() {
         </>
       )}
 
-      {/* LEBDEĆE DUGME ZA KATALOG U DONJEM DESNOM UGLU */}
       {!isCatalogOpen && (
         <button
           onClick={() => {
@@ -422,7 +481,90 @@ export default function Home() {
         </button>
       )}
 
-      {/* MODAL ZA KALENDAR I ZAKAZIVANJE */}
+      {isRegisterBusinessOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0b1329] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative">
+            <button 
+              onClick={() => setIsRegisterBusinessOpen(false)}
+              className="absolute top-5 right-5 text-gray-400 hover:text-white cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-xl font-bold mb-1 text-white">
+              {lang === "BS" ? "Prijavi svoj biznis u katalog" : "Register Business in Directory"}
+            </h3>
+            <p className="text-xs text-gray-400 mb-6">
+              {lang === "BS" ? "opiši svoj biznis svojim riječima, a naš tim će te kontaktirati." : "Describe your business in your own words, and our team will contact you."}
+            </p>
+
+            {regBizSuccess ? (
+              <div className="py-12 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center text-2xl mb-4">
+                  ✓
+                </div>
+                <h4 className="text-lg font-bold text-white mb-1">
+                  {lang === "BS" ? "Prijava uspješno poslana!" : "Registration Successfully Sent!"}
+                </h4>
+                <p className="text-sm text-gray-400">
+                  {lang === "BS" ? "Uskoro te kontaktiramo." : "We will contact you soon."}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleRegisterBusiness} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-gray-300 font-medium">
+                    {lang === "BS" ? "Naziv biznisa:" : "Business Name:"}
+                  </label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder={lang === "BS" ? "Npr. Autopraonica / Salon / Vila" : "E.g. Car Wash / Salon / Villa"}
+                    value={regBizName}
+                    onChange={(e) => setRegBizName(e.target.value)}
+                    className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-gray-300 font-medium">
+                    {lang === "BS" ? "Broj telefona (Viber):" : "Phone Number:"}
+                  </label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="+387 61..."
+                    value={regBizPhone}
+                    onChange={(e) => setRegBizPhone(e.target.value)}
+                    className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-gray-300 font-medium">
+                    {lang === "BS" ? "Opiši svoj biznis (usluge, lokacija...):" : "Describe your business (services, location...):"}
+                  </label>
+                  <textarea 
+                    rows={3}
+                    placeholder={lang === "BS" ? "Npr. Bavimo se... Nalazimo se u..." : "E.g. We provide... Located in..."}
+                    value={regBizDesc}
+                    onChange={(e) => setRegBizDesc(e.target.value)}
+                    className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-blue-600/30 cursor-pointer mt-2"
+                >
+                  {lang === "BS" ? "Pošalji prijavu za katalog" : "Submit Directory Request"}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {isBookingOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#0b1329] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -455,7 +597,6 @@ export default function Home() {
             ) : (
               <form onSubmit={handleConfirmBooking} className="flex flex-col gap-5">
                 
-                {/* IZBOR PAKETA */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-gray-300 font-medium">
                     {lang === "BS" ? "Izaberi paket usluge:" : "Select service package:"}
@@ -491,10 +632,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* WINDOWS STYLE KALENDAR MREŽA (GRID) */}
                 <div className="flex flex-col gap-2 bg-[#030712] border border-white/10 rounded-2xl p-4">
                   
-                  {/* Zaglavlje kalendara */}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-bold capitalize text-white">
                       {monthNames[currentMonth]} {currentYear}
@@ -517,7 +656,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Dani u sedmici */}
                   <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-gray-400 mb-1">
                     <span>po</span>
                     <span>ut</span>
@@ -528,7 +666,6 @@ export default function Home() {
                     <span>ne</span>
                   </div>
 
-                  {/* Dani u mjesecu */}
                   <div className="grid grid-cols-7 gap-1 text-center text-xs">
                     {Array.from({ length: getFirstDayOfMonth(currentYear, currentMonth) }).map((_, index) => (
                       <div key={`empty-${index}`} />
@@ -564,7 +701,6 @@ export default function Home() {
                   {lang === "BS" ? "Izabrani datum:" : "Selected date:"} <span className="font-bold text-white">{selectedDate}</span>
                 </div>
 
-                {/* Izbor sata */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-gray-300 font-medium">
                     {lang === "BS" ? "Slobodni termini (sati):" : "Available time slots:"}
@@ -595,7 +731,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Podaci o klijentu */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs text-gray-300 font-medium">
@@ -656,7 +791,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL ZA PREGLED I OTKAZIVANJE TERMINA */}
       {isManageModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#090d16] border border-white/10 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative max-h-[80vh] overflow-y-auto">

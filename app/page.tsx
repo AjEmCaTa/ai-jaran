@@ -47,6 +47,7 @@ export default function Home() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [clientEmail, setClientEmail] = useState(""); // Dodat email za zakazivanje
   const [clientCar, setClientCar] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
@@ -155,7 +156,7 @@ export default function Home() {
 
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTimeSlot || !clientName || !clientPhone) return;
+    if (!selectedTimeSlot || !clientName || !clientPhone || !clientEmail) return;
 
     const packageNameText = selectedPackage === "basic" 
       ? (lang === "BS" ? "Basic Pranje (20-25 KM)" : "Basic Wash (20-25 KM)")
@@ -168,13 +169,13 @@ export default function Home() {
         body: JSON.stringify({
           name: clientName,
           phone: clientPhone,
-          email: "Zakazivanje termina kroz katalog",
+          email: clientEmail, // Slanje unesenog emaila za Resend i Telegram
           package: `Dubinsko Ćatić - ${packageNameText}`,
           message: `📅 Datum: ${selectedDate} | ⏰ Vrijeme: ${selectedTimeSlot} | 🚗 Vozilo: ${clientCar || "Nije navedeno"}`
         })
       });
     } catch (error) {
-      console.error("Greška pri slanju na Telegram:", error);
+      console.error("Greška pri slanju:", error);
     }
 
     const currentDayBookings = bookedSlots[selectedDate] || [];
@@ -202,6 +203,7 @@ export default function Home() {
       time: selectedTimeSlot,
       name: clientName,
       phone: clientPhone,
+      email: clientEmail,
       car: clientCar
     };
     setMyAppointments(prev => [...prev, newAppointment]);
@@ -213,6 +215,7 @@ export default function Home() {
       setSelectedTimeSlot(null);
       setClientName("");
       setClientPhone("");
+      setClientEmail("");
       setClientCar("");
     }, 2500);
   };
@@ -519,7 +522,7 @@ export default function Home() {
                   <input 
                     type="text"
                     required
-                    placeholder={lang === "BS" ? "Npr. Autopraonica / Salon / Vila" : "E.g. Car Wash / Salon / Villa"}
+                    placeholder=""
                     value={regBizName}
                     onChange={(e) => setRegBizName(e.target.value)}
                     className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
@@ -533,7 +536,7 @@ export default function Home() {
                   <input 
                     type="text"
                     required
-                    placeholder="+387 61..."
+                    placeholder=""
                     value={regBizPhone}
                     onChange={(e) => setRegBizPhone(e.target.value)}
                     className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
@@ -546,7 +549,7 @@ export default function Home() {
                   </label>
                   <textarea 
                     rows={3}
-                    placeholder={lang === "BS" ? "Npr. Bavimo se... Nalazimo se u..." : "E.g. We provide... Located in..."}
+                    placeholder=""
                     value={regBizDesc}
                     onChange={(e) => setRegBizDesc(e.target.value)}
                     className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 resize-none"
@@ -739,7 +742,7 @@ export default function Home() {
                     <input 
                       type="text"
                       required
-                      placeholder="Harun Ćatić"
+                      placeholder=""
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
                       className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
@@ -753,7 +756,7 @@ export default function Home() {
                     <input 
                       type="text"
                       required
-                      placeholder="+387 61..."
+                      placeholder=""
                       value={clientPhone}
                       onChange={(e) => setClientPhone(e.target.value)}
                       className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
@@ -763,11 +766,25 @@ export default function Home() {
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-gray-300 font-medium">
+                    {lang === "BS" ? "E-mail adresa (obavezno za potvrdu):" : "Email Address (required):"}
+                  </label>
+                  <input 
+                    type="email"
+                    required
+                    placeholder=""
+                    value={clientEmail}
+                    onChange={(e) => setClientEmail(e.target.value)}
+                    className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-gray-300 font-medium">
                     {lang === "BS" ? "Model vozila (opcionalno):" : "Car Model (optional):"}
                   </label>
                   <input 
                     type="text"
-                    placeholder="Golf 5 / Ford C-Max"
+                    placeholder=""
                     value={clientCar}
                     onChange={(e) => setClientCar(e.target.value)}
                     className="bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
@@ -820,7 +837,7 @@ export default function Home() {
                       <div>
                         <h4 className="font-semibold text-blue-400 text-sm">{app.service} ({app.city})</h4>
                         <p className="text-xs text-emerald-400 font-medium mt-0.5">{app.packageName}</p>
-                        <p className="text-xs text-gray-300 mt-1">👤 {app.name} | 📞 {app.phone}</p>
+                        <p className="text-xs text-gray-300 mt-1">👤 {app.name} | 📞 {app.phone} | ✉️ {app.email}</p>
                         {app.car && <p className="text-xs text-gray-400">🚗 {app.car}</p>}
                       </div>
                       <span className="text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-full border border-blue-500/30">

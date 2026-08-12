@@ -15,7 +15,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Nedostaju Telegram environment varijable na serveru.' }, { status: 500 });
     }
 
-    // 1. Slanje na Telegram (tvoj stari kod)
+    // 1. Slanje na Telegram (uvijek ide)
     const telegramMessage = `Novi zahtjev sa platforme:\n\nIme / Firma: ${name || 'Nije uneseno'}\nEmail: ${email || 'Nije unesen'}\nTelefon: ${phone || 'Nije unesen'}\nPaket: ${selectedPackage || 'Nije izabran'}\nPoruka: ${message || 'Nema poruke'}`;
 
     const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`;
@@ -35,25 +35,25 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: `Telegram Error: ${telegramData.description || 'Nepoznata greška'}` }, { status: 500 });
     }
 
-    // 2. Slanje maila preko Resenda sa tvoje aijaran.ba domene
-    try {
-      await resend.emails.send({
-        from: 'AI Jaran <info@aijaran.ba>',
-        to: [email, 'caticharun126@gmail.com'], // Šalje potvrdu klijentu i tebi kopiju
-        subject: 'Uspješno zaprimljen zahtjev – AI Jaran',
-        html: `
-          <div style="font-family: Arial, sans-serif; color: #333;">
-            <h2>Pozdrav ${name || 'korisniče'},</h2>
-            <p>Hvala ti što si kontaktirao AI Jaran! Uspješno smo zaprimili tvoj upit.</p>
-            <p><strong>Izabrani paket:</strong> ${selectedPackage || 'Nije izabran'}</p>
-            <p><strong>Tvoja poruka:</strong> ${message || 'Nema poruke'}</p>
-            <p>Uskoro ćemo te kontaktirati.</p>
-          </div>
-        `,
-      });
-    } catch (emailError) {
-      console.error('Greška pri slanju emaila:', emailError);
-      // Nećemo rušiti cijeli zahtjev ako mail pukne, Telegram je već prošao
+    // 2. Slanje emaila preko Resenda - SAMO ako je klijent unio email adresu!
+    if (email && email.trim() !== '') {
+      try {
+        await resend.emails.send({
+          from: 'AI Jaran <info@aijaran.ba>',
+          to: [email, 'caticharun126@gmail.com'],
+          subject: 'Potvrda upita – AI Jaran',
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333;">
+              <h2>Pozdrav ${name || 'korisniče'},</h2>
+              <p>Hvala što si kontaktirao AI Jaran. Primili smo tvoj upit:</p>
+              <p><strong>Poruka:</strong> ${message || 'Nema poruke'}</p>
+              <p>Javićemo ti se u najkraćem roku.</p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error('Greška pri slanju emaila:', emailError);
+      }
     }
 
     return NextResponse.json({ success: true });

@@ -41,7 +41,6 @@ export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, bran
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5">
-      {/* w-full i px-8 osiguravaju da ide od skroz lijevog do skroz desnog ruba ekrana */}
       <div className="w-full px-8 h-24 flex items-center justify-between">
         
         {/* LOGO - SKROZ LIJEVO */}
@@ -134,20 +133,27 @@ export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, bran
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 text-white focus:outline-none cursor-pointer"
+            className="w-10 h-10 flex items-center justify-center text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none cursor-pointer transition-colors hover:bg-white/10"
+            aria-label="Toggle Menu"
           >
-            <div className="w-6 h-5 flex flex-col justify-between items-center">
-              <span className={`w-full h-0.5 bg-white transition-transform duration-300 ${isOpen ? "rotate-45 translate-y-2" : ""}`} />
-              <span className={`w-full h-0.5 bg-white transition-opacity duration-300 ${isOpen ? "opacity-0" : ""}`} />
-              <span className={`w-full h-0.5 bg-white transition-transform duration-300 ${isOpen ? "-rotate-45 -translate-y-2" : ""}`} />
-            </div>
+            {isOpen ? (
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <div className="w-5 h-4 flex flex-col justify-between items-center">
+                <span className="w-full h-0.5 bg-white rounded-full" />
+                <span className="w-full h-0.5 bg-white rounded-full" />
+                <span className="w-full h-0.5 bg-white rounded-full" />
+              </div>
+            )}
           </button>
         </div>
       </div>
 
       {/* Mobilni Meni */}
       {isOpen && (
-        <div className="md:hidden bg-[#030712] border-b border-white/5 px-8 py-6 flex flex-col gap-6 shadow-2xl">
+        <div className="md:hidden bg-[#030712] border-b border-white/5 px-8 py-6 flex flex-col gap-6 shadow-2xl animate-fade-in">
           {navLinks.map((item) => (
             <a 
               key={item.name} 

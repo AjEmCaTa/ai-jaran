@@ -50,6 +50,7 @@ export default function Home() {
   const [clientEmail, setClientEmail] = useState("");
   const [clientCar, setClientCar] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
 
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const [myAppointments, setMyAppointments] = useState<any[]>([]);
@@ -246,7 +247,10 @@ export default function Home() {
         [app.date]: newDayBookings
       });
 
-      alert(lang === "BS" ? "Termin je uspješno otkazan i vraćen u slobodne." : "Appointment successfully cancelled and freed up.");
+      setCancelSuccess(true);
+      setTimeout(() => {
+        setCancelSuccess(false);
+      }, 2500);
     } catch (error) {
       console.error("Greška pri otkazivanju:", error);
     }
@@ -831,6 +835,26 @@ export default function Home() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {cancelSuccess && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0b1329] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative">
+            <div className="py-12 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 bg-red-500/20 border border-red-500 text-red-400 rounded-full flex items-center justify-center text-2xl mb-4">
+                ✓
+              </div>
+              <h4 className="text-lg font-bold text-white mb-1">
+                {lang === "BS" ? "Termin otkazan!" : "Appointment Cancelled!"}
+              </h4>
+              <p className="text-sm text-gray-400">
+                {lang === "BS"
+                  ? "Termin je ponovo dostupan za rezervaciju."
+                  : "The appointment is available for booking again."}
+              </p>
+            </div>
           </div>
         </div>
       )}

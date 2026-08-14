@@ -40,9 +40,16 @@ export default function Home() {
   const [selectedPackage, setSelectedPackage] = useState<"basic" | "premium">("basic");
   
   // Današnji datum inicijalno
-  const [currentYear, setCurrentYear] = useState<number>(2026);
-  const [currentMonth, setCurrentMonth] = useState<number>(7);
-  const [selectedDate, setSelectedDate] = useState<string>("2026-08-07");
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDay = String(today.getDate()).padStart(2, "0");
+  const todayMonthFormatted = String(todayMonth + 1).padStart(2, "0");
+  const todayDateString = `${todayYear}-${todayMonthFormatted}-${todayDay}`;
+
+  const [currentYear, setCurrentYear] = useState<number>(todayYear);
+  const [currentMonth, setCurrentMonth] = useState<number>(todayMonth);
+  const [selectedDate, setSelectedDate] = useState<string>(todayDateString);
 
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [clientName, setClientName] = useState("");
@@ -80,6 +87,16 @@ export default function Home() {
     "januar", "februar", "mart", "april", "maj", "juni", 
     "juli", "avgust", "septembar", "oktobar", "novembar", "decembar"
   ];
+
+  // Prikaz datuma po našem formatu DD.MM.YYYY.
+  // Za API i Google Calendar ostavljamo interni format YYYY-MM-DD.
+  const formatDateBS = (dateString: string) => {
+    const parts = dateString.split("-");
+    if (parts.length !== 3) return dateString;
+
+    const [year, month, day] = parts;
+    return `${day}.${month}.${year}.`;
+  };
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -172,7 +189,7 @@ export default function Home() {
           phone: clientPhone,
           email: clientEmail,
           package: `Dubinsko Ćatić - ${packageNameText}`,
-          message: `📅 Datum: ${selectedDate} | ⏰ Vrijeme: ${selectedTimeSlot} | 🚗 Vozilo: ${clientCar || "Nije navedeno"}`
+          message: `📅 Datum: ${formatDateBS(selectedDate)} | ⏰ Vrijeme: ${selectedTimeSlot} | 🚗 Vozilo: ${clientCar || "Nije navedeno"}`
         })
       });
     } catch (error) {
@@ -732,7 +749,7 @@ export default function Home() {
                 </div>
 
                 <div className="text-xs text-blue-400 font-medium text-center">
-                  {lang === "BS" ? "Izabrani datum:" : "Selected date:"} <span className="font-bold text-white">{selectedDate}</span>
+                  {lang === "BS" ? "Izabrani datum:" : "Selected date:"} <span className="font-bold text-white">{formatDateBS(selectedDate)}</span>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -892,7 +909,7 @@ export default function Home() {
                         {app.car && <p className="text-xs text-gray-400">🚗 {app.car}</p>}
                       </div>
                       <span className="text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-full border border-blue-500/30">
-                        {app.date} u {app.time}
+                        {formatDateBS(app.date)} u {app.time}
                       </span>
                     </div>
 

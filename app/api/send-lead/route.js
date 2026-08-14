@@ -38,7 +38,6 @@ export async function POST(request) {
     // 2. Slanje emaila preko Resenda - SAMO ako je klijent unio email adresu!
     if (email && email.trim() !== '') {
       try {
-        // Formatiranje datuma ako postoji u poruci (npr. iz YYYY-MM-DD u DD.MM.YYYY)
         let formattedMessage = message || 'Nema poruke';
         const dateMatch = formattedMessage.match(/(\d{4})-(\d{2})-(\d{2})/);
         if (dateMatch) {
@@ -46,7 +45,8 @@ export async function POST(request) {
           formattedMessage = formattedMessage.replace(`${year}-${month}-${day}`, `${day}.${month}.${year}.`);
         }
 
-        await resend.emails.send({
+        const emailResult = await resend.emails.send({
+          // Ako ti na produkciji blokira domenu, ovdje privremeno stavi 'onboarding@resend.dev'
           from: 'Dubinsko Ćatić <info@aijaran.ba>',
           to: [email, 'caticharun126@gmail.com'],
           subject: 'Potvrda rezervacije termina – Dubinsko Ćatić',
@@ -66,8 +66,12 @@ export async function POST(request) {
             </div>
           `,
         });
+
+        console.log('Resend Email Success:', emailResult);
       } catch (emailError) {
         console.error('Greška pri slanju emaila:', emailError);
+        // Da tačno vidimo na Vercelu šta je puklo sa mailom ako se ponovi
+        return NextResponse.json({ success: false, error: `Greška pri slanju emaila: ${emailError.message}` }, { status: 500 });
       }
     }
 

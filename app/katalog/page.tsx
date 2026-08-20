@@ -53,8 +53,7 @@ export default function KatalogPage() {
       <Background />
 
       <Navbar 
-        lang={lang}
-        setLang={setLang}
+        
         brandName="AI Jaran"
         onOpenContact={() => {}} 
         onResetHero={() => {}}

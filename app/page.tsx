@@ -15,8 +15,7 @@ import CookieBanner from "../components/CookieBanner";
 import PrivacyModal from "../components/PrivacyModal";
 
 export default function Home() {
-  const [lang, setLang] = useState<"BS" | "EN">("BS");
-  const t = translations[lang === "BS" ? "bs" : "en"];
+  const t = translations.bs;
 
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
@@ -33,8 +32,6 @@ export default function Home() {
       <Background />
 
       <Navbar 
-        lang={lang}
-        setLang={setLang}
         brandName={t.nav.brandName}
         onOpenContact={() => openContact("Opšta pitanja / Konsultacije")} 
         onResetHero={() => { 
@@ -48,7 +45,6 @@ export default function Home() {
       <Hero 
         t={t.hero}
         animationKey={heroKey}
-        lang={lang}
         onStartFree={() => {
           window.location.href = "/cjenovnik";
         }}
@@ -63,8 +59,8 @@ export default function Home() {
       <Features t={t.features} />
       <Comparison t={t.comparison} />
       
-      {/* Ovdje smo dodali akcije za dugmad */}
       <CTASection 
+        t={t.ctaSection}
         onDemoClick={() => {
           window.location.href = "/cjenovnik";
         }}

@@ -8,7 +8,7 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-gray-950 text-gray-100">
       {/* Sidebar - Tamni meni */}
-      <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col justify-between hidden md:flex">
+      <aside className="w-64 bg-gray-900 border-r border-gray-800 flex-col justify-between hidden md:flex">
         <div>
           {/* Logo */}
           <div className="h-16 flex items-center px-6 border-b border-gray-800">

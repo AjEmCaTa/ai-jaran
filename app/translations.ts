@@ -114,6 +114,12 @@ export const translations = {
         }
       ]
     },
+    ctaSection: {
+      title: "Spremni da vaš biznis radi pametnije?",
+      description: "Pridružite se malim biznisima koji već koriste AI Jaran da bi uštedjeli sate svakog tjedna. Počnite besplatno — bez kreditne kartice.",
+      demoBtn: "Zatraži besplatnu demonstraciju",
+      contactBtn: "Kontaktiraj nas",
+    },
     pricing: {
       titleMain: "Investiraj u svog",
       titleHighlight: "DIGITALNOG RADNIKA",
@@ -132,7 +138,7 @@ export const translations = {
             "Direktno zakazivanje termina bez tvog uplitanja",
             "Telegram obavijesti u realnom vremenu o svakoj rezervaciji",
             "Gotovo i pušteno u rad za 2 do 3 radna dana",
-            "Fleksibilan dogovor i avansno pokretanje izrade",
+            "Fleksibilan dogovor i direktan dogovor saradnje",
           ],
           buttonText: "Zatraži Starter",
           popular: false,
@@ -206,13 +212,15 @@ export const translations = {
     privacy: {
       title: "Politika privatnosti i uslovi saradnje",
       sec1Title: "1. Sigurnost i zaštita vaših podataka",
-      sec1Desc: "Svi podaci koje unesete putem kontakt forme ili demo sistema (poput imena, broja telefona i specifičnosti vašeg biznisa) koriste se isključivo u svrhu uspostavljanja direktne komunikacije i dogovora oko implementacije sistema. Vaši podaci se čuvaju na sigurnom i šifriranom mjestu, proslijeđuju se isključivo nama putem sigurnih kanala (Telegram obavještenja) i nikada se ne ustupaju, ne prodaju niti dijele trećim licima.",
+      sec1Desc: "Svi podaci koje unesete putem kontakt formi ili demo sistema (poput imena, broja telefona i specifičnosti vašeg biznisa) koriste se isključivo u svrhu uspostavljanja direktne komunikacije i dogovora oko implementacije sistema. Vaši podaci se čuvaju na sigurnom i šifrovanom mjestu, proslijeđuju se isključivo nama putem sigurnih kanala (Telegram obavještenja) i nikada se ne ustupaju, ne prodaju niti dijele trećim licima.",
       sec2Title: "2. Kako funkcioniše usluga i realizacija",
       sec2Desc: "AI Jaran pruža rješenja za automatizaciju komunikacije, integraciju kalendara i pametno zakazivanje termina za vaše klijente. Svaki projekat se prilagođava specifičnim potrebama vašeg poslovanja. Nakon što iskažete interesovanje za određeni paket ili rješenje, stupamo u kontakt s vama kako bismo definisali sve detalje prije nego što sistem bude pušten u rad.",
       sec3Title: "3. Cijene, avansno plaćanje i uslovi saradnje",
-      sec3Desc: "Cijene i uslovi implementacije formiraju se fleksibilno u skladu sa zahtjevima i obimom posla dogovorenim sa svakim klijentom posebno. Početak rada na projektu i izrada sistema obično se baziraju na uplati dogovorenog avansa. S obzirom na to da se svaki sistem i AI agent u potpunosti ručno konfigurišu i prilagođavaju vašem biznisu, povrat novca nakon početka realizacije i puštanja u rad nije moguć. Konačni uslovi definišu se direktno kroz konsultacije, uz maksimalnu fer saradnju i bez skrivenih troškova.",
+      sec3Desc: "Cijene i uslovi implementacije formiraju se fleksibilno u skladu sa zahtjevima i obimom posla dogovorenim sa svakim klijentom posebno. Početak rada na projektu i izrada sistema obično se baziraju na uplati dogovorenog avansa. S obzirom na to da se svaki sistem i AI agent u potpunosti ručno konfigurišu i prilagođavaju vašem biznisu, povrat novca nakon početka realizacije i puštanja u rad nije moguć. Konačni uslovi definišu se direktno kroz konsultacije, uz maksimalno fer saradnju i bez skrivenih troškova.",
       sec4Title: "4. Transparentnost i kontakt",
       sec4Desc: "U svakom trenutku možete zatražiti uvid, izmjenu ili brisanje vaših podataka iz naše baze slanjem upita kroz kontakt formu. Tu smo da odgovorimo na svako vaše pitanje i pojednostavimo vaše poslovanje.",
+      sec5Title: "5. Kontakt",
+      sec5Desc: "Za sva pitanja u vezi sa privatnošću, uslovima korištenja ili radom platforme, možete nas kontaktirati direktno putem kontakt forme ili dostupnih komunikacionih kanala.",
       closeBtn: "Razumijem",
     },
     cookie: {
@@ -240,249 +248,6 @@ export const translations = {
       placeholderMessage: "Napiši ako imaš nekih specifičnih želja...",
       loadingBtn: "Slanje...",
       submitBtn: "Pošalji zahtjev jaranu",
-    },
-  },
-  en: {
-    nav: {
-      brandName: "AI Buddy",
-    },
-    hero: {
-      badge: "YOUR NEW DIGITAL WORKER",
-      titleMain: "Meet",
-      titleHighlight: "AI BUDDY",
-      description: "Automate appointment scheduling with an AI worker and feature your business (car wash, villa, salon) in our directory to thousands of new clients.",
-      ctaPrimary: "Try for free 🚀",
-      ctaSecondary: "How it works?",
-      catalogCta: "📦 Add Your Business to Directory",
-    },
-    features: {
-      titleMain: "What does",
-      titleHighlight: "AI BUDDY offer?",
-      items: [
-        {
-          title: "AI Worker 24/7",
-          desc: "Your digital Buddy works without breaks, answering queries and chatting with clients anytime.",
-        },
-        {
-          title: "Smart Bookings",
-          desc: "Clients pick slots, and the system automatically logs them into your calendar, preventing double bookings.",
-        },
-        {
-          title: "Business Directory",
-          desc: "Your business becomes part of an exclusive network where thousands of new clients find and book your services.",
-        },
-        {
-          title: "All Business Categories",
-          desc: "Car washes, villas, restaurants, or salons – the system is fully configured to your specific business needs.",
-        },
-      ],
-    },
-    benefits: {
-      titleMain: "Why choose",
-      titleHighlight: "AI BUDDY?",
-      items: [
-        {
-          title: "Backs you up 24/7",
-          desc: "Works and replies to clients while you rest or handle field work.",
-        },
-        {
-          title: "Speaks like a human",
-          desc: "Natural communication tone and local vibe without any robotic feeling.",
-        },
-        {
-          title: "Instant speed",
-          desc: "Resolves inquiries in seconds, ensuring no potential client is left waiting.",
-        },
-        {
-          title: "Smart bookings",
-          desc: "Automatically schedules appointments and logs them directly into your calendar flawlessly.",
-        },
-      ],
-    },
-    chatDemo: {
-      titleMain: "How",
-      titleHighlight: "AI Buddy",
-      titleSuffix: "works behind the scenes",
-      description: "See how the system automatically handles inquiries, checks availability, and secures bookings without your presence.",
-      steps: [
-        {
-          title: "1. Client sends a message",
-          subtitle: "Instagram DM",
-          content: "Hello! Do you have a free spot for the cottage this Saturday?",
-          badge: "New message received"
-        },
-        {
-          title: "2. AI Buddy processes query",
-          subtitle: "Database & Availability",
-          content: "Checking calendar... Saturday is available! Price is 250 KM.",
-          badge: "AI analyzing database"
-        },
-        {
-          title: "3. Automatic confirmation",
-          subtitle: "Google Calendar & Telegram",
-          content: "Slot successfully booked! Notification sent to owner's Telegram.",
-          badge: "Completed automatically"
-        }
-      ],
-      footerRealtime: "Real-time automation"
-    },
-    comparison: {
-      title: "Main",
-      titleHighlight: "benefits",
-      subtitle: "Discover why small business owners trust AI Buddy for their daily business challenges.",
-      items: [
-        {
-          title: "24/7 Customer Support",
-          desc: "AI Buddy answers your customers' questions anytime, day or night, even while you sleep."
-        },
-        {
-          title: "Time Saving",
-          desc: "Automate tedious administrative tasks and focus on what you do best — growing your business."
-        },
-        {
-          title: "Better Business Decisions",
-          desc: "Get quick analyses, reports, and insights that help you make smarter decisions every day."
-        },
-        {
-          title: "Reliable & Secure",
-          desc: "Your business data is protected. AI Buddy is designed with privacy and security first."
-        },
-        {
-          title: "Easy to Use",
-          desc: "No complicated setups. AI Buddy quickly integrates into the existing tools you already use."
-        },
-        {
-          title: "Tailored for Small Businesses",
-          desc: "We understand small business challenges. AI Buddy is priced and functionally tailored to your needs."
-        }
-      ]
-    },
-    pricing: {
-      titleMain: "Invest in your",
-      titleHighlight: "DIGITAL WORKER",
-      subtitle: "Quick setup and integration with your calendar in just 2 to 3 working days. Terms and scope are agreed upon directly.",
-      popularBadge: "MOST POPULAR PLAN",
-      priceModel: "Partnership model",
-      priceValue: "Upon agreement",
-      plans: [
-        {
-          name: "Starter Buddy",
-          badge: "Small business / Freelancer",
-          description: "Ideal for individuals and small businesses. Buddy takes over Instagram DM, independently negotiates slots, and logs them into your calendar.",
-          features: [
-            "Instagram DM and calendar integration",
-            "24/7 automated inquiry and pricing replies",
-            "Direct appointment booking without your intervention",
-            "Real-time Telegram notifications for every booking",
-            "Ready and launched in 2 to 3 working days",
-            "Flexible agreement and advance start for development",
-          ],
-          buttonText: "Request Starter",
-          popular: false,
-          value: "Starter Buddy (Small business)",
-        },
-        {
-          name: "Business Buddy",
-          badge: "Medium business (2-3 employees)",
-          description: "For salons, services, and multi-service businesses. A more powerful AI system that manages schedules and sends precise notifications to your team.",
-          features: [
-            "Advanced Instagram DM automation",
-            "Smart database with all prices and services",
-            "Team-wide calendar synchronization",
-            "Telegram notifications and detailed booking overview",
-            "Priority setup and configuration (2-3 days)",
-            "Tailored terms and secure partnership agreement",
-          ],
-          buttonText: "Request Business",
-          popular: true,
-          value: "Business Buddy (Medium business)",
-        },
-        {
-          name: "Pro System Buddy",
-          badge: "Larger systems & enterprises",
-          description: "Fully custom solution for higher work volumes, multiple channels, and specific business integrations with your internal tools.",
-          features: [
-            "Multi-channel AI support and custom integrations",
-            "Advanced calendar and database connectivity",
-            "Telegram notification system for the whole team",
-            "Dedicated server for maximum speed and stability",
-            "Long-term technical support and updates",
-            "Individual offer and implementation terms",
-          ],
-          buttonText: "Request Custom Offer",
-          popular: false,
-          value: "Pro System Buddy (Enterprise)",
-        },
-      ],
-    },
-    faq: {
-      title: "Frequently Asked Questions",
-      items: [
-        { 
-          q: "How does AI Buddy learn about my business?", 
-          a: "Your Buddy gets access to your price lists, services, and working hours. Based on that, it automatically replies to clients and coordinates schedules." 
-        },
-        { 
-          q: "Do I have to reply to messages manually?", 
-          a: "No. Buddy independently manages conversations in Instagram DMs, negotiates appointments, and logs them directly into your calendar without your intervention." 
-        },
-        { 
-          q: "What happens when an appointment is booked?", 
-          a: "When a client confirms the slot, Buddy logs it into the calendar, and a clean notification immediately arrives on your phone so you know the exact time." 
-        },
-        { 
-          q: "How long does setup and launch take?", 
-          a: "Complete setup, database training, and calendar integration take between 2 and 3 working days." 
-        },
-        { 
-          q: "What does the monthly subscription include?", 
-          a: "The monthly subscription covers complete system maintenance, 24/7 AI assistant operation, automatic appointment management, and technical support without any hidden costs." 
-        },
-      ],
-    },
-    footer: {
-      rights: "All rights reserved. Developed for modern businesses.",
-      features: "Features",
-      pricing: "Pricing",
-      privacy: "Privacy Policy",
-    },
-    privacy: {
-      title: "Privacy Policy and Terms of Cooperation",
-      sec1Title: "1. Security and Protection of Your Data",
-      sec1Desc: "All data you enter via the contact form or demo system (such as name, phone number, and business specifics) is used exclusively for establishing direct communication and agreeing on system implementation. Your data is stored securely and encrypted, forwarded exclusively to us via secure channels (Telegram notifications), and is never transferred, sold, or shared with third parties.",
-      sec2Title: "2. How the Service and Realization Work",
-      sec2Desc: "AI Buddy provides communication automation solutions, calendar integration, and smart appointment scheduling for your clients. Each project is tailored to the specific needs of your business. After you express interest in a certain package or solution, we contact you to define all details before the system goes live.",
-      sec3Title: "3. Prices, Advance Payment, and Terms of Cooperation",
-      sec3Desc: "Prices and implementation terms are formed flexibly according to the requirements and scope of work agreed upon with each client individually. Work initiation and system development are usually based on the payment of an agreed advance. Given that each system and AI agent are completely manually configured and tailored to your business, refunds after the start of realization and launch are not possible. Final terms are defined directly through consultation, ensuring maximum fair cooperation and no hidden costs.",
-      sec4Title: "4. Transparency and Contact",
-      sec4Desc: "At any time, you can request insight, modification, or deletion of your data from our database by sending an inquiry through the contact form. We are here to answer your every question and simplify your business.",
-      closeBtn: "I Understand",
-    },
-    cookie: {
-      cookieTitle: "Cookie and Privacy Policy",
-      cookieDesc: "We use minimal cookies for site functionality and analytics. Your contact form data is used exclusively for communication and agreements.",
-      cookieBtn: "Accept",
-    },
-    contactModal: {
-      modalTitle: "Hook up your Buddy",
-      modalSubtitle: "Enter your details and our team will contact you shortly to set up the system.",
-      successTitle: "Successfully sent!",
-      successDesc: "Data has been saved and notification has been sent.",
-      labelName: "Name or business name",
-      placeholderName: "E.g. Beauty Salon Ana",
-      labelPhone: "Phone number (WhatsApp/Viber)",
-      placeholderPhone: "E.g. +387 61 123 456",
-      labelEmail: "Email address (optional)",
-      placeholderEmail: "E.g. info@business.com",
-      labelPackage: "Select package",
-      opt1: "Starter Buddy (Small business)",
-      opt2: "Business Buddy (Medium business)",
-      opt3: "Pro System Buddy (Enterprise)",
-      opt4: "I just want to ask something",
-      labelMessage: "Short message (optional)",
-      placeholderMessage: "Write if you have any specific requests...",
-      loadingBtn: "Sending...",
-      submitBtn: "Send request to buddy",
     },
   },
 };

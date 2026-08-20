@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface NavbarProps {
   onOpenContact: () => void;
@@ -24,10 +24,24 @@ export default function Navbar({
 }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/";
 
+  const handleSmoothScroll = (e: React.MouseEvent, targetId: string) => {
+    e.preventDefault();
+    setIsOpen(false);
+    if (!isHome) {
+      router.push(`/${targetId}`);
+    } else {
+      const element = document.querySelector(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/[0.06] bg-[#030712]/75 backdrop-blur-2xl">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/[0.06] bg-[#030712]/75 backdrop-blur-2xl transition-all">
       <div className="mx-auto flex h-[82px] w-full max-w-[1500px] items-center justify-between px-6 sm:px-8 lg:px-12 xl:px-16">
         
         {/* LOGO */}
@@ -64,12 +78,13 @@ export default function Navbar({
             {lang === "BS" ? "Početna" : "Home"}
           </Link>
 
-          <Link
+          <a
             href="/#faq"
+            onClick={(e) => handleSmoothScroll(e, "#faq")}
             className="cursor-pointer text-sm font-medium text-slate-400 transition-colors duration-200 hover:text-white"
           >
             FAQ
-          </Link>
+          </a>
 
           <Link
             href="/cjenovnik"
@@ -84,7 +99,7 @@ export default function Navbar({
               if (isHome && onOpenCatalog) {
                 onOpenCatalog();
               } else {
-                window.location.href = "/?openCatalog=true";
+                router.push("/?openCatalog=true");
               }
             }}
             className="cursor-pointer rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-sm font-semibold text-emerald-400 transition-all duration-300 hover:border-emerald-400/40 hover:bg-emerald-500/10"
@@ -92,7 +107,7 @@ export default function Navbar({
             {lang === "BS" ? "Biznisi" : "Businesses"}
           </button>
 
-          {/* Dashboard / Panel prečica -> Vodi na /prijava */}
+          {/* Dashboard / Panel prečica */}
           <Link
             href="/prijava"
             className="cursor-pointer rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400 transition-all duration-300 hover:bg-blue-500/20"
@@ -137,11 +152,11 @@ export default function Navbar({
         <div className="flex items-center gap-3 md:hidden">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]"
             aria-label="Toggle Menu"
           >
             {isOpen ? (
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
@@ -155,53 +170,62 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* MOBILE MENU DROPDOWN */}
+      {/* MOBILE MENU DROPDOWN - Povećana slova i razmaci */}
       {isOpen && (
-        <div className="border-t border-white/[0.05] bg-[#030712]/95 px-6 py-6 shadow-2xl backdrop-blur-2xl md:hidden">
-          <div className="flex flex-col gap-4">
+        <div className="border-t border-white/[0.05] bg-[#030712]/98 px-6 py-8 shadow-2xl backdrop-blur-2xl md:hidden">
+          <div className="flex flex-col gap-5">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
-              className="text-sm font-medium text-slate-300 hover:text-white"
+              className="text-base font-semibold text-slate-200 hover:text-white"
             >
               {lang === "BS" ? "Početna" : "Home"}
             </Link>
-            <Link
+            
+            <a
               href="/#faq"
-              onClick={() => setIsOpen(false)}
-              className="text-sm font-medium text-slate-300 hover:text-white"
+              onClick={(e) => handleSmoothScroll(e, "#faq")}
+              className="text-base font-semibold text-slate-200 hover:text-white"
             >
               FAQ
-            </Link>
+            </a>
+
             <Link
               href="/cjenovnik"
               onClick={() => setIsOpen(false)}
-              className="text-sm font-medium text-slate-300 hover:text-white"
+              className="text-base font-semibold text-slate-200 hover:text-white"
             >
               {lang === "BS" ? "Cjenovnik" : "Pricing"}
             </Link>
+
             <Link
               href="/prijava"
               onClick={() => setIsOpen(false)}
-              className="text-sm font-semibold text-blue-400 hover:text-blue-300"
+              className="text-base font-bold text-blue-400 hover:text-blue-300"
             >
               {lang === "BS" ? "Moj Panel" : "Dashboard"}
             </Link>
+
             <button
               onClick={() => {
                 setIsOpen(false);
-                onOpenCatalog?.();
+                if (isHome && onOpenCatalog) {
+                  onOpenCatalog();
+                } else {
+                  router.push("/?openCatalog=true");
+                }
               }}
-              className="w-full rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] py-3 text-center font-semibold text-emerald-400"
+              className="w-full rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] py-3.5 text-center text-base font-semibold text-emerald-400"
             >
               {lang === "BS" ? "Katalog Biznisa" : "Business Directory"}
             </button>
+
             <button
               onClick={() => {
                 setIsOpen(false);
                 onOpenContact();
               }}
-              className="w-full rounded-xl bg-blue-600 py-3 text-center font-bold text-white shadow-lg"
+              className="w-full rounded-xl bg-blue-600 py-3.5 text-center text-base font-bold text-white shadow-lg"
             >
               {lang === "BS" ? "Kontakt" : "Contact"}
             </button>

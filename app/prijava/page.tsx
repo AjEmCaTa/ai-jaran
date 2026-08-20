@@ -5,8 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+// Sigurna inicijalizacija sa fallback vrijednostima da Vercel build ne pukne
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function AuthPage() {
@@ -38,9 +39,9 @@ export default function AuthPage() {
           password,
         });
         if (error) throw error;
-        router.push("/dashboard"); // Ili /panel zavisno gdje ti je panel
+        router.push("/dashboard");
       } else {
-        // REGISTRACIJA SA DODATNIM PODACIMA U METADATA
+        // REGISTRACIJA SA DODATNIM PODACIMA
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -109,7 +110,6 @@ export default function AuthPage() {
         )}
 
         <form onSubmit={handleAuth} className="space-y-4">
-          {/* Dodatna polja samo za registraciju */}
           {!isLogin && (
             <>
               <div>

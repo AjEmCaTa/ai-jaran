@@ -17,7 +17,6 @@ interface ContactModalProps {
     placeholderPhone: string;
     labelEmail: string;
     placeholderEmail: string;
-    labelPackage: string;
     labelMessage: string;
     placeholderMessage: string;
     loadingBtn: string;
@@ -28,35 +27,15 @@ interface ContactModalProps {
 export default function ContactModal({
   isOpen,
   onClose,
-  defaultSubject = "Starter (0 KM)",
+  defaultSubject = "Upit sa stranice",
   t,
 }: ContactModalProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState(defaultSubject);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
-  // Prostrane i jasne opcije
-  const packages = [
-    { 
-      id: "Starter (0 KM)", 
-      title: "Starter Paket", 
-      desc: "Besplatno zauvijek (0 KM)" 
-    },
-    { 
-      id: "Pro Paket (50 KM/mj)", 
-      title: "Pro Paket", 
-      desc: "50 KM mjesečno - Full oprema" 
-    },
-    { 
-      id: "Samo pitam", 
-      title: "Samo pitam / Konsultacije", 
-      desc: "Imam pitanje prije odluke" 
-    },
-  ];
 
   if (!isOpen) return null;
 
@@ -73,10 +52,8 @@ export default function ContactModal({
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim(),
-          email:
-            email.trim() ||
-            `${name.replace(/\s+/g, "").toLowerCase()}@aijaran.ba`,
-          package: subject,
+          email: email.trim() || `${name.replace(/\s+/g, "").toLowerCase()}@aijaran.ba`,
+          package: defaultSubject,
           message: message.trim(),
         }),
       });
@@ -112,8 +89,8 @@ export default function ContactModal({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
 
-      {/* Modal Box - Proširen max-w-2xl da bude komotan */}
-      <div className="relative w-full max-w-2xl bg-[#030712] border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl z-10 my-auto">
+      {/* Modal Box */}
+      <div className="relative w-full max-w-xl bg-[#030712] border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl z-10 my-auto">
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-gray-400 hover:text-white p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
@@ -123,11 +100,10 @@ export default function ContactModal({
 
         <div className="mb-6 pr-8">
           <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">
-            {t?.modalTitle || "Uglavi svog Jarana"}
+            {t?.modalTitle || "Javi se svom AI Jaranu"}
           </h3>
           <p className="text-xs md:text-sm text-gray-400">
-            {t?.modalSubtitle ||
-              "Unesi podatke i naš tim će ti se javiti u najkraćem roku za podešavanje sistema."}
+            {t?.modalSubtitle || "Unesi podatke i postavi pitanje. Tu smo da ti pomognemo oko svega!"}
           </p>
         </div>
 
@@ -138,8 +114,7 @@ export default function ContactModal({
               {t?.successTitle || "Uspješno poslano!"}
             </h4>
             <p className="text-sm text-gray-400">
-              {t?.successDesc ||
-                "Podaci su spremljeni, a obavještenje je poslano."}
+              {t?.successDesc || "Poruka je uspješno proslijeđena jaranu."}
             </p>
           </div>
         ) : (
@@ -189,48 +164,17 @@ export default function ContactModal({
               />
             </div>
 
-            {/* Izbor paketa - Široke i udobne kartice */}
+            {/* Poruka / Pitanje */}
             <div>
               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                {t?.labelPackage || "Izaberi paket"}
-              </label>
-              <div className="grid grid-cols-1 gap-2.5">
-                {packages.map((pkg) => (
-                  <button
-                    type="button"
-                    key={pkg.id}
-                    onClick={() => setSubject(pkg.id)}
-                    className={`flex items-center justify-between p-3.5 px-5 rounded-2xl transition-all cursor-pointer border text-left ${
-                      subject === pkg.id
-                        ? "bg-blue-600/10 border-blue-500 text-white shadow-lg shadow-blue-600/20 ring-1 ring-blue-500"
-                        : "bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/5 hover:text-white"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold text-sm text-white">{pkg.title}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">{pkg.desc}</div>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                      subject === pkg.id ? "border-blue-400 bg-blue-600 text-white" : "border-white/20"
-                    }`}>
-                      {subject === pkg.id && <span className="text-[10px]">✓</span>}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Poruka */}
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                {t?.labelMessage || "Kratka poruka (opcionalno)"}
+                {t?.labelMessage || "Tvoje pitanje ili poruka"}
               </label>
               <textarea
                 placeholder={
                   t?.placeholderMessage ||
-                  "Napiši ako imaš nekih specifičnih želja..."
+                  "Samo pitam... Kako ovo tačno funkcioniše za moj biznis?"
                 }
-                rows={2.5}
+                rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="w-full rounded-2xl border border-white/10 bg-white/[0.02] px-4.5 py-3 text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none transition-colors resize-none text-sm"
@@ -245,7 +189,7 @@ export default function ContactModal({
             >
               {loading
                 ? t?.loadingBtn || "Slanje..."
-                : t?.submitBtn || "Pošalji zahtjev jaranu"}
+                : t?.submitBtn || "Pošalji upit jaranu"}
             </button>
           </form>
         )}

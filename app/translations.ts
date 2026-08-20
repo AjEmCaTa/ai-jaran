@@ -84,21 +84,35 @@ export const translations = {
       footerRealtime: "Automatizacija u realnom vremenu"
     },
     comparison: {
-      title: "Razlika koja",
-      titleHighlight: "donosi novac",
-      subtitle: "Pogledaj kako izgleda vođenje posla bez sistema i sa Jaranom u ekipi.",
-      oldBadge: "Stari način (Bez Jarana)",
-      oldTitle: "Gubljenje klijenata i živaca",
-      old1: "Poruke u 23:00 ostaju nepročitane, klijent ujutro odustane i ode kod konkurencije.",
-      old2: "Vječito kuckanje iste cijene, lokacije i slobodnih termina po sto puta dnevno.",
-      old3: "Dupla rezervacija istog termina jer se zaboravilo upisati u svesku ili Excel.",
-      old4: "Zveči telefon dok si na terenu ili odmaraš s porodicom.",
-      newBadge: "Novi način (Sa AI Jaranom)",
-      newTitle: "Automatizovan biznis 24/7",
-      new1: "Instant odgovor u sekundi, bez obzira je li 3 ujutro ili subota popodne.",
-      new2: "Jaran samostalno vodi razgovor prema tvojoj bazi znanja i cjenovniku.",
-      new3: "Termin se automatski upisuje u kalendar, a tebi stiže čista notifikacija.",
-      new4: "Ti imaš punu kontrolu i slobodno vrijeme za ono što je stvarno bitno.",
+      title: "Glavne",
+      titleHighlight: "prednosti",
+      subtitle: "Otkrijte zašto vlasnici malih biznisa i autopraonica vjeruju AI Jaranu za svakodnevne poslovne izazove.",
+      items: [
+        {
+          title: "24/7 korisnička podrška",
+          desc: "AI Jaran odgovara na pitanja vaših kupaca u bilo koje doba dana i noći, čak i kada vi spavate."
+        },
+        {
+          title: "Ušteda vremena",
+          desc: "Automatizirajte dosadne administrativne zadatke i fokusirajte se na ono što najbolje radite — rast vašeg biznisa."
+        },
+        {
+          title: "Bolje poslovne odluke",
+          desc: "Dobijajte brze analize, izvještaje i uvide koji vam pomažu da donosite pametnije odluke svaki dan."
+        },
+        {
+          title: "Pouzdan i siguran",
+          desc: "Vaši poslovni podaci su zaštićeni. AI Jaran je dizajniran s privatnošću i sigurnošću na prvom mjestu."
+        },
+        {
+          title: "Jednostavan za korištenje",
+          desc: "Bez kompliciranih podešavanja. AI Jaran se brzo integrira u postojeće alate koje već koristite."
+        },
+        {
+          title: "Prilagođen malim biznisima",
+          desc: "Razumijemo izazove malih biznisa. AI Jaran je cjenovno i funkcionalno prilagođen vašim potrebama."
+        }
+      ]
     },
     pricing: {
       titleMain: "Investiraj u svog",
@@ -178,8 +192,8 @@ export const translations = {
           a: "Kompletno podešavanje, učenje baze i spajanje sa tvojim kalendarom traje između 2 i 3 radna dana." 
         },
         { 
-          q: "Postoje li ikakvi mjesečni troškovi ili pretplate?", 
-          a: "Ne. Izrada i postavljanje sistema je jednokratna investicija, čime izbjegavaš bilo kakve mjesečne naknade i komplikacije." 
+          q: "Šta sve uključuje mjesečna pretplata?", 
+          a: "Mjesečna pretplata pokriva kompletno održavanje sistema, rad AI asistenta 24/7, automatsko vođenje termina i tehničku podršku bez ikakvih skrivenih troškova." 
         },
       ],
     },
@@ -313,21 +327,35 @@ export const translations = {
       footerRealtime: "Real-time automation"
     },
     comparison: {
-      title: "The difference that",
-      titleHighlight: "brings profit",
-      subtitle: "See what running a business looks like without a system versus having Buddy on your team.",
-      oldBadge: "Old way (Without Buddy)",
-      oldTitle: "Losing clients and nerves",
-      old1: "Messages at 11 PM remain unread, the client gives up in the morning and goes to the competition.",
-      old2: "Constantly typing the same price, location, and available slots a hundred times a day.",
-      old3: "Double booking the same slot because someone forgot to write it down in a notebook or Excel.",
-      old4: "Phone ringing constantly while you're in the field or resting with family.",
-      newBadge: "New way (With AI Buddy)",
-      newTitle: "Automated business 24/7",
-      new1: "Instant reply in seconds, whether it's 3 AM or Saturday afternoon.",
-      new2: "Buddy independently manages the conversation based on your knowledge base and price list.",
-      new3: "Appointments are automatically booked in the calendar, and you receive a clean notification.",
-      new4: "You have full control and free time for what truly matters.",
+      title: "Main",
+      titleHighlight: "benefits",
+      subtitle: "Discover why small business owners trust AI Buddy for their daily business challenges.",
+      items: [
+        {
+          title: "24/7 Customer Support",
+          desc: "AI Buddy answers your customers' questions anytime, day or night, even while you sleep."
+        },
+        {
+          title: "Time Saving",
+          desc: "Automate tedious administrative tasks and focus on what you do best — growing your business."
+        },
+        {
+          title: "Better Business Decisions",
+          desc: "Get quick analyses, reports, and insights that help you make smarter decisions every day."
+        },
+        {
+          title: "Reliable & Secure",
+          desc: "Your business data is protected. AI Buddy is designed with privacy and security first."
+        },
+        {
+          title: "Easy to Use",
+          desc: "No complicated setups. AI Buddy quickly integrates into the existing tools you already use."
+        },
+        {
+          title: "Tailored for Small Businesses",
+          desc: "We understand small business challenges. AI Buddy is priced and functionally tailored to your needs."
+        }
+      ]
     },
     pricing: {
       titleMain: "Invest in your",
@@ -407,8 +435,8 @@ export const translations = {
           a: "Complete setup, database training, and calendar integration take between 2 and 3 working days." 
         },
         { 
-          q: "Are there any monthly fees or subscriptions?", 
-          a: "No. Creating and setting up the system is a one-time investment, avoiding any monthly fees and complications." 
+          q: "What does the monthly subscription include?", 
+          a: "The monthly subscription covers complete system maintenance, 24/7 AI assistant operation, automatic appointment management, and technical support without any hidden costs." 
         },
       ],
     },

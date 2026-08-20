@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
+import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+
     const code = searchParams.get("code");
     const error = searchParams.get("error");
 
@@ -30,11 +32,26 @@ export async function GET(request: Request) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
     if (!clientId || !clientSecret) {
       return NextResponse.json(
         {
           success: false,
-          error: "Nedostaju GOOGLE_CLIENT_ID ili GOOGLE_CLIENT_SECRET.",
+          error:
+            "Nedostaju GOOGLE_CLIENT_ID ili GOOGLE_CLIENT_SECRET.",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Nedostaju NEXT_PUBLIC_SUPABASE_URL ili SUPABASE_SERVICE_ROLE_KEY.",
         },
         { status: 500 }
       );
@@ -56,13 +73,63 @@ export async function GET(request: Request) {
         {
           success: false,
           error:
-            "Google nije vratio refresh token. Potrebno je ponovo odobriti pristup Google Calendaru.",
+            "Google nije vratio refresh token. Ponovo odobri pristup Google Calendaru.",
         },
         { status: 400 }
       );
     }
 
-    console.log("Google Calendar autorizacija uspješna.");
+    const supabase = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
+    /*
+     * AI Jaran trenutno koristi jedan administratorski
+     * Google Calendar.
+     *
+     * Koristimo id = 1 jer je id u Supabase tabeli int8.
+     */
+
+    const { error: saveError } = await supabase
+      .from("google_calendar_tokens")
+      .upsert(
+        {
+          id: 1,
+          access_token: tokens.access_token ?? null,
+          refresh_token: tokens.refresh_token,
+        },
+        {
+          onConflict: "id",
+        }
+      );
+
+    if (saveError) {
+      console.error(
+        "Greška pri spremanju Google Calendar tokena:",
+        saveError
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Google je autorizovan, ali token nije moguće spremiti u bazu.",
+          details: saveError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log(
+      "Google Calendar autorizacija i spremanje tokena uspješni."
+    );
 
     return new NextResponse(
       `
@@ -70,8 +137,12 @@ export async function GET(request: Request) {
         <html lang="bs">
           <head>
             <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1.0"
+            />
             <title>Google Calendar povezan</title>
+
             <style>
               body {
                 font-family: Arial, sans-serif;
@@ -101,15 +172,6 @@ export async function GET(request: Request) {
                 color: #475569;
                 line-height: 1.6;
               }
-
-              code {
-                display: block;
-                background: #f1f5f9;
-                padding: 15px;
-                border-radius: 8px;
-                word-break: break-all;
-                margin-top: 15px;
-              }
             </style>
           </head>
 
@@ -118,17 +180,16 @@ export async function GET(request: Request) {
               <h1>Google Calendar je povezan ✅</h1>
 
               <p>
-                Google je uspješno autorizovao AI Jaran za pristup kalendaru.
+                AI Jaran je uspješno povezan sa Google Calendarom.
               </p>
 
               <p>
-                Refresh token je uspješno dobijen.
+                Pristup Google Calendaru je uspješno spremljen.
               </p>
 
               <p>
-                Za sada ga ne prikazujemo na stranici radi sigurnosti.
-                Sljedećim korakom ćemo ga pravilno povezati sa sistemom
-                rezervacija.
+                Sada možemo povezati online kalendar sa stvarnim
+                zauzetim terminima i rezervacijama.
               </p>
             </div>
           </body>

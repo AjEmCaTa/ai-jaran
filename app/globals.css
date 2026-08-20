@@ -2,40 +2,106 @@
 
 :root {
   --background: #030712;
-  --foreground: #ededed;
+  --foreground: #f8fafc;
 }
 
-/* Omogućava glatko skrolanje i sprečava skakanje sadržaja */
+* {
+  box-sizing: border-box;
+}
+
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px; /* Štiti da navigacija ne pokrije sekciju pri kliku */
+  scroll-padding-top: 90px;
 }
 
 body {
-  background-color: #030712;
-  color: #ededed;
-  font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
+  background:
+    radial-gradient(circle at 75% 20%, rgba(37, 99, 235, 0.08), transparent 30%),
+    #030712;
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* Omogućava fluidno inercijsko skrolovanje na mobilnim uređajima (iOS/Android) */
-  -webkit-overflow-scrolling: touch;
 }
 
-/* Custom Scrollbar */
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.35);
+  color: white;
+}
+
+/* Scrollbar */
+
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: #030712;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #1f2937;
-  border-radius: 4px;
-  transition: background 0.2s ease;
+  border-radius: 999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #374151;
+}
+
+/* Animacije */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 5s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.7s ease-out both;
 }

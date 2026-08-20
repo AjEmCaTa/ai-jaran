@@ -1,183 +1,211 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface NavbarProps {
   onOpenContact: () => void;
-  onResetHero: () => void;
+  onResetHero?: () => void;
   onOpenCatalog?: () => void;
   brandName: string;
   lang: "BS" | "EN";
   setLang: (lang: "BS" | "EN") => void;
 }
 
-export default function Navbar({ onOpenContact, onResetHero, onOpenCatalog, brandName, lang, setLang }: NavbarProps) {
+export default function Navbar({
+  onOpenContact,
+  onResetHero,
+  onOpenCatalog,
+  brandName,
+  lang,
+  setLang,
+}: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  const navLinks = [
-    { name: lang === "BS" ? "Početna" : "Home", id: "#" },
-    { name: lang === "BS" ? "Demo" : "Demo", id: "#chat-demo" },
-    { name: lang === "BS" ? "Usluge" : "Services", id: "#features" },
-    { name: lang === "BS" ? "Cijene" : "Pricing", id: "#pricing" },
-    { name: lang === "BS" ? "FAQ" : "FAQ", id: "#faq" }
-  ];
-
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string, name: string) => {
-    e.preventDefault();
-    setIsOpen(false);
-
-    if (name === "Početna" || name === "Home" || id === "#") {
-      onResetHero();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    const targetElement = document.querySelector(id);
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5">
-      <div className="w-full px-8 h-24 flex items-center justify-between">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/[0.06] bg-[#030712]/75 backdrop-blur-2xl">
+      <div className="mx-auto flex h-[82px] w-full max-w-[1500px] items-center justify-between px-6 sm:px-8 lg:px-12 xl:px-16">
         
-        {/* LOGO - SKROZ LIJEVO */}
-        <a 
-          href="#" 
-          onClick={(e) => handleNavClick(e, "#", lang === "BS" ? "Početna" : "Home")} 
-          className="flex items-center gap-3.5 cursor-pointer"
+        {/* LOGO */}
+        <Link
+          href="/"
+          className="group flex cursor-pointer items-center gap-3"
         >
-          <Image
-            src="/logo.png"
-            alt="AI Jaran Logo"
-            width={48}
-            height={48}
-            className="rounded-2xl"
-            style={{ mixBlendMode: "screen" }}
-          />
-          <span className="font-extrabold tracking-wider text-white text-xl">{brandName}</span>
-        </a>
+          <div className="relative">
+            <div className="absolute inset-0 rounded-xl bg-blue-500/30 blur-lg transition-all duration-300 group-hover:bg-blue-500/50" />
+            <Image
+              src="/logo.png"
+              alt="AI Jaran Logo"
+              width={42}
+              height={42}
+              priority
+              className="relative rounded-xl"
+              style={{
+                mixBlendMode: "screen",
+              }}
+            />
+          </div>
 
-        {/* DESNI DIO: Linkovi + Biznisi + Jezik + Kontakt - SKROZ DESNO */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((item) => (
-            <a 
-              key={item.name} 
-              href={item.id} 
-              onClick={(e) => handleNavClick(e, item.id, item.name)}
-              className="text-base font-medium text-gray-300 hover:text-white transition-colors duration-200 cursor-pointer"
-            >
-              {item.name}
-            </a>
-          ))}
+          <span className="text-lg font-extrabold tracking-tight text-white sm:text-xl">
+            {brandName}
+          </span>
+        </Link>
 
-          {/* Dugme za Biznise */}
-          <button
-            onClick={onOpenCatalog}
-            className="text-base font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-200 cursor-pointer flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2 rounded-xl shadow-lg shadow-emerald-500/10"
+        {/* DESKTOP NAVIGACIJA */}
+        <div className="hidden items-center gap-6 md:flex">
+          <Link
+            href="/"
+            className="cursor-pointer text-sm font-medium text-slate-400 transition-colors duration-200 hover:text-white"
           >
-            <span>{lang === "BS" ? "Biznisi" : "Businesses"}</span>
+            {lang === "BS" ? "Početna" : "Home"}
+          </Link>
+
+          <Link
+            href="/#faq"
+            className="cursor-pointer text-sm font-medium text-slate-400 transition-colors duration-200 hover:text-white"
+          >
+            FAQ
+          </Link>
+
+          <Link
+            href="/cjenovnik"
+            className="cursor-pointer text-sm font-medium text-slate-400 transition-colors duration-200 hover:text-white"
+          >
+            {lang === "BS" ? "Cjenovnik" : "Pricing"}
+          </Link>
+
+          {/* Biznisi dugme */}
+          <button
+            onClick={() => {
+              if (isHome && onOpenCatalog) {
+                onOpenCatalog();
+              } else {
+                window.location.href = "/?openCatalog=true";
+              }
+            }}
+            className="cursor-pointer rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-sm font-semibold text-emerald-400 transition-all duration-300 hover:border-emerald-400/40 hover:bg-emerald-500/10"
+          >
+            {lang === "BS" ? "Biznisi" : "Businesses"}
           </button>
-          
-          {/* Prekidač za jezik */}
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
+
+          {/* Dashboard / Panel prečica -> Vodi na /prijava */}
+          <Link
+            href="/prijava"
+            className="cursor-pointer rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400 transition-all duration-300 hover:bg-blue-500/20"
+          >
+            {lang === "BS" ? "Moj Panel" : "Dashboard"}
+          </Link>
+
+          {/* Izbor jezika */}
+          <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.035] p-1">
             <button
               onClick={() => setLang("BS")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                lang === "BS" 
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30" 
-                  : "text-gray-400 hover:text-white"
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
+                lang === "BS"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                  : "text-slate-500 hover:text-white"
               }`}
             >
               BS
             </button>
             <button
               onClick={() => setLang("EN")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                lang === "EN" 
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30" 
-                  : "text-gray-400 hover:text-white"
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
+                lang === "EN"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                  : "text-slate-500 hover:text-white"
               }`}
             >
               EN
             </button>
           </div>
 
-          {/* Kontakt dugme */}
+          {/* Kontakt */}
           <button
             onClick={onOpenContact}
-            className="px-7 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 cursor-pointer text-base"
+            className="cursor-pointer rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-blue-600/30"
           >
             {lang === "BS" ? "Kontakt" : "Contact"}
           </button>
         </div>
 
-        {/* Mobilni Meni Dugme i Jezik */}
+        {/* MOBILE HAMBURGER */}
         <div className="flex items-center gap-3 md:hidden">
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
-            <button
-              onClick={() => setLang("BS")}
-              className={`px-2 py-1 rounded-md text-[10px] font-bold cursor-pointer ${lang === "BS" ? "bg-blue-600 text-white" : "text-gray-400"}`}
-            >
-              BS
-            </button>
-            <button
-              onClick={() => setLang("EN")}
-              className={`px-2 py-1 rounded-md text-[10px] font-bold cursor-pointer ${lang === "EN" ? "bg-blue-600 text-white" : "text-gray-400"}`}
-            >
-              EN
-            </button>
-          </div>
-
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="w-10 h-10 flex items-center justify-center text-white bg-white/5 border border-white/10 rounded-xl focus:outline-none cursor-pointer transition-colors hover:bg-white/10"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]"
             aria-label="Toggle Menu"
           >
             {isOpen ? (
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <div className="w-5 h-4 flex flex-col justify-between items-center">
-                <span className="w-full h-0.5 bg-white rounded-full" />
-                <span className="w-full h-0.5 bg-white rounded-full" />
-                <span className="w-full h-0.5 bg-white rounded-full" />
+              <div className="flex h-4 w-5 flex-col justify-between">
+                <span className="h-0.5 w-full rounded-full bg-white" />
+                <span className="h-0.5 w-full rounded-full bg-white" />
+                <span className="h-0.5 w-full rounded-full bg-white" />
               </div>
             )}
           </button>
         </div>
       </div>
 
-      {/* Mobilni Meni */}
+      {/* MOBILE MENU DROPDOWN */}
       {isOpen && (
-        <div className="md:hidden bg-[#030712] border-b border-white/5 px-8 py-6 flex flex-col gap-6 shadow-2xl animate-fade-in">
-          {navLinks.map((item) => (
-            <a 
-              key={item.name} 
-              href={item.id} 
-              onClick={(e) => handleNavClick(e, item.id, item.name)} 
-              className="text-gray-300 hover:text-white text-base font-medium transition-colors"
+        <div className="border-t border-white/[0.05] bg-[#030712]/95 px-6 py-6 shadow-2xl backdrop-blur-2xl md:hidden">
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/"
+              onClick={() => setIsOpen(false)}
+              className="text-sm font-medium text-slate-300 hover:text-white"
             >
-              {item.name}
-            </a>
-          ))}
-          
-          <button 
-            onClick={() => { setIsOpen(false); if(onOpenCatalog) onOpenCatalog(); }} 
-            className="w-full py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold cursor-pointer"
-          >
-            {lang === "BS" ? "Katalog Biznisa" : "Business Directory"}
-          </button>
-
-          <button 
-            onClick={() => { setIsOpen(false); onOpenContact(); }} 
-            className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/20 cursor-pointer"
-          >
-            {lang === "BS" ? "Kontaktirajte nas" : "Contact Us"}
-          </button>
+              {lang === "BS" ? "Početna" : "Home"}
+            </Link>
+            <Link
+              href="/#faq"
+              onClick={() => setIsOpen(false)}
+              className="text-sm font-medium text-slate-300 hover:text-white"
+            >
+              FAQ
+            </Link>
+            <Link
+              href="/cjenovnik"
+              onClick={() => setIsOpen(false)}
+              className="text-sm font-medium text-slate-300 hover:text-white"
+            >
+              {lang === "BS" ? "Cjenovnik" : "Pricing"}
+            </Link>
+            <Link
+              href="/prijava"
+              onClick={() => setIsOpen(false)}
+              className="text-sm font-semibold text-blue-400 hover:text-blue-300"
+            >
+              {lang === "BS" ? "Moj Panel" : "Dashboard"}
+            </Link>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onOpenCatalog?.();
+              }}
+              className="w-full rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] py-3 text-center font-semibold text-emerald-400"
+            >
+              {lang === "BS" ? "Katalog Biznisa" : "Business Directory"}
+            </button>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onOpenContact();
+              }}
+              className="w-full rounded-xl bg-blue-600 py-3 text-center font-bold text-white shadow-lg"
+            >
+              {lang === "BS" ? "Kontakt" : "Contact"}
+            </button>
+          </div>
         </div>
       )}
     </nav>

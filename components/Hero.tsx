@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 interface HeroProps {
   onStartFree: () => void;
   onCatalogJoin?: () => void;
@@ -15,73 +19,184 @@ interface HeroProps {
   };
 }
 
-export default function Hero({ onStartFree, onCatalogJoin, onHowItWorks, animationKey, lang = "BS", t }: HeroProps) {
+export default function Hero({
+  onStartFree,
+  animationKey,
+  lang = "BS",
+  t,
+}: HeroProps) {
+  // Lokalno stanje za otvaranje modala
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
-    <section 
-      key={animationKey} 
-      id="početna" 
-      className="relative min-h-[92vh] flex items-center justify-center overflow-hidden py-24 bg-[#030712]"
+    <section
+      key={animationKey}
+      id="početna"
+      className="relative min-h-screen overflow-hidden bg-[#030712] pt-24"
     >
-      {/* Pozadinski efekti svjetla */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/15 blur-[140px] rounded-full" />
-        <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-indigo-500/10 blur-[100px] rounded-full" />
+      {/* POZADINSKO SVJETLO */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-[50%] top-[15%] h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-blue-600/[0.08] blur-[140px]" />
+        <div className="absolute right-[-150px] top-[10%] h-[500px] w-[500px] rounded-full bg-indigo-600/[0.07] blur-[140px]" />
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-        
-        {/* Istaknuti Badge / Obavijest */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-md mb-8 shadow-inner shadow-blue-500/20">
-          <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-          <span className="text-xs font-bold text-blue-300 uppercase tracking-wider">
-            {t.badge}
-          </span>
-        </div>
+      {/* SUPTILNA MREŽA */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "70px 70px",
+        }}
+      />
 
-        {/* Glavni naslov */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-8 leading-[1.1]">
-          {t.titleMain} <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-blue-500">
-            {t.titleHighlight}
-          </span>
-        </h1>
+      {/* GLAVNI SADRŽAJ */}
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-[1500px] items-center px-6 py-16 sm:px-10 lg:px-14 xl:px-20">
+        <div className="grid w-full items-center gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-10 xl:gap-16">
 
-        {/* Opis */}
-        <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-          {t.description}
-        </p>
+          {/* LIJEVA STRANA */}
+          <div className="max-w-2xl">
 
-        {/* Akcijska dugmad (CTA) */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button 
-            onClick={onStartFree} 
-            className="w-full sm:w-auto px-8 py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all shadow-xl shadow-blue-600/30 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-          >
-            {t.ctaPrimary}
-          </button>
-          
-          <button 
-            onClick={onCatalogJoin} 
-            className="w-full sm:w-auto px-8 py-4 rounded-xl border border-blue-500/40 bg-blue-500/10 text-blue-300 font-semibold hover:bg-blue-500/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-          >
-            {t.catalogCta || (lang === "BS" ? "📦 Ubaci svoj biznis u katalog" : "📦 Add Your Business to Directory")}
-          </button>
-        </div>
+            {/* BADGE */}
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/[0.08] px-4 py-2 backdrop-blur-xl">
+              <span className="h-2.5 w-2.5 rounded-full bg-blue-400" />
+              <span className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300">
+                {t.badge}
+              </span>
+            </div>
 
-        {/* Dodatni mali povjerenje znak / social proof */}
-        <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap items-center justify-center gap-8 text-sm text-gray-400">
-          <div className="flex items-center gap-2">
-            <span className="text-blue-400 font-bold">✓</span> {lang === "BS" ? "Bez skrivenih troškova" : "No hidden costs"}
+            {/* NASLOV */}
+            <h1 className="text-[3.4rem] font-extrabold leading-[0.98] tracking-[-0.045em] text-white sm:text-6xl md:text-7xl lg:text-[4.7rem] xl:text-[5.4rem]">
+              {t.titleMain}
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-blue-500 bg-clip-text text-transparent">
+                {t.titleHighlight}
+              </span>
+            </h1>
+
+            {/* OPIS */}
+            <p className="mt-8 max-w-xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+              {t.description}
+            </p>
+
+            {/* DUGMAD */}
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={onStartFree}
+                className="flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-7 py-4 font-bold text-white shadow-[0_15px_45px_rgba(37,99,235,0.25)] transition hover:bg-blue-500 cursor-pointer"
+              >
+                {t.ctaPrimary}
+                <span className="text-2xl font-bold">→</span>
+              </button>
+
+              {/* DIREKTNO OTVARANJE MODALA */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-7 py-4 font-semibold text-white backdrop-blur-xl transition hover:bg-white/[0.07] cursor-pointer"
+              >
+                {t.ctaSecondary}
+              </button>
+            </div>
+
+            {/* BENEFITI */}
+            <div className="mt-12 flex flex-wrap gap-x-7 gap-y-4 border-t border-white/[0.07] pt-7">
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-blue-500/40 bg-blue-500/10 text-xs text-blue-400">
+                  ✓
+                </span>
+                {lang === "BS" ? "Automatski odgovori" : "Automatic responses"}
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-blue-500/40 bg-blue-500/10 text-xs text-blue-400">
+                  ✓
+                </span>
+                {lang === "BS" ? "Pomoć u poslovanju" : "Business assistance"}
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-blue-500/40 bg-blue-500/10 text-xs text-blue-400">
+                  ✓
+                </span>
+                {lang === "BS" ? "Dostupan 24/7" : "Available 24/7"}
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-blue-400 font-bold">✓</span> {lang === "BS" ? "Sve kategorije biznisa" : "All business categories"}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-blue-400 font-bold">✓</span> {lang === "BS" ? "Direktni upiti i rezervacije" : "Direct inquiries & bookings"}
-          </div>
-        </div>
 
+          {/* DESNA STRANA */}
+          <div className="relative flex items-center justify-center lg:min-h-[650px]">
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/[0.14] blur-[120px]" />
+
+            <div className="relative z-10 w-full max-w-[680px]">
+              <div className="relative overflow-hidden rounded-[32px] border border-blue-400/20 bg-[#020617]/70 p-2 shadow-[0_0_80px_rgba(37,99,235,0.12)]">
+                <div className="relative overflow-hidden rounded-[25px]">
+                  <img
+                    src="/hero-ai-jaran.png"
+                    alt="AI Jaran – AI asistent za poslovanje"
+                    className="block h-auto w-full object-cover"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020617]/20 via-transparent to-blue-500/[0.03]" />
+                </div>
+              </div>
+
+              <div className="absolute -right-4 top-10 hidden rounded-2xl border border-blue-400/15 bg-[#080d1c]/95 px-4 py-3 shadow-2xl backdrop-blur-xl sm:block">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-xs font-medium text-slate-300">Online</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
+
+      {/* MODAL ZA "KAKO RADI?" */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div 
+            onClick={() => setIsModalOpen(false)}
+            className="absolute inset-0 bg-black/50" 
+          />
+          <div className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-[#030712] p-6 md:p-8 shadow-2xl z-10">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
+              {lang === "BS" ? "Kako funkcioniše AI Jaran?" : "How AI Jaran works"}
+            </h3>
+
+            <div className="space-y-4 text-sm text-slate-300 mb-6">
+              <div className="flex gap-3 items-start">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">1</div>
+                <p><strong className="text-white">Odabir opcije:</strong> Izaberi besplatni starter ili pro paket za tvoj biznis.</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">2</div>
+                <p><strong className="text-white">Podešavanje:</strong> Unesi podatke o uslugama, radnom vremenu i cijenama.</p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 font-bold text-white text-xs">3</div>
+                <p><strong className="text-white">Automatizacija:</strong> AI Jaran odgovara klijentima 24/7 i vodi katalog biznisa.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setIsModalOpen(false);
+                onStartFree();
+              }}
+              className="w-full py-3 rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-500 shadow-lg cursor-pointer"
+            >
+              {lang === "BS" ? "Isprobaj odmah" : "Try it now"}
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

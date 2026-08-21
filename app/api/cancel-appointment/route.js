@@ -1,58 +1,100 @@
 import { NextResponse } from 'next/server';
+import Database from 'better-sqlite3';
 import { Resend } from 'resend';
+const path = require('path');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const getDb = () => {
+    const dbPath = path.join(process.cwd(), 'ai_jaran.db');
+    const db = new Database(dbPath);
+    db.prepare(`
+        CREATE TABLE IF NOT EXISTS narudzbe_firmi (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partnerName TEXT,
+            packageName TEXT,
+            price TEXT,
+            durationHours INTEGER,
+            date TEXT,
+            time TEXT,
+            clientName TEXT,
+            clientPhone TEXT,
+            clientEmail TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `).run();
+    return db;
+};
+
+export async function GET() {
+    try {
+        const db = getDb();
+        const rows = db.prepare('SELECT * FROM narudzbe_firmi').all();
+        db.close();
+        return NextResponse.json({ success: true, data: rows });
+    } catch (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
 
 export async function POST(request) {
-  try {
-    const { name, email, date, time, service } = await request.json();
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
+    try {
+        const body = await request.json();
+        const { partnerName, packageName, price, durationHours, date, time, clientName, clientPhone, clientEmail } = body;
 
-    // Formatiranje datuma iz YYYY-MM-DD u DD.MM.YYYY.
-    let formattedDate = date;
-    if (date) {
-      const parts = date.split('-');
-      if (parts.length === 3) {
-        const [year, month, day] = parts;
-        formattedDate = `${day}.${month}.${year}.`;
-      }
+        // 1. Upis u bazu (Ovo je najvažnije da prođe bez greške)
+        const db = getDb();
+        const stmt = db.prepare(`
+            INSERT INTO narudzbe_firmi (partnerName, packageName, price, durationHours, date, time, clientName, clientPhone, clientEmail)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        
+        stmt.run(partnerName, packageName, price, durationHours, date, time, clientName, clientPhone, clientEmail);
+        db.close();
+
+        // 2. Slanje mejlova u pozadini (Ako pukne zbog ključa ili domene, neće srušiti server ni narudžbu)
+        try {
+            const resendApiKey = process.env.RESEND_API_KEY;
+            if (resendApiKey) {
+                const resend = new Resend(resendApiKey);
+
+                // Mejl za tebe
+                await resend.emails.send({
+                    from: 'AI Jaran <onboarding@resend.dev>',
+                    to: 'caticharun126@gmail.com',
+                    subject: `Nova rezervacija: ${partnerName} - ${date} u ${time}`,
+                    html: `
+                        <h2>Nova rezervacija primljena!</h2>
+                        <p><b>Partner / Biznis:</b> ${partnerName}</p>
+                        <p><b>Paket:</b> ${packageName} (${price})</p>
+                        <p><b>Datum i vrijeme:</b> ${date} u ${time}</p>
+                        <h3>Podaci klijenta:</h3>
+                        <p><b>Ime:</b> ${clientName}</p>
+                        <p><b>Telefon:</b> ${clientPhone}</p>
+                        <p><b>Mejl:</b> ${clientEmail}</p>
+                    `
+                });
+
+                // Mejl za klijenta
+                if (clientEmail) {
+                    await resend.emails.send({
+                        from: 'AI Jaran <onboarding@resend.dev>',
+                        to: clientEmail,
+                        subject: `Uspješno zakazan termin - ${partnerName}`,
+                        html: `
+                            <h2>Uspješno ste zakazali termin!</h2>
+                            <p>Poštovani ${clientName},</p>
+                            <p>Vaš termin za <b>${packageName}</b> kod partnera <b>${partnerName}</b> je uspješno potvrđen.</p>
+                            <p><b>Termin:</b> ${date} u ${time}</p>
+                            <p>Hvala vam što koristite naše usluge!</p>
+                        `
+                    });
+                }
+            }
+        } catch (emailErr) {
+            console.log("Mejl nije poslan (ignorišemo da ne ruši aplikaciju):", emailErr);
+        }
+
+        return NextResponse.json({ success: true, message: "Uspješno spremljeno!" });
+    } catch (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-
-    // 1. Obavijesti sebe na Telegram (ostavljamo izvorni datum ili formatirani, kako ti draže)
-    const telegramMessage = `❌ TERMIN OTKAZAN!\n\nKlijent: ${name}\nUsluga: ${service}\nDatum: ${formattedDate}\nVrijeme: ${time}`;
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: telegramMessage }),
-    });
-
-    // 2. Pošalji mail klijentu
-    if (email) {
-      await resend.emails.send({
-        from: 'Dubinsko Ćatić <info@aijaran.ba>',
-        to: [email, 'caticharun126@gmail.com'], // Možeš staviti i sebi kopiju da znaš da je otkazano
-        subject: 'Potvrda otkazivanja termina – Dubinsko Ćatić',
-        html: `
-          <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
-            <h2 style="color: #ef4444; margin-top: 0;">Pozdrav ${name || 'korisniče'},</h2>
-            <p>Obavještavamo te da je tvoj termin uspješno otkazan.</p>
-            
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
-              <p style="margin: 5px 0;"><strong>Otkazana usluga:</strong> ${service || 'Nije izabrano'}</p>
-              <p style="margin: 5px 0;"><strong>Termin:</strong> ${formattedDate} u ${time}</p>
-            </div>
-
-            <p>Ako se predomisliš ili želiš odabrati novi termin, uvijek možeš posjetiti našu platformu.</p>
-            
-            <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">S poštovanjem,<br><strong>Dubinsko Ćatić & AI Jaran</strong></p>
-          </div>
-        `,
-      });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
 }

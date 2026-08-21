@@ -11,96 +11,58 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-
-  // Dodatna polja za registraciju
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [address, setAddress] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
 
     try {
-      if (isLogin) {
-        // PRIJAVA
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        router.push("/dashboard");
-      } else {
-        // REGISTRACIJA SA DODATNIM PODACIMA
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              phone: phone,
-              business_name: businessName,
-              address: address,
-            },
-          },
-        });
-        if (error) throw error;
-        alert("Račun je uspješno kreiran! Sada se možete prijaviti.");
-        setIsLogin(true);
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      router.push("/dashboard");
     } catch (err: any) {
-      setErrorMsg(err.message || "Došlo je do greške. Pokušaj ponovo.");
+      setErrorMsg(err.message || "Neispravni podaci za prijavu. Pokušaj ponovo.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#030712] text-white flex items-center justify-center px-4 py-12 selection:bg-blue-600">
+    <main className="relative min-h-screen bg-[#030712] text-white flex items-center justify-center px-4 py-12 selection:bg-blue-600 overflow-hidden">
+      {/* Pozadinski svjetlosni efekat */}
       <div className="absolute w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-lg rounded-[32px] border border-white/10 bg-[#080d1c] p-8 sm:p-10 shadow-2xl">
-        <div className="mb-6">
-          <Link href="/" className="text-sm text-slate-400 hover:text-white transition flex items-center gap-2">
-            <span>←</span> Nazad na početnu
+      <div className="relative z-10 w-full max-w-md rounded-[28px] border border-white/10 bg-[#080d1c]/90 backdrop-blur-xl p-8 sm:p-10 shadow-2xl">
+        
+        {/* Lijepo uređeno dugme za povratak */}
+        <div className="mb-8">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-slate-400 hover:text-white transition-colors duration-200 group"
+          >
+            <span className="transition-transform duration-200 group-hover:-translate-x-1">←</span> 
+            Nazad na početnu
           </Link>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
-          {isLogin ? "Dobrodošli nazad" : "Kreirajte svoj račun"}
-        </h1>
-        <p className="text-slate-400 text-sm mb-8">
-          {isLogin 
-            ? "Prijavite se da pristupite AI Jaran panelu." 
-            : "Unesite podatke o sebi i vašem biznisu."}
-        </p>
-
-        {/* Tab prekidač */}
-        <div className="grid grid-cols-2 p-1 rounded-2xl bg-white/5 mb-8 border border-white/5 text-sm font-semibold">
-          <button
-            type="button"
-            onClick={() => { setIsLogin(true); setErrorMsg(""); }}
-            className={`py-3 rounded-xl transition-all ${isLogin ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}
-          >
-            Prijavi se
-          </button>
-          <button
-            type="button"
-            onClick={() => { setIsLogin(false); setErrorMsg(""); }}
-            className={`py-3 rounded-xl transition-all ${!isLogin ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}
-          >
-            Kreiraj račun
-          </button>
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 text-white">
+            Moj Panel
+          </h1>
+          <p className="text-slate-400 text-sm">
+            Prijavite se sa podacima koje vam je dodijelio AI Jaran tim.
+          </p>
         </div>
 
         {errorMsg && (
@@ -109,71 +71,10 @@ export default function AuthPage() {
           </div>
         )}
 
-        <form onSubmit={handleAuth} className="space-y-4">
-          {!isLogin && (
-            <>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                  Ime i prezime
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Harun Ćatić"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                    Broj telefona
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+387 61 123 456"
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                    Naziv biznisa
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="Npr. Autopraonica..."
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                  Adresa
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Ulica i grad"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
-                />
-              </div>
-            </>
-          )}
-
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              Email adresa
+              Korisničko ime ili Email
             </label>
             <input
               type="email"
@@ -181,7 +82,7 @@ export default function AuthPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vas@email.com"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
             />
           </div>
 
@@ -195,12 +96,12 @@ export default function AuthPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
             />
           </div>
 
-          {isLogin && (
-            <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="remember"
@@ -212,14 +113,14 @@ export default function AuthPage() {
                 Zapamti me
               </label>
             </div>
-          )}
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-4 inline-flex items-center justify-center rounded-xl bg-blue-600 py-4 font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
+            className="w-full mt-2 inline-flex items-center justify-center rounded-xl bg-blue-600 py-4 font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-500 disabled:opacity-50 cursor-pointer text-sm"
           >
-            {loading ? "Molimo sačekajte..." : isLogin ? "Prijavi se" : "Kreirajte račun"}
+            {loading ? "Prijava u tok..." : "Prijavi se u panel"}
           </button>
         </form>
       </div>

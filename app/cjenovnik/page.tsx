@@ -21,8 +21,7 @@ export default function CjenovnikPage() {
         onOpenContact={() => {}} 
         onResetHero={() => window.location.href = "/"} 
         brandName="AI Jaran" 
-        lang={lang} 
-        setLang={setLang}
+        
       />
       
       <section className="pt-32 pb-20 px-6 sm:px-8 text-center relative overflow-hidden">

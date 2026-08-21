@@ -60,22 +60,19 @@ export async function GET(request: Request) {
       .from("google_calendar_tokens")
       .select("refresh_token")
       .eq("id", 1)
-      .single();
+      .maybeSingle();
 
+    // Ako token ne postoji, umjesto pucanja servera vrati praznu listu zauzetih termina da aplikacija radi normalno
     if (tokenError || !tokenData?.refresh_token) {
-      console.error(
-        "Google Calendar token nije pronađen:",
-        tokenError
+      console.warn(
+        "Google Calendar token nije pronađen ili nije povezan, preskačem provjeru kalendara."
       );
 
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Google Calendar još nije povezan. Prvo poveži Google Calendar.",
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        success: true,
+        date,
+        busy: [],
+      });
     }
 
     const refreshToken = tokenData.refresh_token;
@@ -132,14 +129,11 @@ export async function GET(request: Request) {
       error
     );
 
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error?.message ||
-          "Greška prilikom provjere dostupnosti Google Calendara.",
-      },
-      { status: 500 }
-    );
+    // Vraćamo prazan niz umjesto 500 greške da frontend ne blokira prikaz stranice
+    return NextResponse.json({
+      success: true,
+      date: "",
+      busy: [],
+    });
   }
 }

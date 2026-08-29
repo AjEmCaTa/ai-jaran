@@ -35,14 +35,11 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-800 space-y-3">
+        <div className="p-4 border-t border-gray-800">
           <div className="px-3 py-2 rounded-lg bg-gray-950/50 border border-gray-800/60">
             <p className="text-[11px] text-gray-400">Info telefon:</p>
             <p className="text-xs font-semibold text-blue-400">060 30 50 153</p>
           </div>
-          <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 text-gray-300 transition-colors">
-            <span>🔧</span> Postavke
-          </Link>
         </div>
       </aside>
 

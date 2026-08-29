@@ -5,95 +5,75 @@ const path = require('path');
 
 const getDb = () => {
     const dbPath = path.join(process.cwd(), 'ai_jaran.db');
-    const db = new Database(dbPath);
-    db.prepare(`
-        CREATE TABLE IF NOT EXISTS narudzbe_firmi (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            partnerName TEXT,
-            packageName TEXT,
-            price TEXT,
-            durationHours INTEGER,
-            date TEXT,
-            time TEXT,
-            clientName TEXT,
-            clientPhone TEXT,
-            clientEmail TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `).run();
-    return db;
+    return new Database(dbPath);
 };
-
-export async function GET() {
-    try {
-        const db = getDb();
-        const rows = db.prepare('SELECT * FROM narudzbe_firmi').all();
-        db.close();
-        return NextResponse.json({ success: true, data: rows });
-    } catch (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-}
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { partnerName, packageName, price, durationHours, date, time, clientName, clientPhone, clientEmail } = body;
+        const { id } = body;
 
-        // 1. Upis u bazu (Ovo je najvažnije da prođe bez greške)
+        if (!id) {
+            return NextResponse.json({ success: false, error: "ID rezervacije je obavezan." }, { status: 400 });
+        }
+
         const db = getDb();
-        const stmt = db.prepare(`
-            INSERT INTO narudzbe_firmi (partnerName, packageName, price, durationHours, date, time, clientName, clientPhone, clientEmail)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        
-        stmt.run(partnerName, packageName, price, durationHours, date, time, clientName, clientPhone, clientEmail);
+
+        // 1. Prvo pronađemo rezervaciju da imamo podatke za mejl prije nego što je obrišemo
+        const reservation = db.prepare('SELECT * FROM narudzbe_firmi WHERE id = ?').get(id);
+
+        if (!reservation) {
+            db.close();
+            return NextResponse.json({ success: false, error: "Rezervacija nije pronađena." }, { status: 404 });
+        }
+
+        // 2. Brišemo rezervaciju iz baze
+        db.prepare('DELETE FROM narudzbe_firmi WHERE id = ?').run(id);
         db.close();
 
-        // 2. Slanje mejlova u pozadini (Ako pukne zbog ključa ili domene, neće srušiti server ni narudžbu)
+        // 3. Slanje obavještenja o otkazivanju (Resend mejlovi)
         try {
             const resendApiKey = process.env.RESEND_API_KEY;
             if (resendApiKey) {
                 const resend = new Resend(resendApiKey);
 
-                // Mejl za tebe
+                // Mejl tebi da je termin otkazan
                 await resend.emails.send({
                     from: 'AI Jaran <onboarding@resend.dev>',
                     to: 'caticharun126@gmail.com',
-                    subject: `Nova rezervacija: ${partnerName} - ${date} u ${time}`,
+                    subject: `OTKAZAN TERMIN: ${reservation.partnerName} - ${reservation.date} u ${reservation.time}`,
                     html: `
-                        <h2>Nova rezervacija primljena!</h2>
-                        <p><b>Partner / Biznis:</b> ${partnerName}</p>
-                        <p><b>Paket:</b> ${packageName} (${price})</p>
-                        <p><b>Datum i vrijeme:</b> ${date} u ${time}</p>
+                        <h2>Rezervacija je otkazana!</h2>
+                        <p><b>Partner / Biznis:</b> ${reservation.partnerName}</p>
+                        <p><b>Paket:</b> ${reservation.packageName} (${reservation.price})</p>
+                        <p><b>Termin koji je otkazan:</b> ${reservation.date} u ${reservation.time}</p>
                         <h3>Podaci klijenta:</h3>
-                        <p><b>Ime:</b> ${clientName}</p>
-                        <p><b>Telefon:</b> ${clientPhone}</p>
-                        <p><b>Mejl:</b> ${clientEmail}</p>
+                        <p><b>Ime:</b> ${reservation.clientName}</p>
+                        <p><b>Telefon:</b> ${reservation.clientPhone}</p>
+                        <p><b>Mejl:</b> ${reservation.clientEmail}</p>
                     `
                 });
 
-                // Mejl za klijenta
-                if (clientEmail) {
+                // Mejl klijentu da je otkazivanje uspješno
+                if (reservation.clientEmail) {
                     await resend.emails.send({
                         from: 'AI Jaran <onboarding@resend.dev>',
-                        to: clientEmail,
-                        subject: `Uspješno zakazan termin - ${partnerName}`,
+                        to: reservation.clientEmail,
+                        subject: `Otkazan termin - ${reservation.partnerName}`,
                         html: `
-                            <h2>Uspješno ste zakazali termin!</h2>
-                            <p>Poštovani ${clientName},</p>
-                            <p>Vaš termin za <b>${packageName}</b> kod partnera <b>${partnerName}</b> je uspješno potvrđen.</p>
-                            <p><b>Termin:</b> ${date} u ${time}</p>
-                            <p>Hvala vam što koristite naše usluge!</p>
+                            <h2>Termin je uspješno otkazan</h2>
+                            <p>Poštovani ${reservation.clientName},</p>
+                            <p>Vaš termin za <b>${reservation.packageName}</b> kod partnera <b>${reservation.partnerName}</b> zakazan za ${reservation.date} u ${reservation.time} je uspješno otkazan.</p>
+                            <p>Nadamo se ponovnoj saradnji!</p>
                         `
                     });
                 }
             }
         } catch (emailErr) {
-            console.log("Mejl nije poslan (ignorišemo da ne ruši aplikaciju):", emailErr);
+            console.log("Mejl za otkazivanje nije poslan:", emailErr);
         }
 
-        return NextResponse.json({ success: true, message: "Uspješno spremljeno!" });
+        return NextResponse.json({ success: true, message: "Rezervacija je uspješno otkazana i obavještenja su poslana." });
     } catch (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }

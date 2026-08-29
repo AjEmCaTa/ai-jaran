@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Image from "next/image";
 import Link from "next/link";
@@ -102,7 +102,6 @@ export default function Navbar({
             Cjenovnik
           </Link>
 
-          {/* Biznisi dugme - DIREKTNO NA /katalog */}
           <Link
             href="/katalog"
             className="cursor-pointer rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-sm font-semibold text-emerald-400 transition-all duration-300 hover:border-emerald-400/40 hover:bg-emerald-500/10"
@@ -110,7 +109,6 @@ export default function Navbar({
             Biznisi
           </Link>
 
-          {/* Dashboard / Panel prečica */}
           <Link
             href="/prijava"
             className="cursor-pointer rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400 transition-all duration-300 hover:bg-blue-500/20"
@@ -118,7 +116,6 @@ export default function Navbar({
             Moj Panel
           </Link>
 
-          {/* Kontakt */}
           <button
             onClick={onOpenContact}
             className="cursor-pointer rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-blue-600/30"
@@ -151,12 +148,12 @@ export default function Navbar({
 
       {/* MOBILE MENU DROPDOWN */}
       {isOpen && (
-        <div className="border-t border-white/[0.05] bg-[#030712]/98 px-6 py-8 shadow-2xl backdrop-blur-2xl md:hidden">
-          <div className="flex flex-col gap-5">
+        <div className="border-t border-white/[0.05] bg-[#030712]/98 px-6 py-6 shadow-2xl backdrop-blur-2xl md:hidden">
+          <div className="flex flex-col gap-4">
             <a
               href="/"
               onClick={handleLogoOrHomeClick}
-              className="text-base font-semibold text-slate-200 hover:text-white"
+              className="text-base font-medium text-slate-300 hover:text-white py-1"
             >
               Početna
             </a>
@@ -164,7 +161,7 @@ export default function Navbar({
             <a
               href="/#faq"
               onClick={(e) => handleSmoothScroll(e, "#faq")}
-              className="text-base font-semibold text-slate-200 hover:text-white"
+              className="text-base font-medium text-slate-300 hover:text-white py-1"
             >
               FAQ
             </a>
@@ -172,7 +169,7 @@ export default function Navbar({
             <Link
               href="/cjenovnik"
               onClick={() => setIsOpen(false)}
-              className="text-base font-semibold text-slate-200 hover:text-white"
+              className="text-base font-medium text-slate-300 hover:text-white py-1"
             >
               Cjenovnik
             </Link>
@@ -180,7 +177,7 @@ export default function Navbar({
             <Link
               href="/prijava"
               onClick={() => setIsOpen(false)}
-              className="text-base font-bold text-blue-400 hover:text-blue-300"
+              className="text-base font-semibold text-blue-400 hover:text-blue-300 py-1"
             >
               Moj Panel
             </Link>
@@ -188,9 +185,9 @@ export default function Navbar({
             <Link
               href="/katalog"
               onClick={() => setIsOpen(false)}
-              className="w-full rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] py-3.5 text-center text-base font-semibold text-emerald-400"
+              className="w-full rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] py-3 text-center text-sm font-semibold text-emerald-400"
             >
-              Katalog Biznisa
+              Biznisi
             </Link>
 
             <button
@@ -198,7 +195,7 @@ export default function Navbar({
                 setIsOpen(false);
                 onOpenContact();
               }}
-              className="w-full rounded-xl bg-blue-600 py-3.5 text-center text-base font-bold text-white shadow-lg"
+              className="w-full rounded-xl bg-blue-600 py-3 text-center text-sm font-bold text-white shadow-lg"
             >
               Kontakt
             </button>

@@ -1,181 +1,132 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useState } from "react";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
+import Background from "../../components/Background";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Glavne kategorije biznisa za katalog
+const businessCategories = [
+  {
+    id: "dubinsko",
+    title: "Dubinsko čišćenje i Autopraonice",
+    description: "Sve za vozila i namještaj – dubinsko pranje, autopraonice, detailing i keramička zaštita uz automatsko vođenje termina.",
+    icon: "🚗",
+    count: "Mreža partnera",
+    image: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=600&q=80",
+    slug: "dubinsko-catic" // Vodi direktno na poseban fajl/stranicu partnera
+  },
+  {
+    id: "apartmani",
+    title: "Vile i Apartmani",
+    description: "Automatsko preuzimanje rezervacija noćenja, komunikacija sa gostima i upiti preko AI asistenta.",
+    icon: "🏡",
+    count: "Turistički smještaj",
+    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+    slug: "vile-apartmani"
+  },
+  {
+    id: "stanovi",
+    title: "Agencije za čišćenje stanova",
+    description: "Organizacija i raspored čišćenja stambenih i poslovnih objekata, redovno ili generalno čišćenje.",
+    icon: "🧹",
+    count: "Usluge čišćenja",
+    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80",
+    slug: "agencije-za-ciscenje"
+  },
+  {
+    id: "beauty",
+    title: "Frizeri i Beauty Saloni",
+    description: "Zakazivanje termina za šišanje, njegu lica, tretmane i kozmetičke usluge bez gužve na telefonu.",
+    icon: "💇‍♂️",
+    count: "Beauty sektor",
+    image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
+    slug: "beauty-saloni"
+  }
+];
 
-export default function DashboardPage() {
-  const [reservations, setReservations] = useState<any[]>([]);
-  const [servicesCount, setServicesCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+const cities = ["Svi gradovi", "Mostar", "Sarajevo", "Banja Luka", "Tuzla", "Zenica"];
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        // Povuci rezervacije iz baze
-        const { data: resData, error: resError } = await supabase
-          .from('reservations')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (resError) {
-          console.log("Tabela reservations se još puni ili ne postoji:", resError.message);
-        } else if (resData) {
-          setReservations(resData);
-        }
-
-        // Povuci broj usluga iz cjenovnika
-        const { count, error: countError } = await supabase
-          .from('services')
-          .select('*', { count: 'exact', head: true });
-
-        if (!countError && count !== null) {
-          setServicesCount(count);
-        }
-      } catch (err) {
-        console.error('Greška pri učitavanju dashboard podataka:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  // Izračunaj statistike u realnom vremenu
-  const totalEarnings = reservations.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-  const totalReservations = reservations.length;
-  const pendingCount = reservations.filter((r) => r.status === 'Na čekanju' || !r.status).length;
-  const avgPrice = totalReservations > 0 ? Math.round(totalEarnings / totalReservations) : 0;
+export default function KatalogPage() {
+  const [selectedCity, setSelectedCity] = useState("Svi gradovi");
 
   return (
-    <div className="space-y-8 text-gray-100 max-w-[1600px] mx-auto pb-12">
-      
-      {/* Header Dashboarda - SaaS Stil */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/10 pb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-            Dubinsko Ćatić • <span className="text-blue-400">Kontrolna ploča</span>
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">Vrapčići, Mostar • Tel: 060 30 50 153 • Live baza podataka</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
-            Sistem Aktivan & Online
+    <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
+      <Background />
+
+      <Navbar 
+        brandName="AI Jaran"
+        onOpenContact={() => {}} 
+        onResetHero={() => {}}
+        onOpenCatalog={() => {}}
+      />
+
+      <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <span className="px-3.5 py-1 text-xs font-semibold bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20 uppercase tracking-wider">
+            Katalog Biznisa
           </span>
+          <h1 className="text-4xl md:text-5xl font-extrabold mt-3 mb-4 bg-gradient-to-r from-white via-gray-200 to-cyan-400 bg-clip-text text-transparent">
+            Izaberi djelatnost
+          </h1>
+          <p className="text-gray-400 max-w-2xl mx-auto text-base">
+            Pregledaj industrije i sektore za koje AI Jaran pruža naprednu automatizaciju, upravljanje kalendarima i terminima.
+          </p>
         </div>
-      </div>
 
-      {/* Kartice sa statistikama (SaaS metrike gore) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-[#0b0f19] border border-white/5 p-6 rounded-2xl shadow-xl">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ukupna zarada</p>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-white">{totalEarnings} KM</span>
-            <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">Iz baze</span>
+        {/* Filter gradova */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+          <span className="text-sm text-gray-400 font-medium">📍 Filtriraj lokaciju:</span>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {cities.map(city => (
+              <button
+                key={city}
+                onClick={() => setSelectedCity(city)}
+                className={`px-4 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                  selectedCity === city
+                    ? "bg-cyan-500 text-gray-950 font-bold shadow-md shadow-cyan-500/20"
+                    : "bg-gray-900/80 text-gray-400 border border-gray-800 hover:text-white"
+                }`}
+              >
+                {city}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="bg-[#0b0f19] border border-white/5 p-6 rounded-2xl shadow-xl">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ukupno rezervacija</p>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-white">{totalReservations}</span>
-            <span className="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">Aktivni termini</span>
-          </div>
-        </div>
-
-        <div className="bg-[#0b0f19] border border-white/5 p-6 rounded-2xl shadow-xl">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Zahtjevi na čekanju</p>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-yellow-400">{pendingCount}</span>
-            <span className="text-xs font-medium text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">Za potvrdu</span>
-          </div>
-        </div>
-
-        <div className="bg-[#0b0f19] border border-white/5 p-6 rounded-2xl shadow-xl">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Aktivnih usluga</p>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-white">{servicesCount > 0 ? servicesCount : '2+'}</span>
-            <span className="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">U cjenovniku</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Sekcija: Paketi i Nadolazeći termini */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Lijevi dio: Prikaz paketa usluga */}
-        <div className="lg:col-span-2 bg-[#0b0f19] border border-white/5 p-6 rounded-2xl shadow-xl space-y-5">
-          <h3 className="text-lg font-bold text-white">Pregled usluga i paketa</h3>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 bg-[#030712] rounded-xl border border-white/5">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-bold text-white text-sm">Basic Paket / Detalji</span>
-                <span className="text-blue-400 font-semibold text-xs bg-blue-500/10 px-2 py-0.5 rounded">20 - 25 KM</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">Osnovno čišćenje, pojedinačni dijelovi i brzi tretmani.</p>
-            </div>
-
-            <div className="p-4 bg-[#030712] rounded-xl border border-white/5">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-bold text-white text-sm">Premium Dubinsko</span>
-                <span className="text-emerald-400 font-semibold text-xs bg-emerald-500/10 px-2 py-0.5 rounded">120 - 150 KM</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">Kompletno dubinsko čišćenje vozila uz besplatan dolazak po auto.</p>
-            </div>
-          </div>
-
-          <div className="h-40 flex flex-col items-center justify-center bg-[#030712] rounded-xl border border-dashed border-white/10 text-gray-500 text-xs">
-            <p className="font-medium text-gray-400">Statistika i analitika prihoda</p>
-            <p className="text-[11px] text-gray-600 mt-1">Podaci se automatski sinhronizuju sa Supabase bazom</p>
-          </div>
-        </div>
-
-        {/* Desni dio: Lista rezervacija i kalendar feed */}
-        <div className="bg-[#0b0f19] border border-white/5 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-white mb-4">Nadolazeći termini</h3>
-            
-            <div className="space-y-3">
-              {loading ? (
-                <p className="text-xs text-gray-500 text-center py-8">Učitavanje termina iz baze...</p>
-              ) : reservations.length === 0 ? (
-                <div className="text-center py-10 px-4 bg-[#030712] rounded-xl border border-white/5">
-                  <p className="text-sm font-medium text-gray-300">Nema unesenih rezervacija.</p>
-                  <p className="text-xs text-gray-500 mt-1">Novi termini klijenatskih rezervacija pojavit će se ovdje u realnom vremenu.</p>
-                </div>
-              ) : (
-                reservations.slice(0, 5).map((res) => (
-                  <div key={res.id} className="flex items-center justify-between p-3.5 bg-[#030712] rounded-xl border border-white/5">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{res.customer_name || res.client_name || 'Klijent'}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{res.reservation_date || res.service_name || 'Dubinsko čišćenje'}</p>
-                    </div>
-                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                      res.status === 'Prihvaćeno' || res.status === 'confirmed'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                        : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                    }`}>
-                      {res.status || 'Na čekanju'}
-                    </span>
+        {/* Glavne kartice kategorija koje vode na posebne stranice */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {businessCategories.map(cat => (
+            <a 
+              key={cat.id}
+              href={`/katalog/${cat.slug}`}
+              className="group bg-gray-900/60 backdrop-blur-md rounded-2xl overflow-hidden border border-gray-800 hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between cursor-pointer hover:shadow-xl hover:shadow-cyan-500/10"
+            >
+              <div>
+                <div className="relative h-48 overflow-hidden bg-gray-800">
+                  <img src={cat.image} alt={cat.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute top-3 left-3 bg-gray-950/85 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-cyan-400 border border-gray-700 flex items-center gap-1.5">
+                    <span>{cat.icon}</span>
+                    <span>{cat.count}</span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-white/5 text-center">
-            <span className="text-[11px] text-gray-500">Dubinsko Ćatić • SaaS Booking Platform</span>
-          </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">{cat.title}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">{cat.description}</p>
+                </div>
+              </div>
+              <div className="px-6 pb-6 pt-0 flex items-center justify-between border-t border-gray-800/60 mt-4 pt-4">
+                <span className="text-xs text-gray-500">Grad: {selectedCity}</span>
+                <span className="text-cyan-400 font-semibold text-sm flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Pregledaj →
+                </span>
+              </div>
+            </a>
+          ))}
         </div>
-
       </div>
-    </div>
+
+      <Footer t={{ rights: "Sva prava zadržana.", privacy: "Politika privatnosti" }} brandName="AI Jaran" onOpenPrivacy={() => {}} />
+    </main>
   );
 }

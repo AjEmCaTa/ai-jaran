@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface FooterProps {
   t?: any;
@@ -10,6 +11,9 @@ interface FooterProps {
 }
 
 export default function Footer({ t, brandName = "AI JARAN", onOpenPrivacy }: FooterProps) {
+  const pathname = usePathname();
+  const isCatalog = pathname.startsWith("/katalog");
+
   return (
     <footer className="relative z-20 bg-[#030712] border-t border-white/5 py-16 pb-20">
       <div className="mx-auto w-full max-w-[1500px] px-6 sm:px-8 lg:px-12 xl:px-16 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -39,9 +43,14 @@ export default function Footer({ t, brandName = "AI JARAN", onOpenPrivacy }: Foo
           <Link href="/cjenovnik" className="hover:text-white transition-colors">
             Cjenovnik
           </Link>
-          <Link href="/katalog" className="hover:text-white transition-colors">
-            Biznisi
-          </Link>
+          
+          {/* Sakrij "Biznisi" link kad se nalazimo u katalogu */}
+          {!isCatalog && (
+            <Link href="/katalog" className="hover:text-white transition-colors">
+              Biznisi
+            </Link>
+          )}
+
           <button 
             onClick={onOpenPrivacy}
             className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-sm text-gray-400"
@@ -49,7 +58,7 @@ export default function Footer({ t, brandName = "AI JARAN", onOpenPrivacy }: Foo
             Politika privatnosti
           </button>
           
-          {/* Instagram ikonica (samo ikona, bez teksta) */}
+          {/* Instagram ikonica sa tvojim pravim linkom */}
           <a 
             href="https://www.instagram.com/ai.jaran?igsi=MXV5eGI2b2t5cHc2cw%3D%3D&utm_source=qr" 
             target="_blank" 

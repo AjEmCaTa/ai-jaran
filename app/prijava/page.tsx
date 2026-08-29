@@ -5,10 +5,17 @@ import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Sigurna inicijalizacija sa fallback vrijednostima da Vercel build ne pukne
+// Sigurna inicijalizacija sa postavkama da pamti sesiju u browseru
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true, // Čuva sesiju da ne traži ponovnu prijavu
+    autoRefreshToken: true,
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  },
+});
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");

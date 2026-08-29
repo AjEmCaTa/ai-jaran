@@ -105,3 +105,8 @@ a {
 .animate-fade-up {
   animation: fadeUp 0.7s ease-out both;
 }
+
+.katalog-kartica {
+  background-color: #030712 !important;
+  border: 1px solid #1f2937 !important;
+}

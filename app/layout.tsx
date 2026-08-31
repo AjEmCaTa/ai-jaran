@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   title: "AI Jaran",
   description:
     "AI Jaran – vaš digitalni radnik za svakodnevno poslovanje.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AI Jaran",
+  },
 };
 
 export default function RootLayout({

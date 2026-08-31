@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import InstallButton from "./InstallButton";
 
 interface NavbarProps {
   onOpenContact: () => void;
@@ -189,6 +190,9 @@ export default function Navbar({
             >
               Biznisi
             </Link>
+
+            {/* PWA Install Button integrisan u mobilni meni */}
+            <InstallButton />
 
             <button
               onClick={() => {

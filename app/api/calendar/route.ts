@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+// app/api/calendar/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { createClient } from "@supabase/supabase-js";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get("date");
+    const rawDate = searchParams.get("date");
 
-    if (!date) {
+    if (!rawDate) {
       return NextResponse.json(
         {
           success: false,
@@ -17,52 +18,46 @@ export async function GET(request: Request) {
       );
     }
 
+    // Normalizacija datuma: ako stigne npr. "31.8.2026" ili "31.08.2026", pretvori u "2026-08-31"
+    let formattedDate = rawDate;
+    if (rawDate.includes(".")) {
+      const parts = rawDate.split(".");
+      if (parts.length >= 3) {
+        const day = parts[0].padStart(2, "0");
+        const month = parts[1].padStart(2, "0");
+        const year = parts[2];
+        formattedDate = `${year}-${month}-${day}`;
+      }
+    }
+
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!clientId || !clientSecret) {
+    if (!clientId || !clientSecret || !supabaseUrl || !serviceRoleKey) {
       return NextResponse.json(
         {
           success: false,
-          error: "Nedostaju GOOGLE_CLIENT_ID ili GOOGLE_CLIENT_SECRET.",
+          error: "Nedostaju potrebne serverske varijable okruženja.",
         },
         { status: 500 }
       );
     }
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Nedostaju NEXT_PUBLIC_SUPABASE_URL ili SUPABASE_SERVICE_ROLE_KEY.",
-        },
-        { status: 500 }
-      );
-    }
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
 
-    const supabase = createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    // Google Calendar token je spremljen u redu sa id = 1.
     const { data: tokenData, error: tokenError } = await supabase
       .from("google_calendar_tokens")
       .select("refresh_token")
       .eq("id", 1)
       .maybeSingle();
 
-    // Ako token ne postoji, umjesto pucanja servera vrati praznu listu zauzetih termina da aplikacija radi normalno
     if (tokenError || !tokenData?.refresh_token) {
       console.warn(
         "Google Calendar token nije pronađen ili nije povezan, preskačem provjeru kalendara."
@@ -70,15 +65,13 @@ export async function GET(request: Request) {
 
       return NextResponse.json({
         success: true,
-        date,
+        date: rawDate,
         busy: [],
       });
     }
 
     const refreshToken = tokenData.refresh_token;
-
-    const redirectUri =
-      "https://aijaran.ba/api/auth/google/callback";
+    const redirectUri = "https://aijaran.ba/api/auth/google/callback";
 
     const oauth2Client = new google.auth.OAuth2(
       clientId,
@@ -95,9 +88,8 @@ export async function GET(request: Request) {
       auth: oauth2Client,
     });
 
-    // Bosansko vrijeme.
-    const timeMin = `${date}T00:00:00+02:00`;
-    const timeMax = `${date}T23:59:59+02:00`;
+    const timeMin = `${formattedDate}T00:00:00+02:00`;
+    const timeMax = `${formattedDate}T23:59:59+02:00`;
 
     const response = await calendar.freebusy.query({
       requestBody: {
@@ -120,16 +112,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      date,
+      date: rawDate,
       busy,
     });
-  } catch (error: any) {
-    console.error(
-      "Google Calendar availability error:",
-      error
-    );
+  } catch (error: unknown) {
+    console.error("Google Calendar availability error:", error);
 
-    // Vraćamo prazan niz umjesto 500 greške da frontend ne blokira prikaz stranice
     return NextResponse.json({
       success: true,
       date: "",

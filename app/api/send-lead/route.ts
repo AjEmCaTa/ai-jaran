@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { name, email, phone, package: selectedPackage, message } = body;
@@ -12,7 +12,10 @@ export async function POST(request) {
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (!token || !chatId) {
-      return NextResponse.json({ success: false, error: 'Nedostaju Telegram environment varijable na serveru.' }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'Nedostaju Telegram environment varijable na serveru.' },
+        { status: 500 }
+      );
     }
 
     // 1. Slanje na Telegram
@@ -29,10 +32,13 @@ export async function POST(request) {
     });
 
     const telegramData = await telegramResponse.json();
-    
+
     if (!telegramData.ok) {
       console.error('Telegram API Error Response:', telegramData);
-      return NextResponse.json({ success: false, error: `Telegram Error: ${telegramData.description || 'Nepoznata greška'}` }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: `Telegram Error: ${telegramData.description || 'Nepoznata greška'}` },
+        { status: 500 }
+      );
     }
 
     // 2. Slanje emaila potvrde klijentu - SAMO ako je unio email
@@ -60,15 +66,21 @@ export async function POST(request) {
         });
 
         console.log('Resend Email Success:', emailResult);
-      } catch (emailError) {
+      } catch (emailError: any) {
         console.error('Greška pri slanju emaila:', emailError);
-        return NextResponse.json({ success: false, error: `Greška pri slanju emaila: ${emailError.message}` }, { status: 500 });
+        return NextResponse.json(
+          { success: false, error: `Greška pri slanju emaila: ${emailError.message}` },
+          { status: 500 }
+        );
       }
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('API Catch Error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Greška pri obradi zahtjeva.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message || 'Greška pri obradi zahtjeva.' },
+      { status: 500 }
+    );
   }
 }

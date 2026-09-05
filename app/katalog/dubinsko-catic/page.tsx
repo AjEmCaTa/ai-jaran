@@ -10,6 +10,8 @@ interface ServicePackage {
   id: string;
   name: string;
   price: string;
+  duration: string;
+  durationMinutes: number;
   badge?: string;
   desc: string;
   features: string[];
@@ -25,6 +27,13 @@ interface Reservation {
   reservation_date: string;
   status: string;
 }
+
+interface BusyRange {
+  start: number;
+  end: number;
+}
+
+const BUSINESS_SLUG = 'dubinsko-catic';
 
 const monthNames = [
   "Januar", "Februar", "Mart", "April", "Maj", "Juni",
@@ -50,6 +59,10 @@ const formatToBalkanDate = (dateStr: string) => {
   return `${day}.${month}.${year}.`;
 };
 
+const rangesOverlap = (startA: number, endA: number, ranges: BusyRange[]) => {
+  return ranges.some((r) => startA < r.end && endA > r.start);
+};
+
 export default function DubinskoCaticPage() {
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [resDate, setResDate] = useState('');
@@ -68,28 +81,32 @@ export default function DubinskoCaticPage() {
   const [calMonth, setCalMonth] = useState(todayObj.getMonth());
 
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
-  const [allTakenSlots, setAllTakenSlots] = useState<string[]>([]);
+  const [busyRanges, setBusyRanges] = useState<BusyRange[]>([]);
   const [showMyTerminiModal, setShowMyTerminiModal] = useState(false);
-  
+
   const [reservationToCancel, setReservationToCancel] = useState<Reservation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const packages: ServicePackage[] = [
-    { 
-      id: 'basic', 
-      name: 'Basic Paket', 
+    {
+      id: 'basic',
+      name: 'Basic Paket',
       price: '25 KM',
+      duration: '2h',
+      durationMinutes: 120,
       badge: 'Brzo & Efikasno',
       desc: 'Idealan za parcijalno čišćenje i osvježenje enterijera.',
-      features: ['Dubinsko pranje 2 prednja sjedišta', 'Osvježavanje mirisa', 'Osnovno usisavanje'] 
+      features: ['Dubinsko pranje 2 prednja sjedišta', 'Osvježavanje mirisa', 'Osnovno usisavanje']
     },
-    { 
-      id: 'premium', 
-      name: 'Premium Paket', 
+    {
+      id: 'premium',
+      name: 'Premium Paket',
       price: '130 KM',
+      duration: '5h',
+      durationMinutes: 300,
       badge: 'Najpopularnije 🔥',
       desc: 'Kompletno detaljno dubinsko pranje cijelog vozila.',
-      features: ['Vađenje i pranje svih sjedišta', 'Tepisi i krovni tapacirung', 'Zaštita i sjaj svih plastika', 'Kompletno vanjsko pranje'] 
+      features: ['Vađenje i pranje svih sjedišta', 'Tepisi i krovni tapacirung', 'Zaštita i sjaj svih plastika', 'Kompletno vanjsko pranje']
     }
   ];
 
@@ -107,13 +124,18 @@ export default function DubinskoCaticPage() {
 
   const fetchTakenSlots = async () => {
     try {
-      const res = await fetch('/api/narudzbe');
+      const res = await fetch(`/api/narudzbe?business=${BUSINESS_SLUG}`);
       const json = await res.json();
       if (res.ok && json.data) {
-        const taken = json.data
+        const ranges: BusyRange[] = json.data
           .filter((item: any) => item.status !== 'Otkazano')
-          .map((item: any) => item.reservation_date);
-        setAllTakenSlots(taken);
+          .map((item: any) => {
+            const start = new Date(item.reservation_date).getTime();
+            const durationMin = item.duration_minutes || 120;
+            const end = start + durationMin * 60000;
+            return { start, end };
+          });
+        setBusyRanges(ranges);
       }
     } catch (err) {
       console.error('Greška pri dohvatanju zauzetih termina:', err);
@@ -137,12 +159,14 @@ export default function DubinskoCaticPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          business_slug: BUSINESS_SLUG,
           customer_name: clientName,
           customer_phone: clientPhone,
           customer_email: clientEmail,
           service_name: selectedPackage.name,
           price: priceNum,
           reservation_date: formattedDateTime,
+          duration_minutes: selectedPackage.durationMinutes,
           status: 'Na čekanju',
         }),
       });
@@ -165,7 +189,7 @@ export default function DubinskoCaticPage() {
       setMyReservations(updated);
       localStorage.setItem('aijaran_catic_reservations', JSON.stringify(updated));
 
-      setAllTakenSlots((prev) => [...prev, formattedDateTime]);
+      await fetchTakenSlots();
       setSuccessModalData(newReservation);
 
       setSelectedPackage(null);
@@ -186,12 +210,13 @@ export default function DubinskoCaticPage() {
 
     setIsDeleting(true);
     const id = reservationToCancel.id;
-    const targetDateStr = reservationToCancel.reservation_date;
 
     try {
       if (typeof id === 'number' || typeof id === 'string') {
-        await fetch(`/api/narudzbe?id=${id}`, {
-          method: 'DELETE',
+        await fetch('/api/cancel-appointment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
         });
       }
 
@@ -199,7 +224,7 @@ export default function DubinskoCaticPage() {
       setMyReservations(updated);
       localStorage.setItem('aijaran_catic_reservations', JSON.stringify(updated));
 
-      setAllTakenSlots((prev) => prev.filter((d) => d !== targetDateStr));
+      await fetchTakenSlots();
       setReservationToCancel(null);
     } catch (err: any) {
       alert('Greška pri otkazivanju: ' + err.message);
@@ -208,16 +233,18 @@ export default function DubinskoCaticPage() {
     }
   };
 
+  const activeDurationMinutes = selectedPackage ? selectedPackage.durationMinutes : 30;
+
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       <Background />
       <Navbar brandName="AI Jaran" onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
 
       <div className="pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
-        
+
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link 
-            href="/katalog/dubinsko-ciscenje" 
+          <Link
+            href="/katalog/dubinsko-ciscenje"
             className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-blue-400 bg-[#0b0f19] px-4 py-2.5 rounded-xl border border-white/10 transition-all hover:border-blue-500/40"
           >
             ← Nazad na partnere
@@ -241,7 +268,7 @@ export default function DubinskoCaticPage() {
 
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0e172a] to-[#0b0f19] border border-white/10 p-6 md:p-10 shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          
+
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
@@ -275,12 +302,15 @@ export default function DubinskoCaticPage() {
             {packages.map((pkg) => {
               const isSelected = selectedPackage?.id === pkg.id;
               return (
-                <div 
+                <div
                   key={pkg.id}
-                  onClick={() => setSelectedPackage(pkg)}
+                  onClick={() => {
+                    setSelectedPackage(pkg);
+                    setResTime('');
+                  }}
                   className={`relative p-6 rounded-3xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
-                    isSelected 
-                      ? 'bg-gradient-to-b from-blue-900/20 to-[#0b0f19] border-blue-500 shadow-xl shadow-blue-500/10 scale-[1.01]' 
+                    isSelected
+                      ? 'bg-gradient-to-b from-blue-900/20 to-[#0b0f19] border-blue-500 shadow-xl shadow-blue-500/10 scale-[1.01]'
                       : 'bg-[#0b0f19] border-white/10 hover:border-white/25 hover:bg-[#0e1424]'
                   }`}
                 >
@@ -291,6 +321,9 @@ export default function DubinskoCaticPage() {
                           {pkg.badge}
                         </span>
                         <h3 className="text-2xl font-extrabold text-white mt-2">{pkg.name}</h3>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 mt-1">
+                          ⏱️ Trajanje: <span className="text-blue-400">{pkg.duration}</span>
+                        </span>
                       </div>
                       <div className="text-right">
                         <span className="text-2xl font-black text-blue-400 block">{pkg.price}</span>
@@ -325,15 +358,21 @@ export default function DubinskoCaticPage() {
         </div>
 
         <form onSubmit={handleBooking} className="space-y-10">
-          
+
           <div className="space-y-4 pt-4">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">2</span>
               <h2 className="text-xl font-bold text-white">Odaberite datum i vrijeme dolaska</h2>
             </div>
 
+            {!selectedPackage && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center text-xs text-amber-400 font-semibold">
+                ⚠️ Prvo izaberite paket usluge iznad, kako bismo znali koliko traje termin.
+              </div>
+            )}
+
             <div className="bg-[#0b0f19] border border-white/10 p-6 rounded-3xl space-y-6">
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-gray-400 font-medium block">Odabrani datum:</span>
@@ -381,15 +420,18 @@ export default function DubinskoCaticPage() {
 
                     const isPast = currentDateObj < todayObj;
                     const isSunday = currentDateObj.getDay() === 0;
-                    
+
                     const mStr = (calMonth + 1) < 10 ? `0${calMonth + 1}` : `${calMonth + 1}`;
                     const dStr = dayNum < 10 ? `0${dayNum}` : `${dayNum}`;
                     const fullDateStr = `${calYear}-${mStr}-${dStr}`;
 
-                    const daySlotsCount = timeSlots.length;
-                    const takenSlotsCountForDay = timeSlots.filter(t => allTakenSlots.includes(`${fullDateStr}T${t}:00`)).length;
-                    const isFullyBooked = daySlotsCount > 0 && takenSlotsCountForDay >= daySlotsCount;
+                    const freeSlotsCount = timeSlots.filter((t) => {
+                      const slotStart = new Date(`${fullDateStr}T${t}:00`).getTime();
+                      const slotEnd = slotStart + activeDurationMinutes * 60000;
+                      return !rangesOverlap(slotStart, slotEnd, busyRanges);
+                    }).length;
 
+                    const isFullyBooked = timeSlots.length > 0 && freeSlotsCount === 0;
                     const isDisabled = isPast || isSunday || isFullyBooked;
                     const isSelected = resDate === fullDateStr;
 
@@ -425,12 +467,14 @@ export default function DubinskoCaticPage() {
               {resDate ? (
                 <div className="pt-4 border-t border-white/10">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
-                    Slobodni termini za <span className="text-blue-400">{formatToBalkanDate(resDate)}</span>:
+                    Slobodni termini za <span className="text-blue-400">{formatToBalkanDate(resDate)}</span>
+                    {selectedPackage && <span className="text-gray-500"> (trajanje: {selectedPackage.duration})</span>}:
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {timeSlots.map((time) => {
-                      const fullSlotString = `${resDate}T${time}:00`;
-                      const isTaken = allTakenSlots.includes(fullSlotString);
+                      const slotStart = new Date(`${resDate}T${time}:00`).getTime();
+                      const slotEnd = slotStart + activeDurationMinutes * 60000;
+                      const isTaken = rangesOverlap(slotStart, slotEnd, busyRanges);
 
                       return (
                         <button
@@ -471,37 +515,37 @@ export default function DubinskoCaticPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Ime i prezime *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
-                    placeholder="Unesite vaše ime i prezime" 
-                    value={clientName} 
-                    onChange={e => setClientName(e.target.value)} 
-                    className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all" 
+                    placeholder="Unesite vaše ime i prezime"
+                    value={clientName}
+                    onChange={e => setClientName(e.target.value)}
+                    className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Broj telefona *</label>
-                  <input 
-                    type="tel" 
+                  <input
+                    type="tel"
                     required
-                    placeholder="061 123 456" 
-                    value={clientPhone} 
-                    onChange={e => setClientPhone(e.target.value)} 
-                    className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all" 
+                    placeholder="061 123 456"
+                    value={clientPhone}
+                    onChange={e => setClientPhone(e.target.value)}
+                    className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">E-mail adresa *</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
-                  placeholder="vasa.adresa@email.com" 
-                  value={clientEmail} 
-                  onChange={e => setClientEmail(e.target.value)} 
-                  className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all" 
+                  placeholder="vasa.adresa@email.com"
+                  value={clientEmail}
+                  onChange={e => setClientEmail(e.target.value)}
+                  className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
                 />
               </div>
             </div>
@@ -513,8 +557,8 @@ export default function DubinskoCaticPage() {
                 Pregled rezervacije
               </span>
               <p className="text-base font-extrabold text-white">
-                {selectedPackage 
-                  ? `${selectedPackage.name} — ${selectedPackage.price}` 
+                {selectedPackage
+                  ? `${selectedPackage.name} — ${selectedPackage.price} (${selectedPackage.duration})`
                   : '⚠️ Niste još izabrali paket'}
               </p>
               <p className="text-xs text-gray-400 mt-1">
@@ -522,8 +566,8 @@ export default function DubinskoCaticPage() {
               </p>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading || !selectedPackage || !resDate || !resTime}
               className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600 text-white font-extrabold text-sm rounded-2xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap uppercase tracking-wider"
             >

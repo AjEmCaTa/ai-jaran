@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Background from '../../components/Background';
-// Ako imaš modal komponentu, uvezi je ovdje, npr:
-// import PrivacyModal from '../../components/PrivacyModal';
+import ContactModal from '../../components/ContactModal';
 
 const businessCategories = [
   {
@@ -54,9 +53,8 @@ const cities = ["Svi gradovi", "Mostar", "Sarajevo", "Banja Luka", "Tuzla", "Zen
 
 export default function KatalogPage() {
   const [selectedCity, setSelectedCity] = useState("Svi gradovi");
-  
-  // 1. Dodan state za otvaranje politike privatnosti
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
@@ -64,7 +62,7 @@ export default function KatalogPage() {
 
       <Navbar 
         brandName="AI Jaran"
-        onOpenContact={() => {}} 
+        onOpenContact={() => setIsContactOpen(true)} 
         onResetHero={() => {}}
         onOpenCatalog={() => {}}
       />
@@ -100,13 +98,13 @@ export default function KatalogPage() {
           </div>
         </div>
 
-        {/* Kartice sa zagasitim, čistim tonovima */}
+        {/* Kartice */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {businessCategories.map(cat => (
             <a 
               key={cat.id}
               href={`/katalog/${cat.slug}`}
-              className="katalog-kartica rounded-3xl overflow-hidden flex flex-col justify-between cursor-pointer shadow-2xl transition-all duration-300 hover:border-slate-700"
+              className="katalog-kartica rounded-3xl overflow-hidden flex flex-col justify-between cursor-pointer shadow-2xl transition-all duration-300 hover:border-slate-700 bg-gray-900/40 border border-slate-800/80 backdrop-blur-md"
             >
               <div>
                 <div className="relative h-48 overflow-hidden bg-[#030712]">
@@ -117,7 +115,6 @@ export default function KatalogPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/50 to-transparent"></div>
                   
-                  {/* Diskretan bedž u tonu sa sajtom */}
                   <div className="absolute top-3 left-3 bg-[#030712]/90 px-3 py-1 rounded-full text-xs font-medium text-slate-300 border border-slate-800/80 flex items-center gap-1.5 shadow-md">
                     <span>{cat.icon}</span>
                     <span>{cat.count}</span>
@@ -144,17 +141,46 @@ export default function KatalogPage() {
             </a>
           ))}
         </div>
+
+        {/* Sekcija za prijavu biznisa */}
+        <div className="mt-16 bg-gray-900/40 border border-slate-800/80 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden shadow-2xl backdrop-blur-md">
+          <div className="relative z-10 max-w-2xl mx-auto space-y-4">
+            <span className="px-3.5 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20 uppercase tracking-wider inline-block">
+              Budi dio mreže
+            </span>
+            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+              Želiš i svoj biznis u AI Jaran katalogu?
+            </h2>
+            <p className="text-slate-400 text-sm md:text-base leading-relaxed">
+              Automatizuj svoje rezervacije, oslobodi telefon i ponudi klijentima moderno iskustvo zakazivanja termina. Kontaktiraj nas i dogovorit ćemo sve detalje.
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={() => setIsContactOpen(true)}
+                className="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs md:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all duration-200 cursor-pointer inline-flex items-center gap-2"
+              >
+                <span>📩</span> Želim svoj biznis u katalogu
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 2. Proslijeđena prava funkcija umjesto prazne zagrade */}
       <Footer 
         t={{ rights: "Sva prava zadržana.", privacy: "Politika privatnosti" }} 
         brandName="AI Jaran" 
         onOpenPrivacy={() => setIsPrivacyOpen(true)} 
       />
 
-      {/* 3. Ako imaš modal za privatnost, ovdje ga aktiviraš sa `isPrivacyOpen` */}
-      {/* {isPrivacyOpen && <PrivacyModal onClose={() => setIsPrivacyOpen(false)} />} */}
+      {/* PRAVI CONTACT MODAL SA MAILCHIMPOM */}
+      <ContactModal 
+        isOpen={isContactOpen} 
+        onClose={() => setIsContactOpen(false)} 
+        t={{
+          modalTitle: "Prijava biznisa u katalog",
+          modalSubtitle: "Unesi podatke i AI Jaran tim će te kontaktirati."
+        }}
+      />
     </main>
   );
 }

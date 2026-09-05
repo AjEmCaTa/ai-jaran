@@ -32,6 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="bs"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
       <body className="min-h-screen bg-[#030712] text-white">

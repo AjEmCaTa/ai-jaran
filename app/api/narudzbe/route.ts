@@ -5,11 +5,35 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export async function GET() {
+function formatToBalkanDate(dateStr: string) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    return parts[2] + '.' + parts[1] + '.' + parts[0] + '.';
+}
+
+export async function GET(request: NextRequest) {
     try {
-        const { data, error } = await supabase.from('reservations').select('*');
-        if (error) throw error;
-        return NextResponse.json({ success: true, data });
+        const searchParams = request.nextUrl.searchParams;
+        const businessSlug = searchParams.get('business');
+
+        let query = supabase.from('reservations').select('*');
+
+        if (businessSlug) {
+            const businessResult = await supabase
+                .from('businesses')
+                .select('id')
+                .eq('slug', businessSlug)
+                .maybeSingle();
+
+            if (businessResult.data) {
+                query = query.eq('business_id', businessResult.data.id);
+            }
+        }
+
+        const result = await query;
+        if (result.error) throw result.error;
+        return NextResponse.json({ success: true, data: result.data });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
@@ -17,142 +41,142 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
-        const rawBody = await request.json().catch(() => ({}));
-        console.log("Primljeni body sa frontenda:", rawBody);
+        const body = await request.json().catch(function () { return {}; });
+        console.log("Primljeni body sa frontenda:", body);
 
-        const body = rawBody.formData || rawBody;
+        const businessSlug = body.business_slug || 'dubinsko-catic';
 
-        const partnerName = body.partnerName || body.businessName || body.biznis || 'Dubinsko Ćatić';
-        const packageName = body.packageName || body.package || body.service || body.serviceName || 'Odabrani paket';
-        const price = body.price || '0 KM';
-        const date = body.date || body.selectedDate || body.reservationDate || body.datum || body.reservation_date || '';
-        const time = body.time || body.selectedTime || body.vrijeme || body.reservation_time || '';
+        const businessResult = await supabase
+            .from('businesses')
+            .select('id, name, owner_email, telegram_chat_id')
+            .eq('slug', businessSlug)
+            .maybeSingle();
+
+        if (!businessResult.data) {
+            return NextResponse.json({ success: false, error: "Biznis nije pronadjen (slug: " + businessSlug + ")" }, { status: 404 });
+        }
+
+        const business = businessResult.data;
+
+        const reservationDate = body.reservation_date || '';
+        const dateSplit = reservationDate.split('T');
+        const datePart = dateSplit[0] || '';
+        const timePartRaw = dateSplit[1] || '';
+        const time = timePartRaw ? timePartRaw.slice(0, 5) : '';
+
+        const partnerName = business.name;
+        const packageName = body.service_name || body.packageName || body.service || body.serviceName || 'Odabrani paket';
+        const price = body.price ? (body.price + ' KM') : (body.priceLabel || '0 KM');
         const vehicle = body.vehicle || body.vozilo || body.car || '';
+        const durationMinutes = body.duration_minutes ? Number(body.duration_minutes) : 120;
 
-        const clientName = body.clientName || body.name || body.customer_name || body.customerName || '';
-        const clientPhone = body.clientPhone || body.phone || body.customer_phone || body.customerPhone || '';
-        const clientEmail = body.clientEmail || body.email || body.customer_email || body.customerEmail || '';
+        const clientName = body.customer_name || body.clientName || body.name || '';
+        const clientPhone = body.customer_phone || body.clientPhone || body.phone || '';
+        const clientEmail = body.customer_email || body.clientEmail || body.email || '';
 
         if (!clientName) {
             return NextResponse.json({ success: false, error: "Ime klijenta je obavezno!" }, { status: 400 });
         }
-
-        let formattedDate = date;
-        const parts = date ? date.split('-') : [];
-        if (parts.length === 3) {
-            formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}.`;
+        if (!reservationDate) {
+            return NextResponse.json({ success: false, error: "Datum i vrijeme termina su obavezni!" }, { status: 400 });
         }
-        const displayDate = formattedDate || date;
 
-        // 1. Upis u Supabase tabelu "reservations"
-        const { error: dbError } = await supabase.from('reservations').insert([
+        const displayDate = formatToBalkanDate(datePart) || datePart;
+        const vehicleSuffix = vehicle ? (' - Vozilo: ' + vehicle) : '';
+        const vehicleInfo = vehicle ? (' | Vozilo: ' + vehicle) : '';
+
+        const insertResult = await supabase.from('reservations').insert([
             {
+                business_id: business.id,
                 customer_name: clientName,
                 customer_phone: clientPhone,
                 customer_email: clientEmail,
-                service_name: `${packageName} ${vehicle ? `- Vozilo: ${vehicle}` : ''}`,
+                service_name: packageName + vehicleSuffix,
                 price: price,
-                reservation_date: date && time ? `${date}T${time}:00` : new Date().toISOString(),
-                status: 'Na čekanju'
+                reservation_date: reservationDate,
+                duration_minutes: durationMinutes,
+                status: 'Na cekanju'
             }
-        ]);
+        ]).select();
 
-        if (dbError) {
-            console.error("Greška pri upisu u Supabase:", dbError);
-            return NextResponse.json({ success: false, error: dbError.message }, { status: 500 });
+        if (insertResult.error) {
+            console.error("Greska pri upisu u Supabase:", insertResult.error);
+            return NextResponse.json({ success: false, error: insertResult.error.message }, { status: 500 });
         }
 
-        // 2. Slanje Telegram obavještenja
         try {
             const token = process.env.TELEGRAM_BOT_TOKEN;
-            const chatId = process.env.TELEGRAM_CHAT_ID;
+            const chatId = business.telegram_chat_id || process.env.TELEGRAM_CHAT_ID;
             if (token && chatId) {
-                const telegramMessage = `🔵 NOVA REZERVACIJA!\n\nBiznis: ${partnerName}\nPaket: ${packageName} (${price})\nDatum: ${displayDate} u ${time}${vehicle ? `\nVozilo: ${vehicle}` : ''}\n\nKlijent: ${clientName}\nTelefon: ${clientPhone}\nEmail: ${clientEmail || 'Nije naveden'}`;
-                
-                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                const vehicleLine = vehicle ? ('\nVozilo: ' + vehicle) : '';
+                const telegramMessage = "NOVA REZERVACIJA!\n\nBiznis: " + partnerName + "\nPaket: " + packageName + " (" + price + ")\nDatum: " + displayDate + " u " + time + " (traje " + durationMinutes + " min)" + vehicleLine + "\n\nKlijent: " + clientName + "\nTelefon: " + clientPhone + "\nEmail: " + (clientEmail || 'Nije naveden');
+
+                await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: chatId, text: telegramMessage }),
                 });
             }
         } catch (tgErr) {
-            console.error("Telegram greška:", tgErr);
+            console.error("Telegram greska:", tgErr);
         }
 
-        // 3. Slanje Resend mejlova
         try {
             const resendApiKey = process.env.RESEND_API_KEY;
             if (resendApiKey) {
-                const { Resend } = await import('resend');
+                const resendModule = await import('resend');
+                const Resend = resendModule.Resend;
                 const resend = new Resend(resendApiKey);
 
-                // A) Mejl VLASNIKU
-                const ownerEmailHtml = `
-                    <div style="font-family: Arial, sans-serif; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff;">
-                        <h2 style="color: #2563eb; margin-top: 0; font-size: 22px;">Nova rezervacija primljena!</h2>
-                        <p style="font-size: 15px; line-height: 1.5;">Zaprimljen je novi zahtjev za termin na platformi.</p>
-                        
-                        <div style="background-color: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0;">
-                            <p style="margin: 0 0 8px 0; font-size: 15px;"><b>Usluga / paket:</b> ${packageName} (${price})</p>
-                            <p style="margin: 0; font-size: 14px; color: #4b5563;"><b>Detalji:</b> 📅 Datum: ${displayDate} | ⏰ Vrijeme: ${time} ${vehicle ? `| 🚗 Vozilo: ${vehicle}` : ''}</p>
-                        </div>
-
-                        <div style="background-color: #eff6ff; padding: 15px; border-radius: 4px; margin: 20px 0;">
-                            <h3 style="margin-top: 0; color: #1e40af; font-size: 16px;">Podaci o klijentu:</h3>
-                            <p style="margin: 5px 0; font-size: 14px;"><b>Ime:</b> ${clientName}</p>
-                            <p style="margin: 5px 0; font-size: 14px;"><b>Telefon:</b> ${clientPhone}</p>
-                            <p style="margin: 5px 0; font-size: 14px;"><b>Email:</b> ${clientEmail || 'Nije naveden'}</p>
-                        </div>
-                        
-                        <p style="margin-top: 30px; font-size: 14px; color: #4b5563;">
-                            <b>${partnerName} & AI Jaran</b>
-                        </p>
-                    </div>
-                `;
+                const ownerEmailHtml =
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
+                    '<tr><td style="padding:20px 0;">' +
+                    '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">Nova rezervacija primljena</h2>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;">Zaprimljen je novi zahtjev za termin na platformi.</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + packageName + ' (' + price + ')</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + displayDate + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + time + vehicleInfo + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Klijent:</b> ' + clientName + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Telefon:</b> ' + clientPhone + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Email:</b> ' + (clientEmail || 'Nije naveden') + '</p>' +
+                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + partnerName + ' & AI Jaran</p>' +
+                    '</td></tr></table>';
 
                 await resend.emails.send({
-                    from: `${partnerName} <info@aijaran.ba>`,
-                    to: 'caticharun126@gmail.com',
-                    subject: `Nova rezervacija: ${clientName} - ${displayDate} u ${time}`,
+                    from: partnerName + ' <info@aijaran.ba>',
+                    to: business.owner_email || 'caticharun126@gmail.com',
+                    subject: 'Nova rezervacija: ' + clientName + ' - ' + displayDate + ' u ' + time,
                     html: ownerEmailHtml
                 });
 
-                // B) Mejl KLIJENTU
                 if (clientEmail) {
-                    const clientEmailHtml = `
-                        <div style="font-family: Arial, sans-serif; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff;">
-                            <h2 style="color: #2563eb; margin-top: 0; font-size: 22px;">Pozdrav ${clientName},</h2>
-                            <p style="font-size: 15px; line-height: 1.5;">Hvala ti na povjerenju! Uspješno si poslao zahtjev / zakazao termin.</p>
-                            
-                            <div style="background-color: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin: 20px 0;">
-                                <p style="margin: 0 0 8px 0; font-size: 15px;"><b>Izabrana usluga / paket:</b> ${partnerName} - ${packageName} (${price})</p>
-                                <p style="margin: 0; font-size: 14px; color: #4b5563;"><b>Detalji:</b> 📅 Datum: ${displayDate} | ⏰ Vrijeme: ${time} ${vehicle ? `| 🚗 Vozilo: ${vehicle}` : ''}</p>
-                            </div>
-                            
-                            <p style="font-size: 15px; line-height: 1.5;">Vidimo se u dogovoreno vrijeme! Ako budeš želio pomjeriti ili otkazati termin, možeš to učiniti direktno preko naše platforme.</p>
-                            
-                            <p style="margin-top: 30px; font-size: 14px; color: #4b5563;">
-                                S poštovanjem,<br>
-                                <b>${partnerName} & AI Jaran</b>
-                            </p>
-                        </div>
-                    `;
+                    const clientEmailHtml =
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
+                        '<tr><td style="padding:20px 0;">' +
+                        '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">Pozdrav ' + clientName + '</h2>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;">Hvala ti na povjerenju! Uspjesno si zakazao termin.</p>' +
+                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + partnerName + ' - ' + packageName + ' (' + price + ')</p>' +
+                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + displayDate + '</p>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + time + vehicleInfo + '</p>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;">Vidimo se u dogovoreno vrijeme! Ako budes zelio pomjeriti ili otkazati termin, mozes to uciniti direktno preko nase platforme.</p>' +
+                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + partnerName + ' & AI Jaran</p>' +
+                        '</td></tr></table>';
 
                     await resend.emails.send({
-                        from: `${partnerName} <info@aijaran.ba>`,
+                        from: partnerName + ' <info@aijaran.ba>',
                         to: clientEmail,
-                        subject: `Uspješno zakazan termin - ${partnerName}`,
+                        subject: 'Uspjesno zakazan termin - ' + partnerName,
                         html: clientEmailHtml
                     });
                 }
             }
         } catch (emailErr) {
-            console.error("Resend greška:", emailErr);
+            console.error("Resend greska:", emailErr);
         }
 
-        return NextResponse.json({ success: true, message: "Uspješno spremljeno i obavještenja poslana!" });
+        return NextResponse.json({ success: true, data: insertResult.data, message: "Uspjesno spremljeno i obavjestenja poslana!" });
     } catch (error: any) {
-        console.error("Glavna API greška:", error);
+        console.error("Glavna API greska:", error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

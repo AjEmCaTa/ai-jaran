@@ -3,12 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import path from 'path';
 
-// Opcionalni SQLite fallback ako se koristi lokalno
 let Database: any;
 try {
     Database = require('better-sqlite3');
 } catch (e) {
-    // Na Vercel serverless okruženju sqlite modul se preskače
+    // Na Vercel serverless okruzenju sqlite modul se preskace
 }
 
 const getDb = () => {
@@ -21,10 +20,17 @@ const getDb = () => {
     }
 };
 
+function formatToBalkanDate(dateStr: string) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    return parts[2] + '.' + parts[1] + '.' + parts[0] + '.';
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id } = body;
+        const id = body.id;
 
         if (!id) {
             return NextResponse.json({ success: false, error: "ID rezervacije je obavezan." }, { status: 400 });
@@ -32,22 +38,43 @@ export async function POST(request: NextRequest) {
 
         let reservation: any = null;
 
-        // 1. Prvo pokušamo obrisati iz Supabase baze (ako je dostupna)
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (supabaseUrl && serviceRoleKey) {
             const supabase = createClient(supabaseUrl, serviceRoleKey);
-            
-            // Dohvati podatke prije brisanja
-            const { data } = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
+
+            const selectResult = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
+            const data = selectResult.data;
+
             if (data) {
+                let businessName = 'Dubinsko Catic';
+                let ownerEmail = 'caticharun126@gmail.com';
+                let telegramChatId = null;
+
+                if (data.business_id) {
+                    const businessResult = await supabase
+                        .from('businesses')
+                        .select('name, owner_email, telegram_chat_id')
+                        .eq('id', data.business_id)
+                        .maybeSingle();
+
+                    if (businessResult.data) {
+                        businessName = businessResult.data.name;
+                        ownerEmail = businessResult.data.owner_email || ownerEmail;
+                        telegramChatId = businessResult.data.telegram_chat_id;
+                    }
+                }
+
+                const dateSplit = data.reservation_date ? data.reservation_date.split('T') : ['', ''];
                 reservation = {
-                    partnerName: data.partner_name || 'Dubinsko Ćatić',
+                    partnerName: businessName,
+                    ownerEmail: ownerEmail,
+                    telegramChatId: telegramChatId,
                     packageName: data.service_name,
-                    price: `${data.price} KM`,
-                    date: data.reservation_date ? data.reservation_date.split('T')[0] : '',
-                    time: data.reservation_date ? data.reservation_date.split('T')[1]?.slice(0, 5) : '',
+                    price: data.price,
+                    date: dateSplit[0] || '',
+                    time: dateSplit[1] ? dateSplit[1].slice(0, 5) : '',
                     clientName: data.customer_name,
                     clientPhone: data.customer_phone,
                     clientEmail: data.customer_email || ''
@@ -56,7 +83,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // 2. Ako nije pronađeno u Supabase, pokušavamo u SQLite bazi
         if (!reservation) {
             const db = getDb();
             if (db) {
@@ -69,44 +95,76 @@ export async function POST(request: NextRequest) {
         }
 
         if (!reservation) {
-            return NextResponse.json({ success: false, error: "Rezervacija nije pronađena." }, { status: 404 });
+            return NextResponse.json({ success: false, error: "Rezervacija nije pronadjena." }, { status: 404 });
         }
 
-        // 3. Slanje obavještenja o otkazivanju (Resend mejlovi)
+        const displayDate = formatToBalkanDate(reservation.date) || reservation.date;
+
+        try {
+            const token = process.env.TELEGRAM_BOT_TOKEN;
+            const chatId = reservation.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+            if (token && chatId) {
+                const telegramMessage = "OTKAZAN TERMIN!" + "\n\n" +
+                    "Biznis: " + reservation.partnerName + "\n" +
+                    "Paket: " + reservation.packageName + " (" + reservation.price + ")" + "\n" +
+                    "Datum: " + displayDate + " u " + reservation.time + "\n\n" +
+                    "Klijent: " + reservation.clientName + "\n" +
+                    "Telefon: " + reservation.clientPhone + "\n" +
+                    "Email: " + (reservation.clientEmail || 'Nije naveden');
+
+                await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: telegramMessage }),
+                });
+            }
+        } catch (tgErr) {
+            console.log("Telegram za otkazivanje nije poslan:", tgErr);
+        }
+
         try {
             const resendApiKey = process.env.RESEND_API_KEY;
             if (resendApiKey) {
                 const resend = new Resend(resendApiKey);
 
-                // Email vlasniku
+                const ownerHtml =
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
+                    '<tr><td style="padding:20px 0;">' +
+                    '<h2 style="color:#dc2626;margin:0 0 10px 0;font-size:20px;">Rezervacija je otkazana</h2>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;">Klijent je otkazao svoj termin na platformi.</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Biznis:</b> ' + reservation.partnerName + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + reservation.packageName + ' (' + reservation.price + ')</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Otkazani termin:</b> ' + displayDate + ' u ' + reservation.time + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Ime klijenta:</b> ' + reservation.clientName + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Telefon:</b> ' + reservation.clientPhone + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Email:</b> ' + (reservation.clientEmail || 'Nije naveden') + '</p>' +
+                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + reservation.partnerName + ' & AI Jaran</p>' +
+                    '</td></tr></table>';
+
                 await resend.emails.send({
                     from: 'AI Jaran <info@aijaran.ba>',
-                    to: 'caticharun126@gmail.com',
-                    subject: `OTKAZAN TERMIN: ${reservation.partnerName} - ${reservation.date} u ${reservation.time}`,
-                    html: `
-                        <h2>Rezervacija je otkazana!</h2>
-                        <p><b>Partner / Biznis:</b> ${reservation.partnerName}</p>
-                        <p><b>Paket:</b> ${reservation.packageName} (${reservation.price})</p>
-                        <p><b>Termin koji je otkazan:</b> ${reservation.date} u ${reservation.time}</p>
-                        <h3>Podaci klijenta:</h3>
-                        <p><b>Ime:</b> ${reservation.clientName}</p>
-                        <p><b>Telefon:</b> ${reservation.clientPhone}</p>
-                        <p><b>Mejl:</b> ${reservation.clientEmail || 'Nije naveden'}</p>
-                    `
+                    to: reservation.ownerEmail,
+                    subject: 'OTKAZAN TERMIN: ' + reservation.partnerName + ' - ' + displayDate + ' u ' + reservation.time,
+                    html: ownerHtml
                 });
 
-                // Email klijentu
                 if (reservation.clientEmail) {
+                    const clientHtml =
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
+                        '<tr><td style="padding:20px 0;">' +
+                        '<h2 style="color:#dc2626;margin:0 0 10px 0;font-size:20px;">Termin je otkazan</h2>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;">Postovani ' + reservation.clientName + ', vas termin je uspjesno otkazan.</p>' +
+                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + reservation.partnerName + ' - ' + reservation.packageName + ' (' + reservation.price + ')</p>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;"><b>Otkazani termin:</b> ' + displayDate + ' u ' + reservation.time + '</p>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;">Ukoliko zelis, mozes zakazati novi termin bilo kada preko nase platforme.</p>' +
+                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + reservation.partnerName + ' & AI Jaran</p>' +
+                        '</td></tr></table>';
+
                     await resend.emails.send({
                         from: 'AI Jaran <info@aijaran.ba>',
                         to: reservation.clientEmail,
-                        subject: `Otkazan termin - ${reservation.partnerName}`,
-                        html: `
-                            <h2>Termin je uspješno otkazan</h2>
-                            <p>Poštovani ${reservation.clientName},</p>
-                            <p>Vaš termin za <b>${reservation.packageName}</b> kod partnera <b>${reservation.partnerName}</b> zakazan za ${reservation.date} u ${reservation.time} je uspješno otkazan.</p>
-                            <p>Nadamo se ponovnoj saradnji!</p>
-                        `
+                        subject: 'Otkazan termin - ' + reservation.partnerName,
+                        html: clientHtml
                     });
                 }
             }
@@ -114,7 +172,7 @@ export async function POST(request: NextRequest) {
             console.log("Mejl za otkazivanje nije poslan:", emailErr);
         }
 
-        return NextResponse.json({ success: true, message: "Rezervacija je uspješno otkazana i obavještenja su poslana." });
+        return NextResponse.json({ success: true, message: "Rezervacija je uspjesno otkazana i obavjestenja su poslana." });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }

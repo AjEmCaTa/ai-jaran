@@ -138,11 +138,11 @@ export async function POST(request: NextRequest) {
                     '<p style="font-size:14px;margin:0 0 4px 0;"><b>Ime klijenta:</b> ' + reservation.clientName + '</p>' +
                     '<p style="font-size:14px;margin:0 0 4px 0;"><b>Telefon:</b> ' + reservation.clientPhone + '</p>' +
                     '<p style="font-size:14px;margin:0 0 16px 0;"><b>Email:</b> ' + (reservation.clientEmail || 'Nije naveden') + '</p>' +
-                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + reservation.partnerName + ' & AI Jaran</p>' +
+                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + reservation.partnerName + ' & POSLO ONE</p>' +
                     '</td></tr></table>';
 
                 await resend.emails.send({
-                    from: 'AI Jaran <info@aijaran.ba>',
+                    from: 'POSLO ONE <info@posloone.ba>',
                     to: reservation.ownerEmail,
                     subject: 'OTKAZAN TERMIN: ' + reservation.partnerName + ' - ' + displayDate + ' u ' + reservation.time,
                     html: ownerHtml
@@ -157,11 +157,11 @@ export async function POST(request: NextRequest) {
                         '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + reservation.partnerName + ' - ' + reservation.packageName + ' (' + reservation.price + ')</p>' +
                         '<p style="font-size:14px;margin:0 0 16px 0;"><b>Otkazani termin:</b> ' + displayDate + ' u ' + reservation.time + '</p>' +
                         '<p style="font-size:14px;margin:0 0 16px 0;">Ukoliko zelis, mozes zakazati novi termin bilo kada preko nase platforme.</p>' +
-                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + reservation.partnerName + ' & AI Jaran</p>' +
+                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + reservation.partnerName + ' & POSLO ONE</p>' +
                         '</td></tr></table>';
 
                     await resend.emails.send({
-                        from: 'AI Jaran <info@aijaran.ba>',
+                        from: 'POSLO ONE <info@posloone.ba>',
                         to: reservation.clientEmail,
                         subject: 'Otkazan termin - ' + reservation.partnerName,
                         html: clientHtml

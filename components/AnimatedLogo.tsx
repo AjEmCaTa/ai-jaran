@@ -16,7 +16,7 @@ export default function AnimatedLogo() {
         className="rounded-xl"
         style={{ mixBlendMode: "screen" }}
       />
-      <span className="font-extrabold tracking-wider text-white text-lg">AI JARAN</span>
+      <span className="font-extrabold tracking-wider text-white text-lg">POSLO ONE</span>
     </motion.div>
   );
 }

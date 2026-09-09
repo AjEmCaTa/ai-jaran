@@ -13,14 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Jaran",
+  title: "POSLO ONE",
   description:
-    "AI Jaran – vaš digitalni radnik za svakodnevno poslovanje.",
+    "POSLO ONE – vaš digitalni radnik za svakodnevno poslovanje.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "AI Jaran",
+    title: "POSLO ONE",
   },
 };
 

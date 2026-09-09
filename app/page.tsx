@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { translations } from "./translations";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Features from "../components/Features";
@@ -15,35 +14,61 @@ import CookieBanner from "../components/CookieBanner";
 import PrivacyModal from "../components/PrivacyModal";
 
 export default function Home() {
-  const t = translations.bs;
-
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("Opšta pitanja / Konsultacije");
+
+  const [selectedPlan, setSelectedPlan] = useState(
+    "Opšta pitanja / Konsultacije"
+  );
+
   const [heroKey, setHeroKey] = useState(0);
 
-  const openContact = (planName: string = "Opšta pitanja / Konsultacije") => {
+  const openContact = (
+    planName: string = "Opšta pitanja / Konsultacije"
+  ) => {
     setSelectedPlan(planName);
     setIsContactOpen(true);
   };
+
+  // Otvori ContactModal kada se dođe sa /cjenovnik
+  // npr. /?contact=true&plan=starter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const contact = params.get("contact");
+    const plan = params.get("plan");
+
+    if (contact === "true") {
+      if (plan === "starter") {
+        openContact("Starter");
+      } else if (plan === "pro") {
+        openContact("POSLO ONE Pro (50 KM)");
+      } else {
+        openContact("Opšta pitanja / Konsultacije");
+      }
+
+      // Očisti URL nakon otvaranja modala
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
 
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       <Background />
 
-      <Navbar 
-        brandName={t.nav.brandName}
-        onOpenContact={() => openContact("Opšta pitanja / Konsultacije")} 
-        onResetHero={() => { 
-          setHeroKey(prev => prev + 1); 
+      <Navbar
+        onOpenContact={() =>
+          openContact("Opšta pitanja / Konsultacije")
+        }
+        onResetHero={() => {
+          setHeroKey((prev) => prev + 1);
         }}
         onOpenCatalog={() => {
           window.location.href = "/katalog";
         }}
       />
 
-      <Hero 
-        t={t.hero}
+      <Hero
         animationKey={heroKey}
         onStartFree={() => {
           window.location.href = "/cjenovnik";
@@ -52,15 +77,17 @@ export default function Home() {
           window.location.href = "/katalog";
         }}
         onHowItWorks={() => {
-          document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
+          document
+            .getElementById("demo")
+            ?.scrollIntoView({ behavior: "smooth" });
         }}
       />
 
-      <Features t={t.features} />
-      <Comparison t={t.comparison} />
-      
-      <CTASection 
-        t={t.ctaSection}
+      <Features />
+
+      <Comparison />
+
+      <CTASection
         onDemoClick={() => {
           window.location.href = "/cjenovnik";
         }}
@@ -69,30 +96,25 @@ export default function Home() {
         }}
       />
 
-      <FAQ t={t.faq} />
+      <FAQ />
 
-      <Footer 
-        t={t.footer} 
-        brandName={t.nav.brandName} 
-        onOpenPrivacy={() => setIsPrivacyOpen(true)} 
+      <Footer
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
       />
 
-      <ContactModal 
-        isOpen={isContactOpen} 
-        onClose={() => setIsContactOpen(false)} 
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
         defaultSubject={selectedPlan}
-        t={t.contactModal}
       />
 
-      <PrivacyModal 
-        isOpen={isPrivacyOpen} 
-        onClose={() => setIsPrivacyOpen(false)} 
-        t={t.privacy}
+      <PrivacyModal
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
       />
 
-      <CookieBanner 
-        t={t.cookie} 
-        onOpenPrivacy={() => setIsPrivacyOpen(true)} 
+      <CookieBanner
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
       />
     </main>
   );

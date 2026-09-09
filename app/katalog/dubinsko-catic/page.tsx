@@ -111,7 +111,7 @@ export default function DubinskoCaticPage() {
   ];
 
   useEffect(() => {
-    const saved = localStorage.getItem('aijaran_catic_reservations');
+    const saved = localStorage.getItem('poslo_one_catic_reservations');
     if (saved) {
       try {
         setMyReservations(JSON.parse(saved));
@@ -187,7 +187,7 @@ export default function DubinskoCaticPage() {
 
       const updated = [newReservation, ...myReservations];
       setMyReservations(updated);
-      localStorage.setItem('aijaran_catic_reservations', JSON.stringify(updated));
+      localStorage.setItem('poslo_one_catic_reservations', JSON.stringify(updated));
 
       await fetchTakenSlots();
       setSuccessModalData(newReservation);
@@ -222,7 +222,7 @@ export default function DubinskoCaticPage() {
 
       const updated = myReservations.filter((r) => r.id !== id);
       setMyReservations(updated);
-      localStorage.setItem('aijaran_catic_reservations', JSON.stringify(updated));
+      localStorage.setItem('poslo_one_catic_reservations', JSON.stringify(updated));
 
       await fetchTakenSlots();
       setReservationToCancel(null);
@@ -238,7 +238,7 @@ export default function DubinskoCaticPage() {
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       <Background />
-      <Navbar brandName="AI Jaran" onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
+      <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
 
       <div className="pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
 
@@ -272,7 +272,7 @@ export default function DubinskoCaticPage() {
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
-                🌟 Certificirani AI Jaran Partner
+                🌟 Certificirani Partner
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                 Dubinsko Ćatić
@@ -709,7 +709,7 @@ export default function DubinskoCaticPage() {
         </div>
       )}
 
-      <Footer t={{ rights: "Sva prava zadržana.", privacy: "Politika privatnosti" }} brandName="AI Jaran" onOpenPrivacy={() => {}} />
+      <Footer onOpenPrivacy={() => {}} />
     </main>
   );
 }

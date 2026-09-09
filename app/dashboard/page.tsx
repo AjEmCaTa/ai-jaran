@@ -15,7 +15,6 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState('Korisnik');
   const [loading, setLoading] = useState(true);
 
-  // Dinamička statistika iz baze
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [totalReservationsCount, setTotalReservationsCount] = useState(0);
   const [activeServicesCount, setActiveServicesCount] = useState(0);
@@ -30,36 +29,50 @@ export default function DashboardPage() {
           return;
         }
 
-        // 1. Povlačenje profila ulogovanog korisnika/biznisa
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        if (profile) {
-          setBusinessName(profile.business_name || profile.full_name || 'Moj Biznis');
-          setBusinessCity(profile.city || 'Mostar');
-          setUserName(profile.full_name || user.email || 'Admin');
+        if (!profile) {
+          setLoading(false);
+          return;
         }
 
-        // 2. Povlačenje rezervacija vezanih za ovog korisnika / biznis
+        setUserName(profile.name || user.email || 'Admin');
+        const businessId = profile.business_id;
+
+        if (!businessId) {
+          setLoading(false);
+          return;
+        }
+
+        const { data: business } = await supabase
+          .from('businesses')
+          .select('name, city')
+          .eq('id', businessId)
+          .single();
+
+        if (business) {
+          setBusinessName(business.name || 'Moj Biznis');
+          setBusinessCity(business.city || '');
+        }
+
         const { data: reservationsData, error: resError } = await supabase
           .from('reservations')
           .select('*')
+          .eq('business_id', businessId)
           .order('created_at', { ascending: false });
 
         if (!resError && reservationsData) {
           setTotalReservationsCount(reservationsData.length);
-          setRecentBookings(reservationsData.slice(0, 5)); // Uzimamo 5 najnovijih
+          setRecentBookings(reservationsData.slice(0, 5));
 
-          // Računanje zarade: zbrajamo cijene za sve rezervacije čiji status NIJE Otkazano
           let sum = 0;
           reservationsData.forEach((res) => {
             const status = (res.status || '').toLowerCase();
-            // Ako nije otkazano, uračunaj u zaradu
             if (status !== 'otkazano' && status !== 'cancelled') {
-              // Izvuci brojčanu vrijednost iz cijene (npr. "25 KM" -> 25)
               const priceStr = String(res.price || '0').replace(/[^0-9.]/g, '');
               const priceNum = parseFloat(priceStr) || 0;
               sum += priceNum;
@@ -68,19 +81,13 @@ export default function DashboardPage() {
           setTotalEarnings(sum);
         }
 
-        // 3. Povlačenje broja aktivnih usluga iz cjenovnika
-        const { count: servicesCount, error: servError } = await supabase
+        const { data: servicesData, error: servError } = await supabase
           .from('services')
-          .select('*', { count: 'exact', head: true });
+          .select('*')
+          .eq('business_id', businessId);
 
-        if (!servError && servicesCount !== null) {
-          setActiveServicesCount(servicesCount);
-        } else {
-          // Ako tabela koristi drugo ime ili ima podatke
-          const { data: servicesData } = await supabase.from('services').select('*');
-          if (servicesData) {
-            setActiveServicesCount(servicesData.length);
-          }
+        if (!servError && servicesData) {
+          setActiveServicesCount(servicesData.length);
         }
 
       } catch (err) {
@@ -95,7 +102,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Top Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-800 pb-6">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Kontrolna ploča</h2>
@@ -104,8 +110,8 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link 
-            href="/dashboard/reservations" 
+          <Link
+            href="/dashboard/reservations"
             className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition"
           >
             + Upravljaj terminima
@@ -113,9 +119,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
-        {/* Ukupna Zarada */}
         <div className="p-6 rounded-2xl bg-gradient-to-br from-gray-900 via-gray-900 to-blue-950/40 border border-gray-800 shadow-xl backdrop-blur-md">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Ukupna zarada</p>
           <div className="flex items-baseline gap-2">
@@ -124,17 +128,15 @@ export default function DashboardPage() {
           <p className="text-[11px] text-slate-500 mt-2">Automatski obračun</p>
         </div>
 
-        {/* Ukupno rezervacija */}
         <div className="p-6 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-md">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Ukupno rezervacija</p>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-white">{totalReservationsCount}</span>
             <span className="text-xs text-blue-400 font-medium">prijava</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">Svi termini u bazi</p>
+          <p className="text-[11px] text-slate-500 mt-2">Termini tvog biznisa</p>
         </div>
 
-        {/* Aktivne usluge */}
         <div className="p-6 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-md">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Aktivne usluge</p>
           <div className="flex items-baseline gap-2">
@@ -144,9 +146,8 @@ export default function DashboardPage() {
           <p className="text-[11px] text-slate-500 mt-2">Direktno iz baze</p>
         </div>
 
-        {/* AI Jaran Asistent */}
         <div className="p-6 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-md">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">AI Jaran Asistent</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">POSLO ONE Asistent</p>
           <div className="flex items-center gap-2 mt-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-sm font-bold text-emerald-400">Aktivan i spreman</span>
@@ -155,7 +156,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Bookings Table Section */}
       <div className="rounded-2xl bg-gray-900/60 border border-gray-800 overflow-hidden shadow-xl">
         <div className="p-6 border-b border-gray-800 flex items-center justify-between">
           <h3 className="text-base font-bold text-white">Nedavne rezervacije</h3>

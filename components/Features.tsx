@@ -3,43 +3,50 @@ interface FeatureItem {
   desc: string;
 }
 
-interface FeaturesProps {
-  t?: {
-    titleMain?: string;
-    titleHighlight?: string;
-    items?: FeatureItem[];
-  };
-}
-
 const icons = ["🤖", "📅", "📦", "🏢"];
 
-export default function Features({ t }: FeaturesProps) {
+const items: FeatureItem[] = [
+  {
+    title: "AI radnik 24/7",
+    desc: "Tvoj digitalni asistent radi bez pauze, odgovara klijentima i pruža im potrebne informacije u bilo koje doba dana i noći.",
+  },
+  {
+    title: "Pametne rezervacije",
+    desc: "Klijenti sami biraju slobodan termin, a POSLO ONE ga automatski upisuje u tvoj kalendar i sprječava duplo zakazivanje.",
+  },
+  {
+    title: "Katalog za biznise",
+    desc: "Predstavi svoj biznis u POSLO ONE katalogu i omogući novim klijentima da lako pronađu tvoje usluge i rezervišu termin.",
+  },
+  {
+    title: "Za svaki biznis",
+    desc: "Autopraonice, vile, restorani, saloni, čišćenje i druge djelatnosti – POSLO ONE se prilagođava načinu rada tvog biznisa.",
+  },
+];
+
+export default function Features() {
   return (
     <section className="py-28 px-8 bg-[#030712] relative z-20 overflow-hidden">
       {/* Suptilni plavi sjaj u pozadini */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-600/[0.05] blur-[140px]" />
 
       <div className="relative z-10 max-w-4xl mx-auto">
-        
+
         {/* NASLOV I OPIS */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-            {t?.titleMain || "Šta nudi"}{" "}
+            Šta nudi{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
-              {t?.titleHighlight || "AI JARAN?"}
+              POSLO ONE?
             </span>
           </h2>
         </div>
 
         {/* HORIZONTALNI RED (JEDNA ISPOD DRUGE) */}
         <div className="space-y-6">
-          {(t?.items || [
-            { title: "AI Radnik 24/7", desc: "Tvoj digitalni Jaran radi bez pauze, odgovara na upite i vodi razgovore sa klijentima u bilo koje doba dana i noći." },
-            { title: "Pametne Rezervacije", desc: "Klijenti samostalno biraju termine, a sistem ih automatski upisuje u tvoj kalendar, eliminišući mogućnost duplih zakazivanja." },
-            { title: "Katalog za Biznise", desc: "Tvoj biznis postaje dio ekskluzivne mreže gdje te hiljade novih klijenata lako pronalaze i rezervišu tvoje usluge." },
-            { title: "Sve kategorije biznisa", desc: "Autopraonice, vile, restorani ili saloni – sistem se u potpunosti konfiguriše prema specifičnim potrebama tvoje djelatnosti." }
-          ]).map((item, index) => {
+          {items.map((item, index) => {
             const stepNum = `0${index + 1}`;
+
             return (
               <div
                 key={index}
@@ -56,9 +63,15 @@ export default function Features({ t }: FeaturesProps) {
                     <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs tracking-wider">
                       {stepNum}
                     </span>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide">{item.title}</h3>
+
+                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
+                      {item.title}
+                    </h3>
                   </div>
-                  <p className="text-slate-300 leading-relaxed text-sm sm:text-base">{item.desc}</p>
+
+                  <p className="text-slate-300 leading-relaxed text-sm sm:text-base">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
             );

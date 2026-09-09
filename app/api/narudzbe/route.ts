@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
                     '<p style="font-size:14px;margin:0 0 4px 0;"><b>Klijent:</b> ' + clientName + '</p>' +
                     '<p style="font-size:14px;margin:0 0 4px 0;"><b>Telefon:</b> ' + clientPhone + '</p>' +
                     '<p style="font-size:14px;margin:0 0 16px 0;"><b>Email:</b> ' + (clientEmail || 'Nije naveden') + '</p>' +
-                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + partnerName + ' & AI Jaran</p>' +
+                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + partnerName + ' & POSLO ONE</p>' +
                     '</td></tr></table>';
 
                 await resend.emails.send({
@@ -159,11 +159,11 @@ export async function POST(request: NextRequest) {
                         '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + displayDate + '</p>' +
                         '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + time + vehicleInfo + '</p>' +
                         '<p style="font-size:14px;margin:0 0 16px 0;">Vidimo se u dogovoreno vrijeme! Ako budes zelio pomjeriti ili otkazati termin, mozes to uciniti direktno preko nase platforme.</p>' +
-                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + partnerName + ' & AI Jaran</p>' +
+                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + partnerName + ' & POSLO ONE</p>' +
                         '</td></tr></table>';
 
                     await resend.emails.send({
-                        from: partnerName + ' <info@aijaran.ba>',
+                        from: partnerName + ' <info@posloone.ba>',
                         to: clientEmail,
                         subject: 'Uspjesno zakazan termin - ' + partnerName,
                         html: clientEmailHtml

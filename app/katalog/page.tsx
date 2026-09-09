@@ -5,6 +5,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Background from '../../components/Background';
 import ContactModal from '../../components/ContactModal';
+import PrivacyModal from '../../components/PrivacyModal';
 
 const businessCategories = [
   {
@@ -60,9 +61,8 @@ export default function KatalogPage() {
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       <Background />
 
-      <Navbar 
-        brandName="AI Jaran"
-        onOpenContact={() => setIsContactOpen(true)} 
+      <Navbar
+        onOpenContact={() => setIsContactOpen(true)}
         onResetHero={() => {}}
         onOpenCatalog={() => {}}
       />
@@ -72,16 +72,22 @@ export default function KatalogPage() {
           <span className="px-3.5 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20 uppercase tracking-wider inline-block">
             Katalog Biznisa
           </span>
+
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
             Izaberi djelatnost
           </h1>
+
           <p className="text-slate-400 text-sm md:text-base leading-relaxed">
-            Pregledaj industrije i sektore za koje AI Jaran pruža naprednu automatizaciju, upravljanje kalendarima i terminima.
+            Pregledaj industrije i sektore za koje POSLO ONE pruža napredne
+            mogućnosti upravljanja poslovanjem, rezervacijama i terminima.
           </p>
 
           {/* Filter gradova */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
-            <span className="text-xs text-slate-400 font-medium mr-2">📍 Filtriraj lokaciju:</span>
+            <span className="text-xs text-slate-400 font-medium mr-2">
+              📍 Filtriraj lokaciju:
+            </span>
+
             {cities.map(city => (
               <button
                 key={city}
@@ -101,29 +107,32 @@ export default function KatalogPage() {
         {/* Kartice */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {businessCategories.map(cat => (
-            <a 
+            <a
               key={cat.id}
               href={`/katalog/${cat.slug}`}
               className="katalog-kartica rounded-3xl overflow-hidden flex flex-col justify-between cursor-pointer shadow-2xl transition-all duration-300 hover:border-slate-700 bg-gray-900/40 border border-slate-800/80 backdrop-blur-md"
             >
               <div>
                 <div className="relative h-48 overflow-hidden bg-[#030712]">
-                  <img 
-                    src={cat.image} 
-                    alt={cat.title} 
-                    className="w-full h-full object-cover opacity-50 contrast-125" 
+                  <img
+                    src={cat.image}
+                    alt={cat.title}
+                    className="w-full h-full object-cover opacity-50 contrast-125"
                   />
+
                   <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/50 to-transparent"></div>
-                  
+
                   <div className="absolute top-3 left-3 bg-[#030712]/90 px-3 py-1 rounded-full text-xs font-medium text-slate-300 border border-slate-800/80 flex items-center gap-1.5 shadow-md">
                     <span>{cat.icon}</span>
                     <span>{cat.count}</span>
                   </div>
                 </div>
+
                 <div className="p-6 space-y-2 -mt-4 relative z-10">
                   <h3 className="text-lg font-bold text-white leading-snug">
                     {cat.title}
                   </h3>
+
                   <p className="text-slate-400 text-xs leading-relaxed">
                     {cat.description}
                   </p>
@@ -134,6 +143,7 @@ export default function KatalogPage() {
                 <span className="text-[11px] text-slate-400 font-medium">
                   Grad: {selectedCity}
                 </span>
+
                 <span className="text-slate-300 hover:text-white font-semibold text-xs flex items-center gap-1 transition-colors">
                   Pregledaj →
                 </span>
@@ -148,12 +158,17 @@ export default function KatalogPage() {
             <span className="px-3.5 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20 uppercase tracking-wider inline-block">
               Budi dio mreže
             </span>
+
             <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-              Želiš i svoj biznis u AI Jaran katalogu?
+              Želiš i svoj biznis u POSLO ONE katalogu?
             </h2>
+
             <p className="text-slate-400 text-sm md:text-base leading-relaxed">
-              Automatizuj svoje rezervacije, oslobodi telefon i ponudi klijentima moderno iskustvo zakazivanja termina. Kontaktiraj nas i dogovorit ćemo sve detalje.
+              Predstavi svoj biznis na POSLO ONE platformi i omogući klijentima
+              jednostavan pristup informacijama, rezervacijama i terminima.
+              Kontaktiraj nas i dogovorit ćemo sve detalje.
             </p>
+
             <div className="pt-2">
               <button
                 onClick={() => setIsContactOpen(true)}
@@ -166,20 +181,19 @@ export default function KatalogPage() {
         </div>
       </div>
 
-      <Footer 
-        t={{ rights: "Sva prava zadržana.", privacy: "Politika privatnosti" }} 
-        brandName="AI Jaran" 
-        onOpenPrivacy={() => setIsPrivacyOpen(true)} 
+      <Footer
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
       />
 
-      {/* PRAVI CONTACT MODAL SA MAILCHIMPOM */}
-      <ContactModal 
-        isOpen={isContactOpen} 
-        onClose={() => setIsContactOpen(false)} 
-        t={{
-          modalTitle: "Prijava biznisa u katalog",
-          modalSubtitle: "Unesi podatke i AI Jaran tim će te kontaktirati."
-        }}
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+        defaultSubject="Prijava biznisa u katalog"
+      />
+
+      <PrivacyModal
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
       />
     </main>
   );

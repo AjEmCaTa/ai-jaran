@@ -2,83 +2,100 @@
 
 import { useState } from "react";
 
-interface FAQProps {
-  t?: any;
-}
+const faqs = [
+  {
+    q: "Šta je POSLO ONE?",
+    a: "POSLO ONE je platforma za biznise koja omogućava predstavljanje poslovanja u katalogu, jednostavnije upravljanje rezervacijama i, uz Pro paket, vlastiti dashboard za upravljanje poslovnim informacijama.",
+  },
+  {
+    q: "Kako mogu dodati svoj biznis u POSLO ONE katalog?",
+    a: "Prijaviš svoj biznis, dostaviš osnovne informacije o poslovanju i nakon obrade tvoj biznis može biti predstavljen u POSLO ONE katalogu, gdje ga potencijalni klijenti mogu pronaći.",
+  },
+  {
+    q: "Šta dobijam u besplatnom paketu?",
+    a: "Besplatni paket omogućava da tvoj biznis bude prisutan u POSLO ONE katalogu i da koristi osnovne funkcionalnosti rezervacija i povezivanja kalendara.",
+  },
+  {
+    q: "Šta dobijam sa Pro paketom?",
+    a: "Pro paket ti daje pristup vlastitom dashboardu iz kojeg možeš samostalno upravljati svojim poslovnim informacijama, mijenjati cijene, usluge, radno vrijeme i druge postavke svog biznisa.",
+  },
+  {
+    q: "Kako funkcionišu rezervacije?",
+    a: "Klijent odabire uslugu, datum i slobodan termin. Rezervacija se evidentira u sistemu i povezuje s kalendarom biznisa, čime se olakšava organizacija termina i smanjuje mogućnost duplog zakazivanja.",
+  },
+  {
+    q: "Da li POSLO ONE može automatski odgovarati mojim klijentima?",
+    a: "Automatsko odgovaranje putem AI-ja nije uključeno u osnovne pakete. Po dogovoru možemo dodatno povezati AI asistenta sa kanalima poput Instagrama, kalendarom i sistemom rezervacija.",
+  },
+  {
+    q: "Mogu li kasnije dodati dodatne funkcije?",
+    a: "Da. Dodatne integracije i automatizacije mogu se dogovoriti naknadno, u zavisnosti od potreba tvog biznisa.",
+  },
+];
 
-export default function FAQ({ t }: FAQProps) {
+export default function FAQ() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const defaultFaqs = [
-    { 
-      q: "Kako AI Jaran uči o mom biznisu?", 
-      a: "Tvoj Jaran dobija pristup tvojim cjenovnicima, uslugama i radnom vremenu. Na osnovu toga automatski odgovara klijentima i usklađuje termine." 
-    },
-    { 
-      q: "Da li ja moram ručno odgovarati na poruke?", 
-      a: "Ne. Jaran potpuno samostalno vodi razgovor, dogovara termine i upisuje ih direktno u tvoj sistem bez tvog uplitanja." 
-    },
-    { 
-      q: "Šta se dešava kada se termin zakazuje?", 
-      a: "Kada klijent potvrdi termin preko kataloga, Jaran ga upisuje u bazu, a tebi stiže jasna obavijest da znaš tačno vrijeme." 
-    },
-    { 
-      q: "Koliko traje podešavanje i puštanje u rad?", 
-      a: "Kompletno podešavanje, učenje baze i spajanje sa tvojim uslugama traje u rekordnom roku nakon dogovora." 
-    },
-    { 
-      q: "Šta sve uključuje mjesečna pretplata?", 
-      a: "Mjesečna pretplata pokriva kompletno održavanje sSistema, rad AI asistenta 24/7, automatsko vođenje termina i tehničku podršku bez ikakvih skrivenih troškova." 
-    },
-  ];
-
-  const faqs = t?.items || defaultFaqs;
-
   return (
-    <section id="faq" className="py-24 px-4 sm:px-8 bg-[#030712] relative">
+    <section
+      id="faq"
+      className="py-24 px-4 sm:px-8 bg-[#030712] relative"
+    >
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-            {typeof t?.titleMain === "string" ? (
-              <>
-                {t.titleMain}{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-500">
-                  {t.titleHighlight}
-                </span>
-              </>
-            ) : (
-              t?.title || "Često postavljana pitanja"
-            )}
+            Često postavljana pitanja
           </h2>
         </div>
-        
+
         <div className="space-y-4">
-          {faqs.map((faq: any, index: number) => {
+          {faqs.map((faq, index) => {
             const isOpen = activeIndex === index;
 
             return (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`border rounded-2xl transition-all duration-300 overflow-hidden backdrop-blur-md ${
-                  isOpen 
-                    ? "border-cyan-500/40 bg-gray-900/80 shadow-lg shadow-cyan-500/5" 
-                    : "border-gray-800 bg-gray-900/40 hover:border-gray-700"
+                  isOpen
+                    ? "border-blue-500/40 bg-[#080d1c]/90 shadow-lg shadow-blue-500/5"
+                    : "border-gray-800 bg-gray-900/40 hover:border-blue-500/20"
                 }`}
               >
                 <button
-                  onClick={() => setActiveIndex(isOpen ? null : index)}
+                  onClick={() =>
+                    setActiveIndex(isOpen ? null : index)
+                  }
                   className="w-full p-6 flex justify-between items-center text-left cursor-pointer focus:outline-none"
                 >
-                  <h3 className={`text-base sm:text-lg font-bold pr-4 transition-colors ${isOpen ? "text-cyan-400" : "text-white"}`}>
+                  <h3
+                    className={`text-base sm:text-lg font-bold pr-4 transition-colors ${
+                      isOpen
+                        ? "text-blue-400"
+                        : "text-white"
+                    }`}
+                  >
                     {faq.q}
                   </h3>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-                    isOpen ? "bg-cyan-500 text-gray-950 rotate-45" : "bg-gray-800 text-gray-400"
-                  }`}>
-                    <span className="text-xl font-medium leading-none">+</span>
+
+                  {/* CENTRIRANA + / X ANIMACIJA */}
+                  <div
+                    className={`relative w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isOpen
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-800 text-gray-400"
+                    }`}
+                  >
+                    <span
+                      className={`relative block w-4 h-4 transition-transform duration-300 ${
+                        isOpen ? "rotate-45" : "rotate-0"
+                      }`}
+                    >
+                      <span className="absolute left-1/2 top-1/2 h-[2px] w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
+                      <span className="absolute left-1/2 top-1/2 h-4 w-[2px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
+                    </span>
                   </div>
                 </button>
-                
+
                 {isOpen && (
                   <div className="px-6 pb-6 text-gray-300 text-sm sm:text-base leading-relaxed border-t border-gray-800/60 pt-4 animate-fade-in">
                     {faq.a}

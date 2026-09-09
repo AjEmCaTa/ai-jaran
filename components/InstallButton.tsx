@@ -1,5 +1,6 @@
-'use client';
-import { useState, useEffect } from 'react';
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function InstallButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -17,10 +18,10 @@ export default function InstallButton() {
       setDeferredPrompt(e);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener("beforeinstallprompt", handler);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener("beforeinstallprompt", handler);
     };
   }, []);
 
@@ -32,12 +33,16 @@ export default function InstallButton() {
 
     if (deferredPrompt) {
       deferredPrompt.prompt();
+
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
+
+      if (outcome === "accepted") {
         setDeferredPrompt(null);
       }
     } else {
-      alert('Aplikacija je već instalirana ili vaš pretraživač ne podržava direktnu instalaciju. Provjerite meni pretraživača (Add to Home Screen).');
+      alert(
+        "Aplikacija je već instalirana ili vaš pretraživač ne podržava direktnu instalaciju. Provjerite meni pretraživača (Add to Home Screen)."
+      );
     }
   };
 
@@ -56,10 +61,23 @@ export default function InstallButton() {
       {showIOSModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm md:hidden">
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0b0f19] p-6 text-center shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2">Instalacija na iPhone</h3>
+            <h3 className="text-lg font-bold text-white mb-2">
+              Instalacija na iPhone
+            </h3>
+
             <p className="text-sm text-slate-300 mb-4">
-              Da bi instalirali AI Jaran na iPhone ekran, kliknite na dugme <span className="text-blue-400 font-bold">Share (Podijeli)</span> na traci Vašeg Safari pretraživača, a zatim odaberite <span className="text-blue-400 font-bold">"Add to Home Screen"</span>.
+              Da bi instalirali <strong className="text-white">POSLO ONE</strong>{" "}
+              na iPhone ekran, kliknite na dugme{" "}
+              <span className="text-blue-400 font-bold">
+                Share (Podijeli)
+              </span>{" "}
+              na traci Vašeg Safari pretraživača, a zatim odaberite{" "}
+              <span className="text-blue-400 font-bold">
+                "Add to Home Screen"
+              </span>
+              .
             </p>
+
             <button
               onClick={() => setShowIOSModal(false)}
               className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white shadow-lg"

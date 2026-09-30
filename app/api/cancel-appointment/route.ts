@@ -20,6 +20,9 @@ const getDb = () => {
     }
 };
 
+// Posiljalac mora biti na domeni koja je verifikovana u Resendu
+const FROM_EMAIL = 'POSLO ONE <info@poslo.one>';
+
 function formatToBalkanDate(dateStr: string) {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -100,6 +103,7 @@ export async function POST(request: NextRequest) {
 
         const displayDate = formatToBalkanDate(reservation.date) || reservation.date;
 
+        // ---------- TELEGRAM ----------
         try {
             const token = process.env.TELEGRAM_BOT_TOKEN;
             const chatId = reservation.telegramChatId || process.env.TELEGRAM_CHAT_ID;
@@ -122,9 +126,13 @@ export async function POST(request: NextRequest) {
             console.log("Telegram za otkazivanje nije poslan:", tgErr);
         }
 
+        // ---------- EMAIL (Resend) ----------
         try {
             const resendApiKey = process.env.RESEND_API_KEY;
-            if (resendApiKey) {
+
+            if (!resendApiKey) {
+                console.error("RESEND_API_KEY nije postavljen u okruzenju!");
+            } else {
                 const resend = new Resend(resendApiKey);
 
                 const ownerHtml =
@@ -141,35 +149,52 @@ export async function POST(request: NextRequest) {
                     '<p style="font-size:13px;color:#6b7280;margin:0;">' + reservation.partnerName + ' & POSLO ONE</p>' +
                     '</td></tr></table>';
 
-                await resend.emails.send({
-                    from: 'POSLO ONE <info@posloone.ba>',
+                const clientHtml =
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
+                    '<tr><td style="padding:20px 0;">' +
+                    '<h2 style="color:#dc2626;margin:0 0 10px 0;font-size:20px;">Termin je otkazan</h2>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;">Postovani ' + reservation.clientName + ', vas termin je uspjesno otkazan.</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + reservation.partnerName + ' - ' + reservation.packageName + ' (' + reservation.price + ')</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Otkazani termin:</b> ' + displayDate + ' u ' + reservation.time + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;">Ukoliko zelis, mozes zakazati novi termin bilo kada preko nase platforme.</p>' +
+                    '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + reservation.partnerName + ' & POSLO ONE</p>' +
+                    '</td></tr></table>';
+
+                // Mail vlasniku
+                const ownerResult = await resend.emails.send({
+                    from: FROM_EMAIL,
                     to: reservation.ownerEmail,
                     subject: 'OTKAZAN TERMIN: ' + reservation.partnerName + ' - ' + displayDate + ' u ' + reservation.time,
                     html: ownerHtml
                 });
 
-                if (reservation.clientEmail) {
-                    const clientHtml =
-                        '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
-                        '<tr><td style="padding:20px 0;">' +
-                        '<h2 style="color:#dc2626;margin:0 0 10px 0;font-size:20px;">Termin je otkazan</h2>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;">Postovani ' + reservation.clientName + ', vas termin je uspjesno otkazan.</p>' +
-                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + reservation.partnerName + ' - ' + reservation.packageName + ' (' + reservation.price + ')</p>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;"><b>Otkazani termin:</b> ' + displayDate + ' u ' + reservation.time + '</p>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;">Ukoliko zelis, mozes zakazati novi termin bilo kada preko nase platforme.</p>' +
-                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + reservation.partnerName + ' & POSLO ONE</p>' +
-                        '</td></tr></table>';
+                if (ownerResult.error) {
+                    console.error("Resend greska (vlasnik):", JSON.stringify(ownerResult.error));
+                } else {
+                    console.log("Mail vlasniku poslan:", ownerResult.data?.id);
+                }
 
-                    await resend.emails.send({
-                        from: 'POSLO ONE <info@posloone.ba>',
+                // Mail klijentu (samo ako je upisao email)
+                if (reservation.clientEmail) {
+                    // mali razmak zbog Resend rate limita (2 zahtjeva u sekundi)
+                    await new Promise((resolve) => setTimeout(resolve, 600));
+
+                    const clientResult = await resend.emails.send({
+                        from: FROM_EMAIL,
                         to: reservation.clientEmail,
                         subject: 'Otkazan termin - ' + reservation.partnerName,
                         html: clientHtml
                     });
+
+                    if (clientResult.error) {
+                        console.error("Resend greska (klijent):", JSON.stringify(clientResult.error));
+                    } else {
+                        console.log("Mail klijentu poslan:", clientResult.data?.id);
+                    }
                 }
             }
         } catch (emailErr) {
-            console.log("Mejl za otkazivanje nije poslan:", emailErr);
+            console.error("Mejl za otkazivanje nije poslan:", emailErr);
         }
 
         return NextResponse.json({ success: true, message: "Rezervacija je uspjesno otkazana i obavjestenja su poslana." });

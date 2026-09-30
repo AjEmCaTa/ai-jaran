@@ -6,6 +6,10 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 const supabase = createClient(supabaseUrl, supabaseKey);
 const authSupabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
+// Posiljalac mora biti na domeni koja je VERIFIKOVANA u Resendu (resend.com -> Domains).
+// Ako poslo.one nije verifikovan, stavi ovdje: 'info@aijaran.ba'
+const FROM_ADDRESS = 'info@poslo.one';
+
 function formatToBalkanDate(dateStr: string) {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -145,6 +149,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: insertResult.error.message }, { status: 500 });
         }
 
+        // ---------- TELEGRAM ----------
         try {
             const token = process.env.TELEGRAM_BOT_TOKEN;
             const chatId = business.telegram_chat_id || process.env.TELEGRAM_CHAT_ID;
@@ -162,12 +167,18 @@ export async function POST(request: NextRequest) {
             console.error("Telegram greska:", tgErr);
         }
 
+        // ---------- EMAIL (Resend) ----------
         try {
             const resendApiKey = process.env.RESEND_API_KEY;
-            if (resendApiKey) {
+
+            if (!resendApiKey) {
+                console.error("RESEND_API_KEY nije postavljen u okruzenju!");
+            } else {
                 const resendModule = await import('resend');
                 const Resend = resendModule.Resend;
                 const resend = new Resend(resendApiKey);
+
+                const fromHeader = partnerName + ' <' + FROM_ADDRESS + '>';
 
                 const ownerEmailHtml =
                     '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
@@ -183,14 +194,23 @@ export async function POST(request: NextRequest) {
                     '<p style="font-size:13px;color:#6b7280;margin:0;">' + partnerName + ' & POSLO ONE</p>' +
                     '</td></tr></table>';
 
-                await resend.emails.send({
-                    from: partnerName + ' <info@aijaran.ba>',
+                const ownerResult = await resend.emails.send({
+                    from: fromHeader,
                     to: business.owner_email || 'caticharun126@gmail.com',
                     subject: 'Nova rezervacija: ' + clientName + ' - ' + displayDate + ' u ' + time,
                     html: ownerEmailHtml
                 });
 
+                if (ownerResult.error) {
+                    console.error("Resend greska (vlasnik):", JSON.stringify(ownerResult.error));
+                } else {
+                    console.log("Mail vlasniku poslan:", ownerResult.data?.id);
+                }
+
                 if (clientEmail) {
+                    // mali razmak zbog Resend rate limita (2 zahtjeva u sekundi)
+                    await new Promise((resolve) => setTimeout(resolve, 600));
+
                     const clientEmailHtml =
                         '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
                         '<tr><td style="padding:20px 0;">' +
@@ -203,12 +223,18 @@ export async function POST(request: NextRequest) {
                         '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + partnerName + ' & POSLO ONE</p>' +
                         '</td></tr></table>';
 
-                    await resend.emails.send({
-                        from: partnerName + ' <info@posloone.ba>',
+                    const clientResult = await resend.emails.send({
+                        from: fromHeader,
                         to: clientEmail,
                         subject: 'Uspjesno zakazan termin - ' + partnerName,
                         html: clientEmailHtml
                     });
+
+                    if (clientResult.error) {
+                        console.error("Resend greska (klijent):", JSON.stringify(clientResult.error));
+                    } else {
+                        console.log("Mail klijentu poslan:", clientResult.data?.id);
+                    }
                 }
             }
         } catch (emailErr) {

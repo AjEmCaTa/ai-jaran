@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Dashboard data access
+
+Keep `SUPABASE_SERVICE_ROLE_KEY` configured only as a server-side environment variable. Dashboard APIs validate the signed-in user and resolve their existing `profiles.business_id` before scoping business, service, reservation, and customer operations. The current schema has no business description or logo/image column, so those fields are not editable in the dashboard.
+
 ## Getting Started
 
 First, run the development server:

@@ -24,13 +24,12 @@ export default function AdminReservationsPage() {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('reservations')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (data) setReservations(data);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Prijavite se ponovo za pregled rezervacija.');
+      const response = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Rezervacije nije moguće učitati.');
+      setReservations(result.reservations || []);
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -46,21 +45,15 @@ export default function AdminReservationsPage() {
     if (!supabase) return;
 
     try {
-      const { data, error } = await supabase
-        .from('reservations')
-        .update({ status: newStatus })
-        .eq('id', id)
-        .select();
-
-      if (error) {
-        alert('Greška iz baze: ' + error.message);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        alert('Baza je odbila izmjenu! Provjeri RLS politike.');
-        return;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Prijavite se ponovo za izmjenu rezervacije.');
+      const response = await fetch('/api/dashboard/reservations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Status nije moguće promijeniti.');
 
       await fetchReservations();
     } catch (err: any) {
@@ -69,10 +62,10 @@ export default function AdminReservationsPage() {
   };
 
   const filteredReservations = reservations.filter(res => {
-    const currentStatus = (res.status || 'Aktivno').toLowerCase();
+    const currentStatus = (res.status || 'Aktivno').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (filter === 'Sve') return true;
-    if (filter === 'Aktivno') return currentStatus === 'aktivno' || currentStatus === 'na čekanju' || currentStatus === 'potvrđeno';
-    if (filter === 'Završeno') return currentStatus === 'završeno' || currentStatus === 'zavrseno';
+    if (filter === 'Aktivno') return ['aktivno', 'na cekanju', 'potvrdeno', 'potvrdjeno'].includes(currentStatus);
+    if (filter === 'Završeno') return currentStatus === 'zavrseno' || currentStatus === 'completed';
     if (filter === 'Otkazano') return currentStatus === 'otkazano' || currentStatus === 'cancelled';
     return true;
   });
@@ -137,8 +130,8 @@ export default function AdminReservationsPage() {
                   const clientName = res.customer_name || res.client_name || res.name || 'Klijent';
                   const clientPhone = res.customer_phone || res.client_phone || res.phone || '';
                   const serviceName = res.service_name || res.service || 'Usluga';
-                  const resDate = res.reservation_date || res.date || res.created_at || '-';
-                  const resPrice = res.price ? (String(res.price).includes('KM') ? res.price : `${res.price} KM`) : '25 KM';
+                  const resDate = res.reservation_date ? new Date(res.reservation_date).toLocaleString('bs-BA') : '-';
+                  const resPrice = res.price != null && res.price !== '' ? (String(res.price).includes('KM') ? res.price : `${res.price} KM`) : '-';
                   const currentStatus = res.status || 'Aktivno';
 
                   const isCancelled = currentStatus.toLowerCase() === 'otkazano' || currentStatus.toLowerCase() === 'cancelled';

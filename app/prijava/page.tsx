@@ -5,10 +5,14 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
+);
+
 export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -30,17 +34,6 @@ export default function AuthPage() {
       setLoading(false);
       return;
     }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: rememberMe
-          ? window.localStorage
-          : window.sessionStorage,
-      },
-    });
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -79,8 +72,14 @@ export default function AuthPage() {
 
       const isAdmin =
         user.email?.toLowerCase() === 'caticharun126@gmail.com';
+      const requestedPath = new URLSearchParams(window.location.search).get('next');
+      const safeRequestedPath = requestedPath?.startsWith('/') && !requestedPath.startsWith('//')
+        ? requestedPath
+        : null;
 
-      if (isAdmin) {
+      if (safeRequestedPath) {
+        router.push(safeRequestedPath);
+      } else if (isAdmin) {
         router.push('/master-panel');
       } else {
         router.push('/dashboard');
@@ -172,25 +171,6 @@ export default function AuthPage() {
               placeholder="••••••••"
               className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
-              <input
-                id="remember"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 cursor-pointer rounded border-white/10 bg-white/[0.03] text-blue-600 focus:ring-blue-500"
-              />
-
-              <label
-                htmlFor="remember"
-                className="cursor-pointer select-none text-sm text-slate-400"
-              >
-                Zapamti me
-              </label>
-            </div>
           </div>
 
           <button

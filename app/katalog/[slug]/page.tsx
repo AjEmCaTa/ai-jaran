@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
@@ -9,12 +10,43 @@ import Background from "../../../components/Background";
 export default function CategoryPartnersPage() {
   const params = useParams();
   const slug = params?.slug as string;
+  const [businessProfile, setBusinessProfile] = useState({
+    name: "Dubinsko Ćatić",
+    category: "Auto detailing & čišćenje",
+    city: "Mostar",
+    address: "Vrapčići",
+    phone: "060 30 50 153",
+    work_start: "07:00",
+    work_end: "17:00",
+    work_days: ["Pon", "Uto", "Sri", "Cet", "Pet", "Sub"],
+  });
 
   // Provjeravamo da li je izabrana kategorija za dubinsko čišćenje
   const isDubinskoCategory =
     slug === "dubinsko-ciscenje" ||
     slug === "dubinsko-catic" ||
     slug === "dubinsko";
+
+  useEffect(() => {
+    if (!isDubinskoCategory) return;
+    fetch("/api/business-profile?slug=dubinsko-catic")
+      .then(async (response) => response.ok ? response.json() : null)
+      .then((result) => {
+        if (!result?.business) return;
+        const business = result.business;
+        setBusinessProfile({
+          name: business.name || "Dubinsko Ćatić",
+          category: business.category || "",
+          city: business.city || "",
+          address: business.address || "",
+          phone: business.phone || "",
+          work_start: String(business.work_start || "").slice(0, 5),
+          work_end: String(business.work_end || "").slice(0, 5),
+          work_days: Array.isArray(business.work_days) ? business.work_days : [],
+        });
+      })
+      .catch((error) => console.error("Profil biznisa nije učitan:", error));
+  }, [isDubinskoCategory]);
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
@@ -81,11 +113,11 @@ export default function CategoryPartnersPage() {
 
                     <div>
                       <h3 className="text-2xl font-extrabold leading-tight text-white transition-colors group-hover:text-blue-400">
-                        Dubinsko Ćatić
+                        {businessProfile.name}
                       </h3>
 
                       <span className="text-[11px] font-medium text-blue-400/90">
-                        Auto detailing & čišćenje
+                        {businessProfile.category}
                       </span>
                     </div>
                   </div>
@@ -101,17 +133,17 @@ export default function CategoryPartnersPage() {
                   <div className="mb-6 space-y-2 border-t border-white/5 pt-4 text-xs text-gray-300">
                     <p className="flex items-center gap-2">
                       <span className="text-blue-400">📍</span>
-                      Vrapčići, Mostar
+                      {[businessProfile.address, businessProfile.city].filter(Boolean).join(", ")}
                     </p>
 
                     <p className="flex items-center gap-2">
                       <span className="text-blue-400">📞</span>
-                      060 30 50 153
+                      {businessProfile.phone}
                     </p>
 
                     <p className="flex items-center gap-2 text-gray-400">
                       <span className="text-blue-400">🕒</span>
-                      Pon – Sub: 07:00 – 17:00
+                      {businessProfile.work_days.join(" – ")}: {businessProfile.work_start} – {businessProfile.work_end}
                     </p>
                   </div>
                 </div>

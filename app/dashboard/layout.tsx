@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -16,6 +16,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const [fullName, setFullName] = useState("Korisnik");
   const [businessName, setBusinessName] = useState("Moj Biznis");
@@ -32,7 +33,8 @@ export default function DashboardLayout({
         const user = userResult.data.user;
 
         if (!user) {
-          setCheckingAccess(false);
+          setAccessStatus("unauthenticated");
+          router.replace(`/prijava?next=${encodeURIComponent(pathname || "/dashboard")}`);
           return;
         }
 
@@ -72,7 +74,11 @@ export default function DashboardLayout({
                 business.status === "active" ? "active" : "pending"
               );
             }
+          } else {
+            setAccessStatus("no-business");
           }
+        } else {
+          setAccessStatus("no-business");
         }
       } catch (err) {
         console.error(
@@ -85,7 +91,7 @@ export default function DashboardLayout({
     }
 
     loadLayoutData();
-  }, []);
+  }, [pathname, router]);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -97,6 +103,14 @@ export default function DashboardLayout({
         Ucitavanje...
       </div>
     );
+  }
+
+  if (accessStatus === "unauthenticated") {
+    return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400 text-sm">Preusmjeravanje na prijavu...</div>;
+  }
+
+  if (accessStatus === "no-business") {
+    return <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 text-center text-sm text-slate-300">Ovaj račun nije povezan s poslovnim dashboardom.</div>;
   }
 
   if (accessStatus !== "active") {
@@ -180,6 +194,17 @@ export default function DashboardLayout({
         }
       >
         <span>Usluge i cijene</span>
+      </Link>
+
+      <Link
+        href="/dashboard/customers"
+        className={
+          pathname === "/dashboard/customers"
+            ? "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-blue-950 text-blue-400 border border-blue-800/50"
+            : "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-gray-800 text-gray-300"
+        }
+      >
+        <span>Klijenti</span>
       </Link>
     </div>
   );

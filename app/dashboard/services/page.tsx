@@ -13,7 +13,7 @@ export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [hasBusiness, setHasBusiness] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<any | null>(null);
@@ -23,7 +23,7 @@ export default function ServicesPage() {
   const [price, setPrice] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchServices = async (bizId: string) => {
+  const fetchServices = async () => {
     if (!supabase) {
       setLoading(false);
       setErrorMsg('Supabase nije konfigurisan.');
@@ -32,14 +32,12 @@ export default function ServicesPage() {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('business_id', bizId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (data) setServices(data);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Prijavite se ponovo za upravljanje uslugama.');
+      const response = await fetch('/api/dashboard/services', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Usluge nije moguće učitati.');
+      setServices(result.services || []);
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -58,18 +56,10 @@ export default function ServicesPage() {
         setLoading(false);
         return;
       }
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('business_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.business_id) {
-        setBusinessId(profile.business_id);
-        fetchServices(profile.business_id);
-      } else {
-        setLoading(false);
-      }
+      if (user) {
+        setHasBusiness(true);
+        fetchServices();
+      } else setLoading(false);
     }
     init();
   }, []);
@@ -93,7 +83,7 @@ export default function ServicesPage() {
 
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase || !businessId) return;
+    if (!supabase || !hasBusiness) return;
 
     try {
       setSubmitting(true);
@@ -103,26 +93,19 @@ export default function ServicesPage() {
         description,
         duration,
         price: parseFloat(price) || 0,
-        business_id: businessId
       };
-
-      if (editingService) {
-        const { error } = await supabase
-          .from('services')
-          .update(serviceData)
-          .eq('id', editingService.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('services')
-          .insert([serviceData]);
-
-        if (error) throw error;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Prijavite se ponovo za izmjenu usluge.');
+      const response = await fetch('/api/dashboard/services', {
+        method: editingService ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(editingService ? { ...serviceData, id: editingService.id } : serviceData),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Uslugu nije moguće sačuvati.');
 
       setIsModalOpen(false);
-      await fetchServices(businessId);
+      await fetchServices();
     } catch (err: any) {
       alert('Greška pri snimanju: ' + err.message);
     } finally {
@@ -132,12 +115,19 @@ export default function ServicesPage() {
 
   const handleDeleteService = async (id: string) => {
     if (!confirm('Da li ste sigurni da želite obrisati ovu uslugu?')) return;
-    if (!supabase || !businessId) return;
+    if (!supabase || !hasBusiness) return;
 
     try {
-      const { error } = await supabase.from('services').delete().eq('id', id);
-      if (error) throw error;
-      await fetchServices(businessId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Prijavite se ponovo za brisanje usluge.');
+      const response = await fetch('/api/dashboard/services', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ id }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Uslugu nije moguće obrisati.');
+      await fetchServices();
     } catch (err: any) {
       alert('Greška pri brisanju: ' + err.message);
     }
@@ -152,7 +142,7 @@ export default function ServicesPage() {
         </div>
         <button
           onClick={() => handleOpenModal()}
-          disabled={!businessId}
+          disabled={!hasBusiness}
           className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 cursor-pointer disabled:opacity-50"
         >
           + Nova usluga

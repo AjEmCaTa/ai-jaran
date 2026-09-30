@@ -15,7 +15,6 @@ interface NavbarProps {
 export default function Navbar({
   onOpenContact,
   onResetHero,
-  onOpenCatalog,
 }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -66,7 +65,7 @@ export default function Navbar({
       <div className="mx-auto flex h-[82px] w-full max-w-[1500px] items-center justify-between px-6 sm:px-8 lg:px-12 xl:px-16">
 
         {/* LOGO */}
-        <a
+        <Link
           href="/"
           onClick={handleLogoOrHomeClick}
           className="group flex cursor-pointer items-center gap-3"
@@ -88,26 +87,26 @@ export default function Navbar({
           <span className="text-[20px] leading-none font-extrabold tracking-tight text-white">
             POSLO ONE
           </span>
-        </a>
+        </Link>
 
         {/* DESKTOP NAVIGACIJA */}
         <div className="hidden items-center gap-6 md:flex">
 
-          <a
+          <Link
             href="/"
             onClick={handleLogoOrHomeClick}
             className="cursor-pointer text-[14px] leading-none font-medium text-slate-400 transition-colors duration-200 hover:text-white"
           >
             Početna
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/#faq"
             onClick={(e) => handleSmoothScroll(e, "#faq")}
             className="cursor-pointer text-[14px] leading-none font-medium text-slate-400 transition-colors duration-200 hover:text-white"
           >
             FAQ
-          </a>
+          </Link>
 
           {/* CJENOVNIK - ne prikazuj na stranici cjenovnika */}
           {!isPricing && (
@@ -130,7 +129,7 @@ export default function Navbar({
           )}
 
           <Link
-            href="/prijava"
+            href="/dashboard"
             className="cursor-pointer rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-[14px] leading-none font-semibold text-blue-400 transition-all duration-300 hover:bg-blue-500/20"
           >
             Moj Panel
@@ -181,21 +180,21 @@ export default function Navbar({
         <div className="border-t border-white/[0.05] bg-[#030712]/98 px-6 py-6 shadow-2xl backdrop-blur-2xl md:hidden">
           <div className="flex flex-col gap-4">
 
-            <a
+            <Link
               href="/"
               onClick={handleLogoOrHomeClick}
               className="py-1 text-base font-medium text-slate-300 hover:text-white"
             >
               Početna
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/#faq"
               onClick={(e) => handleSmoothScroll(e, "#faq")}
               className="py-1 text-base font-medium text-slate-300 hover:text-white"
             >
               FAQ
-            </a>
+            </Link>
 
             {/* CJENOVNIK - ne prikazuj na stranici cjenovnika */}
             {!isPricing && (
@@ -209,7 +208,7 @@ export default function Navbar({
             )}
 
             <Link
-              href="/prijava"
+              href="/dashboard"
               onClick={() => setIsOpen(false)}
               className="py-1 text-base font-semibold text-blue-400 hover:text-blue-300"
             >

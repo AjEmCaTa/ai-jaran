@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
@@ -9,16 +9,45 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key"
 );
 
+type DashboardReservation = {
+  id: string;
+  user_id?: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  service_name: string | null;
+  reservation_date: string | null;
+  status: string | null;
+  price: string | number | null;
+};
+
 export default function DashboardPage() {
-  const [businessName, setBusinessName] = useState('Moj Biznis');
-  const [businessCity, setBusinessCity] = useState('');
+  const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[] });
   const [userName, setUserName] = useState('Korisnik');
   const [loading, setLoading] = useState(true);
-
-  const [totalEarnings, setTotalEarnings] = useState(0);
-  const [totalReservationsCount, setTotalReservationsCount] = useState(0);
-  const [activeServicesCount, setActiveServicesCount] = useState(0);
+  const [savingBusiness, setSavingBusiness] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [statistics, setStatistics] = useState({ today: 0, month: 0, completed: 0, cancelled: 0, customers: 0, revenueToday: 0, revenueMonth: 0, revenueTotal: 0, upcoming: 0, services: 0 });
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
+
+  const parsePrice = (value: unknown) => {
+    let normalized = String(value ?? '').replace(/[^\d,.-]/g, '');
+    if (normalized.includes(',')) normalized = normalized.replace(/\./g, '').replace(',', '.');
+    else normalized = normalized.replace(/\.(?=\d{3}$)/, '');
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const normalizeStatus = (value: unknown) => String(value ?? '').trim().toLocaleLowerCase('bs').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const isCancelledStatus = (value: unknown) => ['otkazano', 'cancelled', 'canceled'].includes(normalizeStatus(value));
+  const isCompletedStatus = (value: unknown) => ['zavrseno', 'completed', 'finished'].includes(normalizeStatus(value));
+  const dateKey = (value: string | null) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value.slice(0, 10);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -29,69 +58,40 @@ export default function DashboardPage() {
           return;
         }
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Prijavite se ponovo za pristup dashboardu.');
+        const response = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${session.access_token}` } });
+        const dashboard = await response.json();
+        if (!response.ok) throw new Error(dashboard.error || 'Dashboard nije moguće učitati.');
 
-        if (!profile) {
-          setLoading(false);
-          return;
-        }
+        setUserName(user.user_metadata?.full_name || user.email || 'Korisnik');
+        const businessData = dashboard.business;
+        const reservations: DashboardReservation[] = dashboard.reservations || [];
+        setBusiness({ ...businessData, work_days: Array.isArray(businessData.work_days) ? businessData.work_days : [] });
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const month = today.slice(0, 7);
+        const customers = new Set(reservations.map((res) => String(res.user_id || res.customer_email || res.customer_phone || res.customer_name || '').trim().toLocaleLowerCase('bs')).filter(Boolean));
+        const revenue = (items: DashboardReservation[]) => items.reduce((sum, res) => sum + (isCompletedStatus(res.status) ? parsePrice(res.price) : 0), 0);
+        setRecentBookings(reservations.slice(0, 5));
+        setStatistics((current) => ({
+          ...current,
+          today: reservations.filter((res) => dateKey(res.reservation_date) === today).length,
+          month: reservations.filter((res) => dateKey(res.reservation_date).slice(0, 7) === month).length,
+          completed: reservations.filter((res) => isCompletedStatus(res.status)).length,
+          cancelled: reservations.filter((res) => isCancelledStatus(res.status)).length,
+          customers: customers.size,
+          revenueToday: revenue(reservations.filter((res) => dateKey(res.reservation_date) === today)),
+          revenueMonth: revenue(reservations.filter((res) => dateKey(res.reservation_date).slice(0, 7) === month)),
+          revenueTotal: revenue(reservations),
+          upcoming: reservations.filter((res) => !isCancelledStatus(res.status) && !isCompletedStatus(res.status) && Boolean(res.reservation_date) && new Date(res.reservation_date as string).getTime() >= now.getTime()).length,
+        }));
 
-        setUserName(profile.name || user.email || 'Admin');
-        const businessId = profile.business_id;
-
-        if (!businessId) {
-          setLoading(false);
-          return;
-        }
-
-        const { data: business } = await supabase
-          .from('businesses')
-          .select('name, city')
-          .eq('id', businessId)
-          .single();
-
-        if (business) {
-          setBusinessName(business.name || 'Moj Biznis');
-          setBusinessCity(business.city || '');
-        }
-
-        const { data: reservationsData, error: resError } = await supabase
-          .from('reservations')
-          .select('*')
-          .eq('business_id', businessId)
-          .order('created_at', { ascending: false });
-
-        if (!resError && reservationsData) {
-          setTotalReservationsCount(reservationsData.length);
-          setRecentBookings(reservationsData.slice(0, 5));
-
-          let sum = 0;
-          reservationsData.forEach((res) => {
-            const status = (res.status || '').toLowerCase();
-            if (status !== 'otkazano' && status !== 'cancelled') {
-              const priceStr = String(res.price || '0').replace(/[^0-9.]/g, '');
-              const priceNum = parseFloat(priceStr) || 0;
-              sum += priceNum;
-            }
-          });
-          setTotalEarnings(sum);
-        }
-
-        const { data: servicesData, error: servError } = await supabase
-          .from('services')
-          .select('*')
-          .eq('business_id', businessId);
-
-        if (!servError && servicesData) {
-          setActiveServicesCount(servicesData.length);
-        }
+        setStatistics((current) => ({ ...current, services: dashboard.serviceCount || 0 }));
 
       } catch (err) {
         console.error("Greška pri učitavanju dashboard podataka:", err);
+        setErrorMessage(err instanceof Error ? err.message : 'Podatke nije moguće učitati.');
       } finally {
         setLoading(false);
       }
@@ -100,13 +100,47 @@ export default function DashboardPage() {
     loadDashboardData();
   }, []);
 
+  const saveBusiness = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSavingBusiness(true);
+    setSaveMessage('');
+    setErrorMessage('');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setErrorMessage('Prijavite se ponovo da biste sačuvali izmjene.');
+      setSavingBusiness(false);
+      return;
+    }
+    const response = await fetch('/api/dashboard', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({
+      name: business.name.trim(),
+      city: business.city.trim() || null,
+      category: business.category.trim() || null,
+      phone: business.phone.trim() || null,
+      owner_email: business.owner_email.trim() || null,
+      address: business.address.trim() || null,
+      work_start: business.work_start || null,
+      work_end: business.work_end || null,
+      work_days: business.work_days,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) setErrorMessage(result.error || 'Promjene nije moguće sačuvati.');
+    else setSaveMessage('Podaci biznisa su sačuvani.');
+    setSavingBusiness(false);
+  };
+
+  const money = (amount: number) => `${amount.toLocaleString('bs-BA', { maximumFractionDigits: 2 })} KM`;
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-800 pb-6">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Kontrolna ploča</h2>
           <p className="text-slate-400 text-sm mt-1">
-            Dobrodošli nazad, <span className="text-white font-medium">{userName}</span>. Pregled poslovanja za <span className="text-blue-400 font-semibold">{businessName}</span> {businessCity && `(${businessCity})`}.
+            Dobrodošli nazad, <span className="text-white font-medium">{userName}</span>. Pregled poslovanja za <span className="text-blue-400 font-semibold">{business.name || 'Moj biznis'}</span> {business.city && `(${business.city})`}.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -119,42 +153,70 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-gray-900 via-gray-900 to-blue-950/40 border border-gray-800 shadow-xl backdrop-blur-md">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Ukupna zarada</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-emerald-400">{totalEarnings} KM</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-2">Automatski obračun</p>
-        </div>
+      {errorMessage && <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">{errorMessage}</p>}
 
-        <div className="p-6 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-md">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Ukupno rezervacija</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-white">{totalReservationsCount}</span>
-            <span className="text-xs text-blue-400 font-medium">prijava</span>
+      <section aria-label="Statistika rezervacija" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          ['Rezervacije danas', statistics.today, 'text-white'],
+          ['Rezervacije ovaj mjesec', statistics.month, 'text-white'],
+          ['Završene rezervacije', statistics.completed, 'text-blue-400'],
+          ['Otkazane rezervacije', statistics.cancelled, 'text-red-400'],
+          ['Broj klijenata', statistics.customers, 'text-white'],
+          ['Prihod danas', money(statistics.revenueToday), 'text-emerald-400'],
+          ['Prihod ovaj mjesec', money(statistics.revenueMonth), 'text-emerald-400'],
+          ['Ukupan prihod', money(statistics.revenueTotal), 'text-emerald-400'],
+          ['Predstojeći termini', statistics.upcoming, 'text-amber-400'],
+          ['Usluge u cjenovniku', statistics.services, 'text-blue-400'],
+        ].map(([label, value, color]) => (
+          <div key={String(label)} className="rounded-xl border border-gray-800 bg-gray-900/80 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+            <p className={`mt-2 text-2xl font-black ${color}`}>{loading ? '...' : value}</p>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">Termini tvog biznisa</p>
-        </div>
+        ))}
+      </section>
 
-        <div className="p-6 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-md">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Aktivne usluge</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-blue-400">{activeServicesCount}</span>
-            <span className="text-xs text-slate-400 font-medium">u cjenovniku</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-2">Direktno iz baze</p>
+      <section className="rounded-xl border border-gray-800 bg-gray-900/60 p-5 sm:p-6">
+        <div className="mb-5">
+          <h3 className="text-base font-bold text-white">Podaci o biznisu</h3>
+          <p className="mt-1 text-xs text-slate-400">Uređujete podatke povezane s vašim vlasničkim profilom.</p>
         </div>
-
-        <div className="p-6 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-md">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">POSLO ONE Asistent</p>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-sm font-bold text-emerald-400">Aktivan i spreman</span>
+        <form onSubmit={saveBusiness} className="grid gap-4 sm:grid-cols-2">
+          {([
+            ['name', 'Naziv biznisa', 'text'],
+            ['category', 'Djelatnost', 'text'],
+            ['city', 'Grad / lokacija', 'text'],
+            ['phone', 'Telefon', 'tel'],
+            ['owner_email', 'Email biznisa', 'email'],
+            ['address', 'Adresa', 'text'],
+          ] as const).map(([field, label, type]) => (
+            <label key={field} className="block text-xs font-medium text-slate-300">
+              {label}
+              <input required={field === 'name'} type={type} value={business[field]} onChange={(event) => setBusiness((current) => ({ ...current, [field]: event.target.value }))} className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
+            </label>
+          ))}
+          <label className="block text-xs font-medium text-slate-300">Početak radnog vremena
+            <input type="time" value={business.work_start.slice(0, 5)} onChange={(event) => setBusiness((current) => ({ ...current, work_start: event.target.value }))} className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
+          </label>
+          <label className="block text-xs font-medium text-slate-300">Kraj radnog vremena
+            <input type="time" value={business.work_end.slice(0, 5)} onChange={(event) => setBusiness((current) => ({ ...current, work_end: event.target.value }))} className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
+          </label>
+          <fieldset className="sm:col-span-2">
+            <legend className="mb-2 text-xs font-medium text-slate-300">Radni dani</legend>
+            <div className="flex flex-wrap gap-2">
+              {['Pon', 'Uto', 'Sri', 'Cet', 'Pet', 'Sub', 'Ned'].map((day) => (
+                <label key={day} className="flex items-center gap-2 rounded-lg border border-gray-700 px-3 py-2 text-xs text-slate-300">
+                  <input type="checkbox" checked={business.work_days.includes(day)} onChange={(event) => setBusiness((current) => ({ ...current, work_days: event.target.checked ? [...current.work_days, day] : current.work_days.filter((item) => item !== day) }))} className="accent-blue-500" />
+                  {day}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="flex items-end gap-3 sm:col-span-2">
+            <button type="submit" disabled={savingBusiness || loading || !business.id} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50">{savingBusiness ? 'Čuvanje...' : 'Sačuvaj podatke'}</button>
+            {saveMessage && <p role="status" className="pb-2 text-sm text-emerald-400">{saveMessage}</p>}
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">Sistem radi besprijekorno</p>
-        </div>
-      </div>
+        </form>
+      </section>
 
       <div className="rounded-2xl bg-gray-900/60 border border-gray-800 overflow-hidden shadow-xl">
         <div className="p-6 border-b border-gray-800 flex items-center justify-between">
@@ -189,8 +251,8 @@ export default function DashboardPage() {
                   const clientName = b.customer_name || b.client_name || b.name || 'Klijent';
                   const clientPhone = b.customer_phone || b.client_phone || b.phone || '';
                   const serviceName = b.service_name || b.service || 'Usluga';
-                  const price = b.price ? (String(b.price).includes('KM') ? b.price : `${b.price} KM`) : '25 KM';
-                  const date = b.reservation_date || b.date || b.created_at || '-';
+                  const price = b.price != null && b.price !== '' ? (String(b.price).includes('KM') ? b.price : `${b.price} KM`) : '-';
+                  const date = b.reservation_date ? new Date(b.reservation_date).toLocaleString('bs-BA') : '-';
                   const status = b.status || 'Na čekanju';
 
                   const isCancelled = status.toLowerCase() === 'otkazano' || status.toLowerCase() === 'cancelled';

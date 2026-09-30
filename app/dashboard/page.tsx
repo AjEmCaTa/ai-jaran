@@ -21,6 +21,33 @@ type DashboardReservation = {
   price: string | number | null;
 };
 
+function parsePrice(value: unknown) {
+  let normalized = String(value ?? '').replace(/[^\d,.-]/g, '');
+  if (normalized.includes(',')) normalized = normalized.replace(/\./g, '').replace(',', '.');
+  else normalized = normalized.replace(/\.(?=\d{3}$)/, '');
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeStatus(value: unknown) {
+  return String(value ?? '').trim().toLocaleLowerCase('bs').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function isCancelledStatus(value: unknown) {
+  return ['otkazano', 'cancelled', 'canceled'].includes(normalizeStatus(value));
+}
+
+function isCompletedStatus(value: unknown) {
+  return ['zavrseno', 'completed', 'finished'].includes(normalizeStatus(value));
+}
+
+function dateKey(value: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 export default function DashboardPage() {
   const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[] });
   const [userName, setUserName] = useState('Korisnik');
@@ -29,25 +56,7 @@ export default function DashboardPage() {
   const [saveMessage, setSaveMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [statistics, setStatistics] = useState({ today: 0, month: 0, completed: 0, cancelled: 0, customers: 0, revenueToday: 0, revenueMonth: 0, revenueTotal: 0, upcoming: 0, services: 0 });
-  const [recentBookings, setRecentBookings] = useState<any[]>([]);
-
-  const parsePrice = (value: unknown) => {
-    let normalized = String(value ?? '').replace(/[^\d,.-]/g, '');
-    if (normalized.includes(',')) normalized = normalized.replace(/\./g, '').replace(',', '.');
-    else normalized = normalized.replace(/\.(?=\d{3}$)/, '');
-    const parsed = Number.parseFloat(normalized);
-    return Number.isFinite(parsed) ? parsed : 0;
-  };
-
-  const normalizeStatus = (value: unknown) => String(value ?? '').trim().toLocaleLowerCase('bs').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const isCancelledStatus = (value: unknown) => ['otkazano', 'cancelled', 'canceled'].includes(normalizeStatus(value));
-  const isCompletedStatus = (value: unknown) => ['zavrseno', 'completed', 'finished'].includes(normalizeStatus(value));
-  const dateKey = (value: string | null) => {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value.slice(0, 10);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
+  const [recentBookings, setRecentBookings] = useState<DashboardReservation[]>([]);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -135,7 +144,7 @@ export default function DashboardPage() {
   const money = (amount: number) => `${amount.toLocaleString('bs-BA', { maximumFractionDigits: 2 })} KM`;
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="min-w-0 space-y-6 pb-12 sm:space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-800 pb-6">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Kontrolna ploča</h2>
@@ -143,7 +152,7 @@ export default function DashboardPage() {
             Dobrodošli nazad, <span className="text-white font-medium">{userName}</span>. Pregled poslovanja za <span className="text-blue-400 font-semibold">{business.name || 'Moj biznis'}</span> {business.city && `(${business.city})`}.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/dashboard/reservations"
             className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition"
@@ -155,7 +164,7 @@ export default function DashboardPage() {
 
       {errorMessage && <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">{errorMessage}</p>}
 
-      <section aria-label="Statistika rezervacija" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label="Statistika rezervacija" className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4">
         {[
           ['Rezervacije danas', statistics.today, 'text-white'],
           ['Rezervacije ovaj mjesec', statistics.month, 'text-white'],
@@ -168,14 +177,14 @@ export default function DashboardPage() {
           ['Predstojeći termini', statistics.upcoming, 'text-amber-400'],
           ['Usluge u cjenovniku', statistics.services, 'text-blue-400'],
         ].map(([label, value, color]) => (
-          <div key={String(label)} className="rounded-xl border border-gray-800 bg-gray-900/80 p-4">
+          <div key={String(label)} className="min-w-0 rounded-xl border border-gray-800 bg-gray-900/80 p-4 sm:p-5">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-            <p className={`mt-2 text-2xl font-black ${color}`}>{loading ? '...' : value}</p>
+            <p className={`mt-2 break-words text-2xl font-black ${color}`}>{loading ? '...' : value}</p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-xl border border-gray-800 bg-gray-900/60 p-5 sm:p-6">
+      <section className="min-w-0 rounded-xl border border-gray-800 bg-gray-900/60 p-4 sm:p-6">
         <div className="mb-5">
           <h3 className="text-base font-bold text-white">Podaci o biznisu</h3>
           <p className="mt-1 text-xs text-slate-400">Uređujete podatke povezane s vašim vlasničkim profilom.</p>
@@ -218,7 +227,7 @@ export default function DashboardPage() {
         </form>
       </section>
 
-      <div className="rounded-2xl bg-gray-900/60 border border-gray-800 overflow-hidden shadow-xl">
+      <div className="hidden overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/60 shadow-xl lg:block">
         <div className="p-6 border-b border-gray-800 flex items-center justify-between">
           <h3 className="text-base font-bold text-white">Nedavne rezervacije</h3>
           <Link href="/dashboard/reservations" className="text-xs text-blue-400 hover:text-blue-300 font-semibold transition">
@@ -248,9 +257,9 @@ export default function DashboardPage() {
                 </tr>
               ) : (
                 recentBookings.map((b) => {
-                  const clientName = b.customer_name || b.client_name || b.name || 'Klijent';
-                  const clientPhone = b.customer_phone || b.client_phone || b.phone || '';
-                  const serviceName = b.service_name || b.service || 'Usluga';
+                  const clientName = b.customer_name || 'Klijent';
+                  const clientPhone = b.customer_phone || '';
+                  const serviceName = b.service_name || 'Usluga';
                   const price = b.price != null && b.price !== '' ? (String(b.price).includes('KM') ? b.price : `${b.price} KM`) : '-';
                   const date = b.reservation_date ? new Date(b.reservation_date).toLocaleString('bs-BA') : '-';
                   const status = b.status || 'Na čekanju';
@@ -259,7 +268,7 @@ export default function DashboardPage() {
                   const isFinished = status.toLowerCase() === 'završeno' || status.toLowerCase() === 'zavrseno';
 
                   return (
-                    <tr key={b.id || Math.random()} className="hover:bg-gray-800/30 transition">
+                    <tr key={b.id} className="hover:bg-gray-800/30 transition">
                       <td className="py-4 px-6 font-semibold text-white">
                         {clientName}
                         {clientPhone && <span className="block text-[11px] text-blue-400 font-normal">{clientPhone}</span>}
@@ -286,6 +295,34 @@ export default function DashboardPage() {
           </table>
         </div>
       </div>
+
+      <section aria-label="Nedavne rezervacije" className="space-y-3 lg:hidden">
+        <h3 className="text-base font-bold text-white">Nedavne rezervacije</h3>
+        {loading ? <p className="py-8 text-center text-sm text-slate-500">Učitavanje podataka...</p>
+          : recentBookings.length === 0 ? <p className="rounded-xl border border-gray-800 bg-gray-900/60 px-4 py-8 text-center text-sm text-slate-500">Još uvijek nema zabilježenih rezervacija.</p>
+            : recentBookings.map((booking) => {
+              const status = booking.status || 'Na čekanju';
+              const isCancelled = isCancelledStatus(status);
+              const isFinished = isCompletedStatus(status);
+              return (
+                <article key={booking.id} className="space-y-3 rounded-xl border border-gray-800 bg-gray-900/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h4 className="break-words font-semibold text-white">{booking.customer_name || 'Klijent'}</h4>
+                      <p className="mt-1 break-words text-xs text-blue-300">{booking.customer_phone || 'Telefon nije naveden'}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isCancelled ? 'border-red-500/30 bg-red-500/10 text-red-300' : isFinished ? 'border-blue-500/30 bg-blue-500/10 text-blue-300' : 'border-amber-500/30 bg-amber-500/10 text-amber-300'}`}>{status}</span>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-3 border-t border-gray-800 pt-3 text-xs">
+                    <div className="col-span-2 min-w-0"><dt className="text-slate-500">Usluga</dt><dd className="mt-0.5 break-words text-slate-200">{booking.service_name || 'Usluga'}</dd></div>
+                    <div><dt className="text-slate-500">Termin</dt><dd className="mt-0.5 text-slate-200">{booking.reservation_date ? new Date(booking.reservation_date).toLocaleString('bs-BA') : '-'}</dd></div>
+                    <div><dt className="text-slate-500">Cijena</dt><dd className="mt-0.5 font-semibold text-white">{booking.price != null && booking.price !== '' ? `${booking.price}${String(booking.price).includes('KM') ? '' : ' KM'}` : '-'}</dd></div>
+                  </dl>
+                  <Link href="/dashboard/reservations" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-gray-700 px-3 py-2 text-sm font-semibold text-blue-300">Otvori rezervacije</Link>
+                </article>
+              );
+            })}
+      </section>
     </div>
   );
 }

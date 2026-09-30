@@ -85,13 +85,13 @@ export default function CustomersPage() {
         </div>
         <label className="text-xs font-semibold text-slate-400">
           Pretraga
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ime, email ili telefon" className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 sm:w-72" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ime, email ili telefon" className="mt-2 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 sm:w-72" />
         </label>
       </header>
 
       {error && <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">{error}</p>}
-      <div className="overflow-x-auto rounded-xl border border-gray-800 bg-gray-900/60">
-        <table className="w-full min-w-[760px] text-left">
+      <div className="hidden overflow-x-auto rounded-xl border border-gray-800 bg-gray-900/60 lg:block">
+        <table className="w-full text-left">
           <thead className="border-b border-gray-800 bg-gray-950/50 text-[11px] uppercase tracking-wide text-slate-400">
             <tr><th className="px-5 py-3">Klijent</th><th className="px-5 py-3">Telefon</th><th className="px-5 py-3">Rezervacije</th><th className="px-5 py-3">Posljednja rezervacija</th><th className="px-5 py-3">Potrošeno</th></tr>
           </thead>
@@ -107,6 +107,25 @@ export default function CustomersPage() {
                 </tr>)}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3 lg:hidden">
+        {loading ? <p className="py-10 text-center text-sm text-slate-500">Učitavanje klijenata...</p>
+          : visibleCustomers.length === 0 ? <p className="rounded-xl border border-gray-800 bg-gray-900/60 px-4 py-10 text-center text-sm text-slate-500">{search ? 'Nema rezultata pretrage.' : 'Još nema evidentiranih klijenata.'}</p>
+            : visibleCustomers.map((customer) => (
+              <article key={customer.key} className="space-y-3 rounded-xl border border-gray-800 bg-gray-900/70 p-4">
+                <div className="min-w-0">
+                  <h3 className="break-words font-semibold text-white">{customer.name}</h3>
+                  <p className="mt-1 break-all text-xs text-slate-400">{customer.email || 'Email nije naveden'}</p>
+                  <p className="mt-1 break-words text-sm text-blue-300">{customer.phone || 'Telefon nije naveden'}</p>
+                </div>
+                <dl className="grid grid-cols-2 gap-3 border-t border-gray-800 pt-3 text-xs">
+                  <div><dt className="text-slate-500">Rezervacije</dt><dd className="mt-1 text-slate-200">{customer.reservationCount}</dd></div>
+                  <div><dt className="text-slate-500">Potrošeno</dt><dd className="mt-1 font-semibold text-emerald-400">{customer.totalSpent.toLocaleString('bs-BA', { maximumFractionDigits: 2 })} KM</dd></div>
+                  <div className="col-span-2"><dt className="text-slate-500">Posljednja rezervacija</dt><dd className="mt-1 text-slate-200">{customer.lastReservation ? new Date(customer.lastReservation).toLocaleString('bs-BA') : '-'}</dd></div>
+                </dl>
+              </article>
+            ))}
       </div>
     </section>
   );

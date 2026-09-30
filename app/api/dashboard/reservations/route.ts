@@ -2,6 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOwnerContext } from '../../../../utils/ownerAuth';
 
 const allowedStatuses = new Set(['Na čekanju', 'Na cekanju', 'Aktivno', 'Potvrđeno', 'Završeno', 'Otkazano']);
+const reservationFields = 'id, business_id, user_id, customer_name, customer_phone, customer_email, service_name, reservation_date, status, created_at, price, duration_minutes';
+
+export async function GET(request: NextRequest) {
+  const result = await getOwnerContext(request);
+  if (result.response) return result.response;
+
+  try {
+    const reservations: Record<string, unknown>[] = [];
+    const pageSize = 1000;
+    for (let offset = 0; ; offset += pageSize) {
+      const { data, error } = await result.context.admin
+        .from('reservations')
+        .select(reservationFields)
+        .eq('business_id', result.context.businessId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + pageSize - 1);
+      if (error) throw error;
+      reservations.push(...(data || []));
+      if (!data || data.length < pageSize) break;
+    }
+    return NextResponse.json({ reservations });
+  } catch (error) {
+    console.error('Rezervacije biznisa nisu učitane:', error);
+    return NextResponse.json({ error: 'Rezervacije nije moguće učitati.' }, { status: 500 });
+  }
+}
 
 export async function PATCH(request: NextRequest) {
   const result = await getOwnerContext(request);

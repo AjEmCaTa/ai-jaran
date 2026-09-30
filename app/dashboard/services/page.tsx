@@ -9,14 +9,22 @@ const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+type Service = {
+  id: string;
+  name: string;
+  description: string | null;
+  duration: string | null;
+  price: number;
+};
+
 export default function ServicesPage() {
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [hasBusiness, setHasBusiness] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingService, setEditingService] = useState<any | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('');
@@ -38,8 +46,8 @@ export default function ServicesPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Usluge nije moguće učitati.');
       setServices(result.services || []);
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Usluge nije moguće učitati.');
     } finally {
       setLoading(false);
     }
@@ -56,21 +64,19 @@ export default function ServicesPage() {
         setLoading(false);
         return;
       }
-      if (user) {
-        setHasBusiness(true);
-        fetchServices();
-      } else setLoading(false);
+      setHasBusiness(true);
+      fetchServices();
     }
     init();
   }, []);
 
-  const handleOpenModal = (service: any = null) => {
+  const handleOpenModal = (service: Service | null = null) => {
     if (service) {
       setEditingService(service);
       setName(service.name || '');
       setDescription(service.description || '');
       setDuration(service.duration || '');
-      setPrice(service.price || '');
+      setPrice(String(service.price ?? ''));
     } else {
       setEditingService(null);
       setName('');
@@ -106,8 +112,8 @@ export default function ServicesPage() {
 
       setIsModalOpen(false);
       await fetchServices();
-    } catch (err: any) {
-      alert('Greška pri snimanju: ' + err.message);
+    } catch (err) {
+      alert('Greška pri snimanju: ' + (err instanceof Error ? err.message : 'Pokušajte ponovo.'));
     } finally {
       setSubmitting(false);
     }
@@ -128,8 +134,8 @@ export default function ServicesPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Uslugu nije moguće obrisati.');
       await fetchServices();
-    } catch (err: any) {
-      alert('Greška pri brisanju: ' + err.message);
+    } catch (err) {
+      alert('Greška pri brisanju: ' + (err instanceof Error ? err.message : 'Pokušajte ponovo.'));
     }
   };
 
@@ -143,7 +149,7 @@ export default function ServicesPage() {
         <button
           onClick={() => handleOpenModal()}
           disabled={!hasBusiness}
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 cursor-pointer disabled:opacity-50"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500 disabled:opacity-50 sm:w-auto"
         >
           + Nova usluga
         </button>
@@ -155,7 +161,7 @@ export default function ServicesPage() {
         </div>
       )}
 
-      <div className="bg-gray-900/60 rounded-2xl border border-gray-800 shadow-xl overflow-hidden backdrop-blur-md">
+      <div className="hidden overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/60 shadow-xl backdrop-blur-md lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -175,7 +181,7 @@ export default function ServicesPage() {
               ) : services.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-500">
-                    Nemate kreiranih usluga. Kliknite gore desno na "+ Nova usluga" da dodate prvu.
+                    Nemate kreiranih usluga. Kliknite gore desno na &quot;+ Nova usluga&quot; da dodate prvu.
                   </td>
                 </tr>
               ) : (
@@ -207,9 +213,30 @@ export default function ServicesPage() {
         </div>
       </div>
 
+      <div className="space-y-3 lg:hidden">
+        {loading ? <p className="py-10 text-center text-sm text-slate-500">Učitavanje usluga...</p>
+          : services.length === 0 ? <p className="rounded-xl border border-gray-800 bg-gray-900/60 px-4 py-10 text-center text-sm text-slate-500">Nemate kreiranih usluga. Dodajte prvu uslugu.</p>
+            : services.map((service) => (
+              <article key={service.id} className="space-y-3 rounded-xl border border-gray-800 bg-gray-900/70 p-4">
+                <div className="min-w-0">
+                  <h3 className="break-words font-semibold text-white">{service.name}</h3>
+                  {service.description && <p className="mt-1 break-words text-sm text-slate-400">{service.description}</p>}
+                </div>
+                <dl className="grid grid-cols-2 gap-3 border-t border-gray-800 pt-3 text-xs">
+                  <div><dt className="text-slate-500">Trajanje</dt><dd className="mt-1 text-slate-200">{service.duration || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Cijena</dt><dd className="mt-1 font-semibold text-white">{service.price} KM</dd></div>
+                </dl>
+                <div className="flex gap-2 border-t border-gray-800 pt-3">
+                  <button onClick={() => handleOpenModal(service)} className="min-h-11 flex-1 rounded-lg border border-blue-500/30 bg-blue-600/10 px-3 py-2 text-sm font-semibold text-blue-300">Uredi</button>
+                  <button onClick={() => handleDeleteService(service.id)} className="min-h-11 flex-1 rounded-lg border border-red-500/30 bg-red-600/10 px-3 py-2 text-sm font-semibold text-red-300">Obriši</button>
+                </div>
+              </article>
+            ))}
+      </div>
+
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-4">
+          <div className="max-h-[90dvh] w-full max-w-md space-y-6 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-4 shadow-2xl sm:p-6">
             <div className="flex items-center justify-between border-b border-gray-800 pb-4">
               <h3 className="text-lg font-bold text-white">
                 {editingService ? 'Uredi uslugu' : 'Nova usluga'}
@@ -231,7 +258,7 @@ export default function ServicesPage() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder="npr. Dubinsko čišćenje sjedala"
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -242,7 +269,7 @@ export default function ServicesPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Kratak opis šta usluga uključuje..."
                   rows={2}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -254,7 +281,7 @@ export default function ServicesPage() {
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     placeholder="npr. 2 sata"
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -266,23 +293,23 @@ export default function ServicesPage() {
                     onChange={(e) => setPrice(e.target.value)}
                     required
                     placeholder="25"
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
+              <div className="flex flex-col-reverse gap-2 border-t border-gray-800 pt-4 sm:flex-row sm:justify-end sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-800 text-slate-300 text-xs font-semibold rounded-xl hover:bg-gray-700 transition cursor-pointer"
+                  className="min-h-11 px-4 py-2 bg-gray-800 text-slate-300 text-xs font-semibold rounded-xl hover:bg-gray-700 transition cursor-pointer"
                 >
                   Odustani
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 cursor-pointer disabled:opacity-50"
+                  className="min-h-11 px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? 'Snimanje...' : 'Sačuvaj uslugu'}
                 </button>

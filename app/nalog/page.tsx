@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -14,12 +14,16 @@ function safeReturnPath(value: string | null) {
   return value?.startsWith('/') && !value.startsWith('//') ? value : '/katalog';
 }
 
-function getReturnPath() {
-  return safeReturnPath(new URLSearchParams(window.location.search).get('next'));
+// Vraca putanju iz ?next=... ili null ako je nema
+function getNextParam() {
+  const value = new URLSearchParams(window.location.search).get('next');
+  return value ? safeReturnPath(value) : null;
 }
 
 export default function CustomerAuthPage() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [checking, setChecking] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,13 +33,27 @@ export default function CustomerAuthPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const destination = getReturnPath();
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace(destination);
+      const next = getNextParam();
+      if (session && next) {
+        // Dosao je sa zakazivanja: vrati ga odmah nazad
+        router.replace(next);
+        return;
+      }
+      setUser(session?.user ?? null);
+      setChecking(false);
     });
   }, [router]);
 
-  const completeAuth = () => router.replace(getReturnPath());
+  const completeAuth = async () => {
+    const next = getNextParam();
+    if (next) {
+      router.replace(next);
+      return;
+    }
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user ?? null);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -50,12 +68,12 @@ export default function CustomerAuthPage() {
           options: { data: { full_name: name.trim() } },
         });
         if (authError) throw authError;
-        if (data.session) completeAuth();
-        else setMessage('Provjerite email i potvrdite račun, zatim se prijavite da nastavite rezervaciju.');
+        if (data.session) await completeAuth();
+        else setMessage('Provjerite email i potvrdite račun, zatim se prijavite.');
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (authError) throw authError;
-        completeAuth();
+        await completeAuth();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Prijava nije uspjela. Pokušajte ponovo.');
@@ -68,7 +86,8 @@ export default function CustomerAuthPage() {
     setLoading(true);
     setError('');
     const redirectTo = new URL('/nalog', window.location.origin);
-    redirectTo.searchParams.set('next', getReturnPath());
+    const next = getNextParam();
+    if (next) redirectTo.searchParams.set('next', next);
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: redirectTo.toString() },
@@ -79,6 +98,38 @@ export default function CustomerAuthPage() {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  if (checking) {
+    return <main className="flex min-h-screen items-center justify-center bg-[#07110f] text-slate-400">Učitavanje...</main>;
+  }
+
+  // ---------- PRIJAVLJEN: prikaz naloga ----------
+  if (user) {
+    const displayName = (user.user_metadata?.full_name as string | undefined) || user.email;
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#07110f] px-4 py-10 text-white">
+        <section className="w-full max-w-md border border-white/10 bg-[#0c1915] p-7 shadow-2xl sm:p-9">
+          <Link href="/katalog" className="text-xs font-semibold text-emerald-300 hover:text-emerald-200">Nazad na katalog</Link>
+          <p className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">POSLO ONE · moj nalog</p>
+          <h1 className="mt-3 text-3xl font-black">Zdravo, {displayName}</h1>
+          <p className="mt-2 text-sm text-slate-400">Prijavljeni ste kao {user.email}. Ostajete prijavljeni, pa termine možete zakazivati bez ponovne prijave.</p>
+
+          <Link href="/katalog" className="mt-7 block w-full bg-emerald-400 px-4 py-3.5 text-center text-sm font-bold text-emerald-950 transition hover:bg-emerald-300">
+            Zakaži termin
+          </Link>
+          <button type="button" onClick={handleSignOut} className="mt-3 w-full border border-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/5">
+            Odjavi se
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  // ---------- NIJE PRIJAVLJEN: prijava / registracija ----------
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#07110f] px-4 py-10 text-white">
       <section className="w-full max-w-md border border-white/10 bg-[#0c1915] p-7 shadow-2xl sm:p-9">

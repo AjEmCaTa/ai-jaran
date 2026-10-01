@@ -7,19 +7,24 @@ import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 
+const EMPTY_PROFILE = {
+  name: "",
+  category: "",
+  city: "",
+  address: "",
+  phone: "",
+  work_start: "",
+  work_end: "",
+  work_days: [] as string[],
+};
+
 export default function CategoryPartnersPage() {
   const params = useParams();
   const slug = params?.slug as string;
-  const [businessProfile, setBusinessProfile] = useState({
-    name: "Dubinsko Ćatić",
-    category: "Auto detailing & čišćenje",
-    city: "Mostar",
-    address: "Vrapčići",
-    phone: "060 30 50 153",
-    work_start: "07:00",
-    work_end: "17:00",
-    work_days: ["Pon", "Uto", "Sri", "Cet", "Pet", "Sub"],
-  });
+
+  // Dok se podaci ne ucitaju iz baze, prikazuje se skeleton (nema "stare verzije")
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [businessProfile, setBusinessProfile] = useState(EMPTY_PROFILE);
 
   // Provjeravamo da li je izabrana kategorija za dubinsko čišćenje
   const isDubinskoCategory =
@@ -29,10 +34,13 @@ export default function CategoryPartnersPage() {
 
   useEffect(() => {
     if (!isDubinskoCategory) return;
-    fetch("/api/business-profile?slug=dubinsko-catic")
-      .then(async (response) => response.ok ? response.json() : null)
+    fetch("/api/business-profile?slug=dubinsko-catic", { cache: "no-store" })
+      .then(async (response) => (response.ok ? response.json() : null))
       .then((result) => {
-        if (!result?.business) return;
+        if (!result?.business) {
+          setBusinessProfile({ ...EMPTY_PROFILE, name: "Dubinsko Ćatić" });
+          return;
+        }
         const business = result.business;
         setBusinessProfile({
           name: business.name || "Dubinsko Ćatić",
@@ -45,8 +53,28 @@ export default function CategoryPartnersPage() {
           work_days: Array.isArray(business.work_days) ? business.work_days : [],
         });
       })
-      .catch((error) => console.error("Profil biznisa nije učitan:", error));
+      .catch((error) => {
+        console.error("Profil biznisa nije učitan:", error);
+        setBusinessProfile({ ...EMPTY_PROFILE, name: "Dubinsko Ćatić" });
+      })
+      .finally(() => setDataLoaded(true));
   }, [isDubinskoCategory]);
+
+  if (isDubinskoCategory && !dataLoaded) {
+    return (
+      <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
+        <Background />
+        <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
+        <div className="mx-auto max-w-7xl px-4 pb-20 pt-32">
+          <div className="mb-8 h-10 w-72 animate-pulse rounded-xl bg-[#0b0f19]" />
+          <div className="mb-3 h-10 w-96 max-w-full animate-pulse rounded-xl bg-[#0b0f19]" />
+          <div className="grid grid-cols-1 gap-6 pt-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="h-96 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">

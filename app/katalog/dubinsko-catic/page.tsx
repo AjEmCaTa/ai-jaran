@@ -81,6 +81,36 @@ const rangesOverlap = (startA: number, endA: number, ranges: BusyRange[]) => {
   return ranges.some((r) => startA < r.end && endA > r.start);
 };
 
+// Ovi podaci se koriste SAMO kao izvor opisa/oznaka za pakete (features, badge),
+// nikad se ne prikazuju prije nego sto stignu stvarni podaci iz baze.
+const LEGACY_PACKAGES: ServicePackage[] = [
+  {
+    id: 'basic',
+    name: 'Basic Paket',
+    price: '25 KM',
+    duration: '2h',
+    durationMinutes: 120,
+    badge: 'Brzo & Efikasno',
+    desc: 'Idealan za parcijalno čišćenje i osvježenje enterijera.',
+    features: ['Dubinsko pranje 2 prednja sjedišta', 'Osvježavanje mirisa', 'Osnovno usisavanje']
+  },
+  {
+    id: 'premium',
+    name: 'Premium Paket',
+    price: '130 KM',
+    duration: '5h',
+    durationMinutes: 300,
+    badge: 'Najpopularnije 🔥',
+    desc: 'Kompletno detaljno dubinsko pranje cijelog vozila.',
+    features: ['Vađenje i pranje svih sjedišta', 'Tepisi i krovni tapacirung', 'Zaštita i sjaj svih plastika', 'Kompletno vanjsko pranje']
+  }
+];
+
+const EMPTY_PROFILE: BusinessProfile = {
+  name: '', category: '', city: '', address: '', phone: '',
+  work_start: '', work_end: '', work_days: [],
+};
+
 export default function DubinskoCaticPage() {
   const router = useRouter();
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
@@ -90,11 +120,11 @@ export default function DubinskoCaticPage() {
   const [clientPhone, setClientPhone] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [businessProfile, setBusinessProfile] = useState<BusinessProfile>({
-    name: 'Dubinsko Ćatić', category: 'Auto detailing & čišćenje', city: 'Mostar',
-    address: 'Vrapčići, Mostar', phone: '060 30 50 153', work_start: '07:00',
-    work_end: '17:00', work_days: ['Pon', 'Uto', 'Sri', 'Cet', 'Pet', 'Sub'],
-  });
+
+  // Dok se podaci ne ucitaju iz baze, stranica prikazuje skeleton (nema "stare verzije")
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(EMPTY_PROFILE);
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
 
   const [successModalData, setSuccessModalData] = useState<Reservation | null>(null);
 
@@ -111,29 +141,6 @@ export default function DubinskoCaticPage() {
   const [reservationToCancel, setReservationToCancel] = useState<Reservation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [packages, setPackages] = useState<ServicePackage[]>([
-    {
-      id: 'basic',
-      name: 'Basic Paket',
-      price: '25 KM',
-      duration: '2h',
-      durationMinutes: 120,
-      badge: 'Brzo & Efikasno',
-      desc: 'Idealan za parcijalno čišćenje i osvježenje enterijera.',
-      features: ['Dubinsko pranje 2 prednja sjedišta', 'Osvježavanje mirisa', 'Osnovno usisavanje']
-    },
-    {
-      id: 'premium',
-      name: 'Premium Paket',
-      price: '130 KM',
-      duration: '5h',
-      durationMinutes: 300,
-      badge: 'Najpopularnije 🔥',
-      desc: 'Kompletno detaljno dubinsko pranje cijelog vozila.',
-      features: ['Vađenje i pranje svih sjedišta', 'Tepisi i krovni tapacirung', 'Zaštita i sjaj svih plastika', 'Kompletno vanjsko pranje']
-    }
-  ]);
-
   useEffect(() => {
     const saved = localStorage.getItem('poslo_one_catic_reservations');
     if (saved) {
@@ -144,13 +151,35 @@ export default function DubinskoCaticPage() {
       }
     }
     fetchTakenSlots();
-    fetch(`/api/business-profile?slug=${BUSINESS_SLUG}`)
+
+    // Vraca paket/datum/vrijeme koje je klijent izabrao prije prijave (poslije ucitanih paketa)
+    const restorePending = (available: ServicePackage[]) => {
+      const pending = sessionStorage.getItem('poslo_one_pending_booking');
+      if (!pending) return;
+      try {
+        const booking = JSON.parse(pending);
+        const packageChoice = available.find((item) => item.id === booking.packageId);
+        if (packageChoice) setSelectedPackage(packageChoice);
+        if (typeof booking.date === 'string') setResDate(booking.date);
+        if (typeof booking.time === 'string') setResTime(booking.time);
+        if (typeof booking.name === 'string') setClientName(booking.name);
+        if (typeof booking.phone === 'string') setClientPhone(booking.phone);
+      } catch {
+        // ignorisi neispravan zapis
+      }
+      sessionStorage.removeItem('poslo_one_pending_booking');
+    };
+
+    fetch(`/api/business-profile?slug=${BUSINESS_SLUG}`, { cache: 'no-store' })
       .then(async (response) => {
         if (!response.ok) return null;
         return response.json();
       })
       .then((result) => {
-        if (!result?.business) return;
+        if (!result?.business) {
+          setBusinessProfile({ ...EMPTY_PROFILE, name: 'Dubinsko Ćatić' });
+          return;
+        }
         const profile = result.business;
         setBusinessProfile({
           name: profile.name || 'Dubinsko Ćatić',
@@ -162,39 +191,47 @@ export default function DubinskoCaticPage() {
           work_end: String(profile.work_end || '').slice(0, 5),
           work_days: Array.isArray(profile.work_days) ? profile.work_days : [],
         });
-        if (Array.isArray(result.services) && result.services.length > 0) {
-          setPackages((legacyPackages) => result.services.map((service: {
-            id: string;
-            name: string;
-            description: string | null;
-            duration: string | null;
-            price: number;
-          }, index: number) => {
-            const legacy = legacyPackages.find((item) => item.name === service.name) || legacyPackages[index];
-            const duration = String(service.duration || legacy?.duration || '');
-            const hours = duration.match(/(\d+(?:[.,]\d+)?)\s*h/i);
-            const minutes = duration.match(/(\d+(?:[.,]\d+)?)\s*(?:min|m)\b/i);
-            const numericDuration = hours
-              ? Number(hours[1].replace(',', '.')) * 60
-              : minutes ? Number(minutes[1].replace(',', '.')) : Number(duration);
-            const price = Number(service.price);
-            return {
-              id: service.id,
-              serviceId: service.id,
-              name: service.name,
-              price: `${Number.isFinite(price) ? price.toLocaleString('bs-BA') : '0'} KM`,
-              duration: duration || '2h',
-              durationMinutes: Number.isFinite(numericDuration) && numericDuration >= 30 && numericDuration <= 720
-                ? numericDuration
-                : legacy?.durationMinutes || 120,
-              desc: service.description || legacy?.desc || '',
-              features: legacy?.features || [],
-              badge: legacy?.badge,
-            };
-          }));
-        }
+
+        const services: {
+          id: string;
+          name: string;
+          description: string | null;
+          duration: string | null;
+          price: number;
+        }[] = Array.isArray(result.services) ? result.services : [];
+
+        const mapped: ServicePackage[] = services.map((service, index) => {
+          const legacy = LEGACY_PACKAGES.find((item) => item.name === service.name) || LEGACY_PACKAGES[index];
+          const duration = String(service.duration || legacy?.duration || '');
+          const hours = duration.match(/(\d+(?:[.,]\d+)?)\s*h/i);
+          const minutes = duration.match(/(\d+(?:[.,]\d+)?)\s*(?:min|m)\b/i);
+          const numericDuration = hours
+            ? Number(hours[1].replace(',', '.')) * 60
+            : minutes ? Number(minutes[1].replace(',', '.')) : Number(duration);
+          const price = Number(service.price);
+          return {
+            id: service.id,
+            serviceId: service.id,
+            name: service.name,
+            price: `${Number.isFinite(price) ? price.toLocaleString('bs-BA') : '0'} KM`,
+            duration: duration || '2h',
+            durationMinutes: Number.isFinite(numericDuration) && numericDuration >= 30 && numericDuration <= 720
+              ? numericDuration
+              : legacy?.durationMinutes || 120,
+            desc: service.description || legacy?.desc || '',
+            features: legacy?.features || [],
+            badge: legacy?.badge,
+          };
+        });
+        setPackages(mapped);
+        restorePending(mapped);
       })
-      .catch((err) => console.error('Profil biznisa nije učitan:', err));
+      .catch((err) => {
+        console.error('Profil biznisa nije učitan:', err);
+        setBusinessProfile({ ...EMPTY_PROFILE, name: 'Dubinsko Ćatić' });
+      })
+      .finally(() => setDataLoaded(true));
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       setClientEmail(session.user.email || '');
@@ -206,21 +243,6 @@ export default function DubinskoCaticPage() {
       const result = await response.json();
       setMyReservations(result.reservations || []);
     });
-    const pending = sessionStorage.getItem('poslo_one_pending_booking');
-    if (pending) {
-      try {
-        const booking = JSON.parse(pending);
-        const packageChoice = packages.find((item) => item.id === booking.packageId);
-        if (packageChoice) setSelectedPackage(packageChoice);
-        if (typeof booking.date === 'string') setResDate(booking.date);
-        if (typeof booking.time === 'string') setResTime(booking.time);
-        if (typeof booking.name === 'string') setClientName(booking.name);
-        if (typeof booking.phone === 'string') setClientPhone(booking.phone);
-        sessionStorage.removeItem('poslo_one_pending_booking');
-      } catch {
-        sessionStorage.removeItem('poslo_one_pending_booking');
-      }
-    }
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setClientName((current) => user.user_metadata?.full_name || current);
@@ -231,7 +253,7 @@ export default function DubinskoCaticPage() {
 
   const fetchTakenSlots = async () => {
     try {
-      const res = await fetch(`/api/narudzbe?business=${BUSINESS_SLUG}`);
+      const res = await fetch(`/api/narudzbe?business=${BUSINESS_SLUG}`, { cache: 'no-store' });
       const json = await res.json();
       if (res.ok && json.data) {
         const ranges: BusyRange[] = json.data
@@ -360,6 +382,23 @@ export default function DubinskoCaticPage() {
 
   const activeDurationMinutes = selectedPackage ? selectedPackage.durationMinutes : 30;
 
+  // Dok podaci iz baze ne stignu, prikazi skeleton umjesto stare/ugradjene verzije
+  if (!dataLoaded) {
+    return (
+      <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
+        <Background />
+        <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
+        <div className="pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
+          <div className="h-56 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="h-80 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+            <div className="h-80 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
       <Background />
@@ -422,6 +461,12 @@ export default function DubinskoCaticPage() {
             <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">1</span>
             <h2 className="text-xl font-bold text-white">Izaberite paket usluge</h2>
           </div>
+
+          {packages.length === 0 && (
+            <div className="p-4 bg-[#0b0f19] border border-white/10 rounded-2xl text-center text-sm text-gray-400">
+              Trenutno nema dostupnih usluga za rezervaciju.
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {packages.map((pkg) => {

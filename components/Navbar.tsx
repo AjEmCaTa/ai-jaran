@@ -72,18 +72,18 @@ export default function Navbar({
           className="group flex cursor-pointer items-center gap-3"
         >
           <div className="relative h-[50px] w-[50px] overflow-hidden">
-            <Image
-              src="/poslo.one.png"
-              alt="POSLO ONE Logo"
-              width={90}
-              height={60}
-              priority
-              className="absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2"
-              style={{
-                mixBlendMode: "screen",
-              }}
-            />
-          </div>
+  <Image
+    src="/poslo.one.png"
+    alt="POSLO ONE Logo"
+    width={90}
+    height={60}
+    priority
+    className="absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2"
+    style={{
+      mixBlendMode: "screen",
+    }}
+  />
+</div>
 
           <span className="text-[20px] leading-none font-extrabold tracking-tight text-white">
             POSLO ONE

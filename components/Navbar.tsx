@@ -69,23 +69,20 @@ export default function Navbar({
         <Link
           href="/"
           onClick={handleLogoOrHomeClick}
-          className="group flex cursor-pointer items-center gap-3"
+          className="group flex cursor-pointer items-center gap-2.5"
         >
-          <div className="relative h-[50px] w-[50px] overflow-hidden">
-  <Image
-    src="/poslo.one.png"
-    alt="POSLO ONE Logo"
-    width={90}
-    height={60}
-    priority
-    className="absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2"
-    style={{
-      mixBlendMode: "screen",
-    }}
-  />
-</div>
+          <div className="relative flex h-[44px] w-[44px] shrink-0 items-center justify-center">
+            <Image
+              src="/poslo.one.png"
+              alt="POSLO ONE Logo"
+              width={44}
+              height={44}
+              priority
+              className="h-[44px] w-[44px] object-contain"
+            />
+          </div>
 
-          <span className="text-[20px] leading-none font-extrabold tracking-tight text-white">
+          <span className="text-[20px] font-extrabold leading-none tracking-tight text-white">
             POSLO ONE
           </span>
         </Link>
@@ -96,7 +93,7 @@ export default function Navbar({
           <Link
             href="/"
             onClick={handleLogoOrHomeClick}
-            className="cursor-pointer text-[14px] leading-none font-medium text-slate-400 transition-colors duration-200 hover:text-white"
+            className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white"
           >
             Početna
           </Link>
@@ -104,7 +101,7 @@ export default function Navbar({
           <Link
             href="/#faq"
             onClick={(e) => handleSmoothScroll(e, "#faq")}
-            className="cursor-pointer text-[14px] leading-none font-medium text-slate-400 transition-colors duration-200 hover:text-white"
+            className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white"
           >
             FAQ
           </Link>
@@ -113,7 +110,7 @@ export default function Navbar({
           {!isPricing && (
             <Link
               href="/cjenovnik"
-              className="cursor-pointer text-[14px] leading-none font-medium text-slate-400 transition-colors duration-200 hover:text-white"
+              className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white"
             >
               Cjenovnik
             </Link>
@@ -123,7 +120,7 @@ export default function Navbar({
           {!isCatalog && (
             <Link
               href="/katalog"
-              className="cursor-pointer rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-[14px] leading-none font-semibold text-emerald-400 transition-all duration-300 hover:border-emerald-400/40 hover:bg-emerald-500/10"
+              className="cursor-pointer rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-[14px] font-semibold leading-none text-emerald-400 transition-all duration-300 hover:border-emerald-400/40 hover:bg-emerald-500/10"
             >
               Biznisi
             </Link>
@@ -131,7 +128,7 @@ export default function Navbar({
 
           <Link
             href="/dashboard"
-            className="cursor-pointer rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-[14px] leading-none font-semibold text-blue-400 transition-all duration-300 hover:bg-blue-500/20"
+            className="cursor-pointer rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-[14px] font-semibold leading-none text-blue-400 transition-all duration-300 hover:bg-blue-500/20"
           >
             Moj Panel
           </Link>
@@ -141,7 +138,7 @@ export default function Navbar({
 
           <button
             onClick={onOpenContact}
-            className="cursor-pointer rounded-xl bg-blue-600 px-5 py-2.5 text-[14px] leading-none font-bold text-white shadow-lg shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-blue-600/30"
+            className="cursor-pointer rounded-xl bg-blue-600 px-5 py-2.5 text-[14px] font-bold leading-none text-white shadow-lg shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-blue-600/30"
           >
             Kontakt
           </button>
@@ -220,7 +217,10 @@ export default function Navbar({
             </Link>
 
             {/* PRIJAVA / MOJ NALOG (za klijente) */}
-            <AuthNavButton variant="mobile" onClick={() => setIsOpen(false)} />
+            <AuthNavButton
+              variant="mobile"
+              onClick={() => setIsOpen(false)}
+            />
 
             {/* BIZNISI - ne prikazuj na katalog stranici */}
             {!isCatalog && (

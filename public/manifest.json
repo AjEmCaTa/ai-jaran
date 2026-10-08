@@ -1,7 +1,9 @@
 {
   "name": "POSLO ONE",
   "short_name": "POSLO ONE",
+  "description": "POSLO ONE – vaš digitalni radnik za svakodnevno poslovanje.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#030712",
   "theme_color": "#030712",

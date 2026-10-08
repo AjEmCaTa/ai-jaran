@@ -11,6 +11,9 @@
 
 html {
   scroll-padding-top: 90px;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -71,6 +74,21 @@ body::after {
   pointer-events: none;
   user-select: none;
   z-index: -1;
+}
+
+/* Mobitel: bez automatskog zuma na poljima i bez širenja stranice */
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  body::before,
+  body::after {
+    display: none;
+  }
 }
 
 button,

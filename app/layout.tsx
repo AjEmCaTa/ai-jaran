@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -23,6 +23,12 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "POSLO ONE",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#030712",
 };
 
 export default function RootLayout({

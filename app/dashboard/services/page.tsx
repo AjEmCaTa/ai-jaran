@@ -1,323 +1,315 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Icon from '../_components/icons';
+import {
+  ACCENTS,
+  DEFAULT_THEME,
+  loadTheme,
+  saveTheme,
+  type Density,
+  type Radius,
+  type Surface,
+  type ThemeSettings,
+} from '../_lib/theme';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+);
 
-type Service = {
-  id: string;
-  name: string;
-  description: string | null;
-  duration: string | null;
-  price: number;
-};
+const panel =
+  'min-w-0 rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)] backdrop-blur';
+const inputClass =
+  'mt-2 w-full rounded-[calc(var(--po-radius)*0.6)] border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
 
-export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>([]);
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-medium text-slate-300">{label}</p>
+      <div className="flex rounded-full border border-white/10 p-0.5 text-xs">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            aria-pressed={value === option.value}
+            className={`flex-1 rounded-full px-3 py-1.5 font-medium transition ${value === option.value ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'}`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building'; title: string; text: ReactNode }) {
+  return (
+    <div className="mb-5 flex items-start gap-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+        <Icon name={icon} className="h-[18px] w-[18px]" />
+      </span>
+      <div>
+        <h3 className="text-base font-semibold text-white">{title}</h3>
+        <p className="mt-0.5 text-xs text-slate-400">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
+  const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[] });
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [hasBusiness, setHasBusiness] = useState(false);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState('');
-  const [price, setPrice] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const fetchServices = async () => {
-    if (!supabase) {
-      setLoading(false);
-      setErrorMsg('Supabase nije konfigurisan.');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Prijavite se ponovo za upravljanje uslugama.');
-      const response = await fetch('/api/dashboard/services', { headers: { Authorization: `Bearer ${session.access_token}` } });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Usluge nije moguće učitati.');
-      setServices(result.services || []);
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Usluge nije moguće učitati.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    async function init() {
-      if (!supabase) {
+    setTheme(loadTheme());
+
+    async function loadBusiness() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Prijavite se ponovo za pristup postavkama.');
+        const response = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${session.access_token}` } });
+        const dashboard = await response.json();
+        if (!response.ok) throw new Error(dashboard.error || 'Podatke nije moguće učitati.');
+        const b = dashboard.business;
+        setBusiness({
+          id: b.id || '',
+          name: b.name || '',
+          city: b.city || '',
+          category: b.category || '',
+          phone: b.phone || '',
+          owner_email: b.owner_email || '',
+          address: b.address || '',
+          work_start: b.work_start || '',
+          work_end: b.work_end || '',
+          work_days: Array.isArray(b.work_days) ? b.work_days : [],
+        });
+      } catch (err) {
+        setErrorMessage(err instanceof Error ? err.message : 'Podatke nije moguće učitati.');
+      } finally {
         setLoading(false);
-        return;
       }
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      setHasBusiness(true);
-      fetchServices();
     }
-    init();
+
+    loadBusiness();
   }, []);
 
-  const handleOpenModal = (service: Service | null = null) => {
-    if (service) {
-      setEditingService(service);
-      setName(service.name || '');
-      setDescription(service.description || '');
-      setDuration(service.duration || '');
-      setPrice(String(service.price ?? ''));
-    } else {
-      setEditingService(null);
-      setName('');
-      setDescription('');
-      setDuration('');
-      setPrice('');
-    }
-    setIsModalOpen(true);
+  const update = (partial: Partial<ThemeSettings>) => {
+    const next = { ...theme, ...partial };
+    setTheme(next);
+    saveTheme(next);
   };
 
-  const handleSaveService = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supabase || !hasBusiness) return;
-
-    try {
-      setSubmitting(true);
-
-      const serviceData = {
-        name,
-        description,
-        duration,
-        price: parseFloat(price) || 0,
-      };
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Prijavite se ponovo za izmjenu usluge.');
-      const response = await fetch('/api/dashboard/services', {
-        method: editingService ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify(editingService ? { ...serviceData, id: editingService.id } : serviceData),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Uslugu nije moguće sačuvati.');
-
-      setIsModalOpen(false);
-      await fetchServices();
-    } catch (err) {
-      alert('Greška pri snimanju: ' + (err instanceof Error ? err.message : 'Pokušajte ponovo.'));
-    } finally {
-      setSubmitting(false);
+  const saveBusiness = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+    setSaveMessage('');
+    setErrorMessage('');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setErrorMessage('Prijavite se ponovo da biste sačuvali izmjene.');
+      setSaving(false);
+      return;
     }
-  };
-
-  const handleDeleteService = async (id: string) => {
-    if (!confirm('Da li ste sigurni da želite obrisati ovu uslugu?')) return;
-    if (!supabase || !hasBusiness) return;
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Prijavite se ponovo za brisanje usluge.');
-      const response = await fetch('/api/dashboard/services', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ id }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Uslugu nije moguće obrisati.');
-      await fetchServices();
-    } catch (err) {
-      alert('Greška pri brisanju: ' + (err instanceof Error ? err.message : 'Pokušajte ponovo.'));
-    }
+    const response = await fetch('/api/dashboard', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({
+        name: business.name.trim(),
+        city: business.city.trim() || null,
+        category: business.category.trim() || null,
+        phone: business.phone.trim() || null,
+        owner_email: business.owner_email.trim() || null,
+        address: business.address.trim() || null,
+        work_start: business.work_start || null,
+        work_end: business.work_end || null,
+        work_days: business.work_days,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) setErrorMessage(result.error || 'Promjene nije moguće sačuvati.');
+    else setSaveMessage('Podaci biznisa su sačuvani.');
+    setSaving(false);
   };
 
   return (
-    <div className="space-y-6 text-gray-100 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Usluge i cjenovnik</h2>
-          <p className="text-slate-400 text-sm mt-1">Definiši usluge koje nudiš, njihovo trajanje i cijene koje vide klijenti.</p>
-        </div>
-        <button
-          onClick={() => handleOpenModal()}
-          disabled={!hasBusiness}
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500 disabled:opacity-50 sm:w-auto"
-        >
-          + Nova usluga
-        </button>
+    <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-12">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Postavke</h2>
+        <p className="mt-1 text-sm text-slate-400">Prilagodite izgled panela i uredite podatke o biznisu.</p>
       </div>
 
-      {errorMsg && (
-        <div className="p-4 bg-red-950/50 border border-red-800 text-red-200 rounded-xl text-sm">
-          Greška: {errorMsg}
-        </div>
-      )}
+      {/* IZGLED */}
+      <section className={panel} aria-label="Izgled">
+        <SectionTitle icon="palette" title="Izgled" text="Promjene se primjenjuju odmah i pamte se u ovom pregledniku." />
 
-      <div className="hidden overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/60 shadow-xl backdrop-blur-md lg:block">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-950/60 border-b border-gray-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                <th className="py-4 px-6">Naziv usluge</th>
-                <th className="py-4 px-6">Opis</th>
-                <th className="py-4 px-6">Trajanje</th>
-                <th className="py-4 px-6">Cijena</th>
-                <th className="py-4 px-6 text-right">Akcije</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800/60 text-xs text-slate-300">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-500">Učitavanje podataka iz baze...</td>
-                </tr>
-              ) : services.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-500">
-                    Nemate kreiranih usluga. Kliknite gore desno na &quot;+ Nova usluga&quot; da dodate prvu.
-                  </td>
-                </tr>
-              ) : (
-                services.map((service) => (
-                  <tr key={service.id} className="hover:bg-gray-800/30 transition-colors">
-                    <td className="py-4 px-6 font-semibold text-white">{service.name}</td>
-                    <td className="py-4 px-6 text-slate-400">{service.description || '-'}</td>
-                    <td className="py-4 px-6 text-slate-400">{service.duration || '-'}</td>
-                    <td className="py-4 px-6 font-bold text-white">{service.price} KM</td>
-                    <td className="py-4 px-6 text-right space-x-3">
-                      <button
-                        onClick={() => handleOpenModal(service)}
-                        className="text-blue-400 hover:text-blue-300 font-semibold cursor-pointer"
-                      >
-                        Uredi
-                      </button>
-                      <button
-                        onClick={() => handleDeleteService(service.id)}
-                        className="text-red-400 hover:text-red-300 font-semibold cursor-pointer"
-                      >
-                        Obriši
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="space-y-3 lg:hidden">
-        {loading ? <p className="py-10 text-center text-sm text-slate-500">Učitavanje usluga...</p>
-          : services.length === 0 ? <p className="rounded-xl border border-gray-800 bg-gray-900/60 px-4 py-10 text-center text-sm text-slate-500">Nemate kreiranih usluga. Dodajte prvu uslugu.</p>
-            : services.map((service) => (
-              <article key={service.id} className="space-y-3 rounded-xl border border-gray-800 bg-gray-900/70 p-4">
-                <div className="min-w-0">
-                  <h3 className="break-words font-semibold text-white">{service.name}</h3>
-                  {service.description && <p className="mt-1 break-words text-sm text-slate-400">{service.description}</p>}
-                </div>
-                <dl className="grid grid-cols-2 gap-3 border-t border-gray-800 pt-3 text-xs">
-                  <div><dt className="text-slate-500">Trajanje</dt><dd className="mt-1 text-slate-200">{service.duration || '-'}</dd></div>
-                  <div><dt className="text-slate-500">Cijena</dt><dd className="mt-1 font-semibold text-white">{service.price} KM</dd></div>
-                </dl>
-                <div className="flex gap-2 border-t border-gray-800 pt-3">
-                  <button onClick={() => handleOpenModal(service)} className="min-h-11 flex-1 rounded-lg border border-blue-500/30 bg-blue-600/10 px-3 py-2 text-sm font-semibold text-blue-300">Uredi</button>
-                  <button onClick={() => handleDeleteService(service.id)} className="min-h-11 flex-1 rounded-lg border border-red-500/30 bg-red-600/10 px-3 py-2 text-sm font-semibold text-red-300">Obriši</button>
-                </div>
-              </article>
-            ))}
-      </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-4">
-          <div className="max-h-[90dvh] w-full max-w-md space-y-6 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-4 shadow-2xl sm:p-6">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
-              <h3 className="text-lg font-bold text-white">
-                {editingService ? 'Uredi uslugu' : 'Nova usluga'}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white text-sm font-bold cursor-pointer"
-              >
-                ✕
-              </button>
+        <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr]">
+          <div className="space-y-6">
+            <div>
+              <p className="mb-3 text-xs font-medium text-slate-300">Boja panela</p>
+              <div className="flex flex-wrap items-center gap-3">
+                {ACCENTS.map((accent) => {
+                  const selected = theme.accent.toLowerCase() === accent.hex.toLowerCase();
+                  return (
+                    <button
+                      key={accent.hex}
+                      type="button"
+                      onClick={() => update({ accent: accent.hex })}
+                      aria-label={accent.name}
+                      aria-pressed={selected}
+                      title={accent.name}
+                      className={`h-9 w-9 rounded-full transition ${selected ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : 'hover:scale-110'}`}
+                      style={{ backgroundColor: accent.hex }}
+                    />
+                  );
+                })}
+                <label className="flex cursor-pointer items-center gap-2 rounded-full border border-white/10 py-1 pl-1 pr-3 text-xs text-slate-300 hover:border-blue-500/40">
+                  <input
+                    type="color"
+                    value={theme.accent}
+                    onChange={(event) => update({ accent: event.target.value })}
+                    className="h-7 w-7 cursor-pointer rounded-full border-0 bg-transparent p-0"
+                    aria-label="Vlastita boja"
+                  />
+                  Vlastita
+                </label>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveService} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Naziv usluge</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  placeholder="npr. Dubinsko čišćenje sjedala"
-                  className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Segmented<Surface>
+                label="Pozadina"
+                value={theme.surface}
+                onChange={(surface) => update({ surface })}
+                options={[{ value: 'midnight', label: 'Ponoćna' }, { value: 'graphite', label: 'Grafit' }]}
+              />
+              <Segmented<Density>
+                label="Razmak"
+                value={theme.density}
+                onChange={(density) => update({ density })}
+                options={[{ value: 'compact', label: 'Kompaktno' }, { value: 'comfortable', label: 'Udobno' }]}
+              />
+              <div className="sm:col-span-2">
+                <Segmented<Radius>
+                  label="Zaobljenost kartica"
+                  value={theme.radius}
+                  onChange={(radius) => update({ radius })}
+                  options={[{ value: 'sharp', label: 'Oštro' }, { value: 'soft', label: 'Meko' }, { value: 'round', label: 'Zaobljeno' }]}
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Opis</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Kratak opis šta usluga uključuje..."
-                  rows={2}
-                  className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
+            <button
+              type="button"
+              onClick={() => update(DEFAULT_THEME)}
+              className="text-xs font-medium text-slate-400 underline-offset-4 transition hover:text-white hover:underline"
+            >
+              Vrati početni izgled
+            </button>
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Trajanje</label>
-                  <input
-                    type="text"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    placeholder="npr. 2 sata"
-                    className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Cijena (KM)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                    placeholder="25"
-                    className="min-h-11 w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col-reverse gap-2 border-t border-gray-800 pt-4 sm:flex-row sm:justify-end sm:gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="min-h-11 px-4 py-2 bg-gray-800 text-slate-300 text-xs font-semibold rounded-xl hover:bg-gray-700 transition cursor-pointer"
-                >
-                  Odustani
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="min-h-11 px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 cursor-pointer disabled:opacity-50"
-                >
-                  {submitting ? 'Snimanje...' : 'Sačuvaj uslugu'}
-                </button>
-              </div>
-            </form>
+          {/* Pregled uživo */}
+          <div
+            className="rounded-[var(--po-radius)] border border-blue-500/20 p-[var(--po-pad)]"
+            style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-blue-500) 22%, var(--color-gray-900)), var(--color-gray-900) 70%)' }}
+            aria-hidden="true"
+          >
+            <p className="text-xs text-slate-400">Pregled</p>
+            <p className="mt-1 text-3xl font-bold tabular-nums text-white">12</p>
+            <p className="text-xs text-slate-400">rezervacija ovaj mjesec</p>
+            <div className="mt-4 flex h-16 items-end gap-1.5">
+              {[35, 55, 40, 75, 60, 90, 70].map((h, i) => (
+                <div key={i} className={`flex-1 rounded-t-md ${i === 6 ? 'bg-gradient-to-t from-blue-600 to-blue-400' : 'bg-blue-500/30'}`} style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            <div className="mt-4 inline-flex rounded-[calc(var(--po-radius)*0.7)] bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white">Dugme</div>
           </div>
         </div>
-      )}
+      </section>
+
+      {/* PODACI O BIZNISU */}
+      <section className={panel} aria-label="Podaci o biznisu">
+        <SectionTitle icon="building" title="Podaci o biznisu" text="Uređujete podatke povezane s vašim vlasničkim profilom." />
+
+        {errorMessage && <p role="alert" className="mb-4 rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200">{errorMessage}</p>}
+
+        <form onSubmit={saveBusiness} className="grid gap-4 sm:grid-cols-2">
+          {([
+            ['name', 'Naziv biznisa', 'text'],
+            ['category', 'Djelatnost', 'text'],
+            ['city', 'Grad / lokacija', 'text'],
+            ['phone', 'Telefon', 'tel'],
+            ['owner_email', 'Email biznisa', 'email'],
+            ['address', 'Adresa', 'text'],
+          ] as const).map(([field, label, type]) => (
+            <label key={field} className="block text-xs font-medium text-slate-300">
+              {label}
+              <input
+                required={field === 'name'}
+                type={type}
+                value={business[field]}
+                onChange={(event) => setBusiness((current) => ({ ...current, [field]: event.target.value }))}
+                className={inputClass}
+              />
+            </label>
+          ))}
+          <label className="block text-xs font-medium text-slate-300">
+            Početak radnog vremena
+            <input type="time" value={business.work_start.slice(0, 5)} onChange={(event) => setBusiness((current) => ({ ...current, work_start: event.target.value }))} className={inputClass} />
+          </label>
+          <label className="block text-xs font-medium text-slate-300">
+            Kraj radnog vremena
+            <input type="time" value={business.work_end.slice(0, 5)} onChange={(event) => setBusiness((current) => ({ ...current, work_end: event.target.value }))} className={inputClass} />
+          </label>
+          <fieldset className="sm:col-span-2">
+            <legend className="mb-2 text-xs font-medium text-slate-300">Radni dani</legend>
+            <div className="flex flex-wrap gap-2">
+              {['Pon', 'Uto', 'Sri', 'Cet', 'Pet', 'Sub', 'Ned'].map((day) => (
+                <label key={day} className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 px-3 py-2 text-xs text-slate-300 transition hover:border-blue-500/40">
+                  <input
+                    type="checkbox"
+                    checked={business.work_days.includes(day)}
+                    onChange={(event) =>
+                      setBusiness((current) => ({
+                        ...current,
+                        work_days: event.target.checked ? [...current.work_days, day] : current.work_days.filter((item) => item !== day),
+                      }))
+                    }
+                    className="accent-blue-500"
+                  />
+                  {day}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="flex items-center gap-3 sm:col-span-2">
+            <button
+              type="submit"
+              disabled={saving || loading || !business.id}
+              className="rounded-[calc(var(--po-radius)*0.7)] bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50"
+            >
+              {saving ? 'Čuvanje...' : 'Sačuvaj podatke'}
+            </button>
+            {saveMessage && <p role="status" className="text-sm text-emerald-400">{saveMessage}</p>}
+          </div>
+        </form>
+      </section>
     </div>
   );
 }

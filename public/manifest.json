@@ -1,15 +1,16 @@
 {
-  "name": "AI Jaran",
-  "short_name": "AI Jaran",
+  "name": "POSLO ONE",
+  "short_name": "POSLO ONE",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#030712",
+  "theme_color": "#030712",
   "icons": [
     {
-      "src": "/logo.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png"
+      "src": "/poslo.one.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

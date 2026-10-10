@@ -5,12 +5,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Icon, { type IconName } from "./_components/icons";
+import NotificationBell from "./_components/NotificationBell";
 import { DEFAULT_THEME, THEME_EVENT, loadTheme, themeVars, type ThemeSettings } from "./_lib/theme";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key"
 );
+
+const getToken = async () => (await supabase.auth.getSession()).data.session?.access_token ?? null;
 
 type NavItem = { href: string; label: string; icon: IconName; exact?: boolean };
 
@@ -299,6 +302,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationBell getToken={getToken} />
             <Link
               href="/dashboard/settings"
               className="hidden items-center gap-2 rounded-full border border-white/[0.08] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:border-blue-500/40 hover:text-white sm:flex"

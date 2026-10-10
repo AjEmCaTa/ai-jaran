@@ -19,11 +19,39 @@ type Reservation = {
   status: string | null;
 };
 
+type NewStatus = 'Potvrđeno' | 'Završeno' | 'Otkazano';
+
+// "đ" se ne razlaže pri normalizaciji, pa ga ručno pretvaramo u "dj"
+const normalizedStatus = (status: string | null) =>
+  (status || 'Aktivno').toLowerCase().replace(/đ/g, 'dj').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+const isCancelledKey = (key: string) => ['otkazano', 'cancelled', 'canceled'].includes(key);
+const isFinishedKey = (key: string) => ['zavrseno', 'completed', 'finished'].includes(key);
+const isConfirmedKey = (key: string) => ['potvrdjeno', 'confirmed'].includes(key);
+
+const badgeTone = (key: string) =>
+  isFinishedKey(key)
+    ? 'border-blue-500/25 bg-blue-500/10 text-blue-300'
+    : isCancelledKey(key)
+      ? 'border-red-500/25 bg-red-500/10 text-red-300'
+      : isConfirmedKey(key)
+        ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
+        : 'border-amber-500/25 bg-amber-500/10 text-amber-300';
+
+const priceLabel = (price: string | number | null) =>
+  price != null && price !== '' ? (String(price).includes('KM') ? String(price) : `${price} KM`) : '-';
+
+const btn = 'min-h-11 rounded-lg border px-3 py-2 text-xs font-semibold transition cursor-pointer disabled:opacity-50';
+const btnConfirm = `${btn} border-emerald-500/30 bg-emerald-600/15 text-emerald-300 hover:bg-emerald-600/25`;
+const btnFinish = `${btn} border-blue-500/30 bg-blue-600/15 text-blue-300 hover:bg-blue-600/25`;
+const btnCancel = `${btn} border-red-500/30 bg-red-600/15 text-red-300 hover:bg-red-600/25`;
+
 export default function AdminReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [filter, setFilter] = useState('Sve');
+  const [busyId, setBusyId] = useState('');
 
   const fetchReservations = useCallback(async (silent = false) => {
     if (!supabase) {
@@ -67,9 +95,11 @@ export default function AdminReservationsPage() {
     };
   }, []);
 
-  const updateStatus = async (id: string, newStatus: string) => {
+  const updateStatus = async (id: string, newStatus: NewStatus) => {
     if (!supabase) return;
+    if (newStatus === 'Otkazano' && !window.confirm('Sigurno želite otkazati ovu rezervaciju?')) return;
 
+    setBusyId(id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Prijavite se ponovo za izmjenu rezervacije.');
@@ -81,39 +111,62 @@ export default function AdminReservationsPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Status nije moguće promijeniti.');
 
-      await fetchReservations();
+      setErrorMsg('');
+      await fetchReservations(true);
     } catch (err) {
-      alert('Došlo je do greške: ' + (err instanceof Error ? err.message : 'Pokušajte ponovo.'));
+      setErrorMsg(err instanceof Error ? err.message : 'Pokušajte ponovo.');
+    } finally {
+      setBusyId('');
     }
   };
 
-  const normalizedStatus = (status: string | null) => (status || 'Aktivno').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const filteredReservations = reservations.filter((res) => {
-    const currentStatus = normalizedStatus(res.status);
+    const key = normalizedStatus(res.status);
     if (filter === 'Sve') return true;
-    if (filter === 'Aktivno') return ['aktivno', 'na cekanju', 'potvrdeno', 'potvrdjeno'].includes(currentStatus);
-    if (filter === 'Završeno') return currentStatus === 'zavrseno' || currentStatus === 'completed';
-    if (filter === 'Otkazano') return currentStatus === 'otkazano' || currentStatus === 'cancelled';
+    if (filter === 'Aktivno') return !isFinishedKey(key) && !isCancelledKey(key);
+    if (filter === 'Završeno') return isFinishedKey(key);
+    if (filter === 'Otkazano') return isCancelledKey(key);
     return true;
   });
 
+  const actions = (res: Reservation) => {
+    const key = normalizedStatus(res.status);
+    const finished = isFinishedKey(key);
+    const cancelled = isCancelledKey(key);
+    const confirmed = isConfirmedKey(key);
+    return (
+      <>
+        {!finished && !cancelled && !confirmed && (
+          <button disabled={busyId === res.id} onClick={() => updateStatus(res.id, 'Potvrđeno')} className={btnConfirm}>Potvrdi</button>
+        )}
+        {!finished && (
+          <button disabled={busyId === res.id} onClick={() => updateStatus(res.id, 'Završeno')} className={btnFinish}>Završi</button>
+        )}
+        {!cancelled && (
+          <button disabled={busyId === res.id} onClick={() => updateStatus(res.id, 'Otkazano')} className={btnCancel}>Otkaži</button>
+        )}
+      </>
+    );
+  };
+
   return (
-    <div className="space-y-6 text-gray-100 pb-12">
+    <div className="mx-auto max-w-7xl space-y-6 pb-12 text-gray-100">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Rezervacije i kalendar</h2>
-        <p className="text-slate-400 text-sm mt-1">Automatski pregled svih prijava klijenata, termina i statusa.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Rezervacije i kalendar</h2>
+        <p className="mt-1 text-sm text-slate-400">Automatski pregled svih prijava klijenata, termina i statusa.</p>
       </div>
 
       {/* Filteri */}
-      <div className="grid grid-cols-2 gap-2 border-b border-gray-800 pb-3 sm:flex sm:flex-wrap">
+      <div className="grid grid-cols-2 gap-2 border-b border-white/[0.06] pb-3 sm:flex sm:flex-wrap">
         {['Sve', 'Aktivno', 'Završeno', 'Otkazano'].map((tab) => (
-          <button 
+          <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`min-h-11 px-3 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer sm:px-4 ${
-              filter === tab 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 border border-blue-500' 
-                : 'bg-gray-900 text-slate-400 border border-gray-800 hover:bg-gray-800 hover:text-white'
+            aria-pressed={filter === tab}
+            className={`min-h-11 cursor-pointer rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+              filter === tab
+                ? 'border border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/25'
+                : 'border border-white/10 bg-gray-900 text-slate-400 hover:bg-gray-800 hover:text-white'
             }`}
           >
             {tab === 'Sve' ? 'Sve rezervacije' : tab}
@@ -122,87 +175,48 @@ export default function AdminReservationsPage() {
       </div>
 
       {errorMsg && (
-        <div className="p-4 bg-red-950/50 border border-red-800 text-red-200 rounded-xl text-sm">
-          Greška: {errorMsg}
+        <div role="alert" className="rounded-xl border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">
+          {errorMsg}
         </div>
       )}
 
       {/* Tabela rezervacija */}
-      <div className="hidden overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/60 shadow-xl backdrop-blur-md lg:block">
+      <div className="hidden overflow-hidden rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 shadow-xl backdrop-blur-md lg:block">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="bg-gray-950/60 border-b border-gray-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                <th className="py-4 px-6">Klijent / Telefon</th>
-                <th className="py-4 px-6">Usluga</th>
-                <th className="py-4 px-6">Datum i vrijeme</th>
-                <th className="py-4 px-6">Cijena</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6 text-right">Akcija</th>
+              <tr className="border-b border-white/[0.06] bg-gray-950/60 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-6 py-4">Klijent / Telefon</th>
+                <th className="px-6 py-4">Usluga</th>
+                <th className="px-6 py-4">Datum i vrijeme</th>
+                <th className="px-6 py-4">Cijena</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Akcija</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/60 text-xs text-slate-300">
+            <tbody className="divide-y divide-white/[0.05] text-xs text-slate-300">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500">Učitavanje prijava iz baze...</td>
-                </tr>
+                <tr><td colSpan={6} className="py-12 text-center text-slate-500">Učitavanje prijava iz baze...</td></tr>
               ) : filteredReservations.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500">
-                    Nema pristiglih prijava u ovoj kategoriji.
-                  </td>
-                </tr>
+                <tr><td colSpan={6} className="py-12 text-center text-slate-500">Nema pristiglih prijava u ovoj kategoriji.</td></tr>
               ) : (
                 filteredReservations.map((res) => {
-                  const clientName = res.customer_name || 'Klijent';
-                  const clientPhone = res.customer_phone || '';
-                  const serviceName = res.service_name || 'Usluga';
-                  const resDate = res.reservation_date ? new Date(res.reservation_date).toLocaleString('bs-BA') : '-';
-                  const resPrice = res.price != null && res.price !== '' ? (String(res.price).includes('KM') ? res.price : `${res.price} KM`) : '-';
                   const currentStatus = res.status || 'Aktivno';
-
-                  const statusKey = normalizedStatus(currentStatus);
-                  const isCancelled = ['otkazano', 'cancelled', 'canceled'].includes(statusKey);
-                  const isFinished = ['zavrseno', 'completed', 'finished'].includes(statusKey);
-
                   return (
-                    <tr key={res.id} className="hover:bg-gray-800/30 transition-colors">
-                      <td className="py-4 px-6 font-semibold text-white">
-                        {clientName}
-                        {clientPhone && <span className="block text-[11px] text-blue-400 font-normal">{clientPhone}</span>}
+                    <tr key={res.id} className="transition-colors hover:bg-white/[0.03]">
+                      <td className="px-6 py-4 font-semibold text-white">
+                        {res.customer_name || 'Klijent'}
+                        {res.customer_phone && <span className="block text-[11px] font-normal text-blue-400">{res.customer_phone}</span>}
                       </td>
-                      <td className="py-4 px-6 text-slate-300">{serviceName}</td>
-                      <td className="py-4 px-6 text-slate-300">{resDate}</td>
-                      <td className="py-4 px-6 font-bold text-white">{resPrice}</td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-2.5 py-1 text-[10px] font-bold rounded-full border ${
-                          isFinished
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                            : isCancelled
-                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}>
+                      <td className="px-6 py-4 text-slate-300">{res.service_name || 'Usluga'}</td>
+                      <td className="px-6 py-4 text-slate-300">{res.reservation_date ? new Date(res.reservation_date).toLocaleString('bs-BA') : '-'}</td>
+                      <td className="px-6 py-4 font-bold text-white">{priceLabel(res.price)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold ${badgeTone(normalizedStatus(currentStatus))}`}>
                           {currentStatus}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-right space-x-2">
-                        {!isFinished && (
-                          <button 
-                            onClick={() => updateStatus(res.id, 'Završeno')}
-                            className="min-h-11 px-3 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-semibold hover:bg-blue-600/30 transition cursor-pointer"
-                          >
-                            Završi
-                          </button>
-                        )}
-                        {!isCancelled && (
-                          <button 
-                            onClick={() => updateStatus(res.id, 'Otkazano')}
-                            className="min-h-11 px-3 py-2 bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-semibold hover:bg-red-600/30 transition cursor-pointer"
-                          >
-                            Otkaži
-                          </button>
-                        )}
-                      </td>
+                      <td className="space-x-2 px-6 py-4 text-right">{actions(res)}</td>
                     </tr>
                   );
                 })
@@ -212,35 +226,34 @@ export default function AdminReservationsPage() {
         </div>
       </div>
 
+      {/* Kartice za mobitel */}
       <div className="space-y-3 lg:hidden">
-        {loading ? <p className="py-10 text-center text-sm text-slate-500">Učitavanje prijava iz baze...</p>
-          : filteredReservations.length === 0 ? <p className="rounded-xl border border-gray-800 bg-gray-900/60 px-4 py-10 text-center text-sm text-slate-500">Nema pristiglih prijava u ovoj kategoriji.</p>
-            : filteredReservations.map((res) => {
-              const status = res.status || 'Aktivno';
-              const statusKey = normalizedStatus(status);
-              const isCancelled = ['otkazano', 'cancelled', 'canceled'].includes(statusKey);
-              const isFinished = ['zavrseno', 'completed', 'finished'].includes(statusKey);
-              return (
-                <article key={res.id} className="space-y-3 rounded-xl border border-gray-800 bg-gray-900/70 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="break-words font-semibold text-white">{res.customer_name || 'Klijent'}</h3>
-                      <p className="mt-1 break-words text-xs text-blue-300">{res.customer_phone || 'Telefon nije naveden'}</p>
-                    </div>
-                    <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isFinished ? 'border-blue-500/30 bg-blue-500/10 text-blue-300' : isCancelled ? 'border-red-500/30 bg-red-500/10 text-red-300' : 'border-amber-500/30 bg-amber-500/10 text-amber-300'}`}>{status}</span>
+        {loading ? (
+          <p className="py-10 text-center text-sm text-slate-500">Učitavanje prijava iz baze...</p>
+        ) : filteredReservations.length === 0 ? (
+          <p className="rounded-xl border border-white/[0.07] bg-gray-900/60 px-4 py-10 text-center text-sm text-slate-500">Nema pristiglih prijava u ovoj kategoriji.</p>
+        ) : (
+          filteredReservations.map((res) => {
+            const status = res.status || 'Aktivno';
+            return (
+              <article key={res.id} className="space-y-3 rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="break-words font-semibold text-white">{res.customer_name || 'Klijent'}</h3>
+                    <p className="mt-1 break-words text-xs text-blue-300">{res.customer_phone || 'Telefon nije naveden'}</p>
                   </div>
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-gray-800 pt-3 text-xs">
-                    <div className="col-span-2 min-w-0"><dt className="text-slate-500">Usluga</dt><dd className="mt-0.5 break-words text-slate-200">{res.service_name || 'Usluga'}</dd></div>
-                    <div><dt className="text-slate-500">Datum i vrijeme</dt><dd className="mt-0.5 text-slate-200">{res.reservation_date ? new Date(res.reservation_date).toLocaleString('bs-BA') : '-'}</dd></div>
-                    <div><dt className="text-slate-500">Cijena</dt><dd className="mt-0.5 font-semibold text-white">{res.price != null && res.price !== '' ? `${res.price}${String(res.price).includes('KM') ? '' : ' KM'}` : '-'}</dd></div>
-                  </dl>
-                  <div className="flex flex-wrap gap-2 border-t border-gray-800 pt-3">
-                    {!isFinished && <button onClick={() => updateStatus(res.id, 'Završeno')} className="min-h-11 flex-1 rounded-lg border border-blue-500/30 bg-blue-600/15 px-3 py-2 text-xs font-semibold text-blue-300">Završi</button>}
-                    {!isCancelled && <button onClick={() => updateStatus(res.id, 'Otkazano')} className="min-h-11 flex-1 rounded-lg border border-red-500/30 bg-red-600/15 px-3 py-2 text-xs font-semibold text-red-300">Otkaži</button>}
-                  </div>
-                </article>
-              );
-            })}
+                  <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badgeTone(normalizedStatus(status))}`}>{status}</span>
+                </div>
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-white/[0.06] pt-3 text-xs">
+                  <div className="col-span-2 min-w-0"><dt className="text-slate-500">Usluga</dt><dd className="mt-0.5 break-words text-slate-200">{res.service_name || 'Usluga'}</dd></div>
+                  <div><dt className="text-slate-500">Datum i vrijeme</dt><dd className="mt-0.5 text-slate-200">{res.reservation_date ? new Date(res.reservation_date).toLocaleString('bs-BA') : '-'}</dd></div>
+                  <div><dt className="text-slate-500">Cijena</dt><dd className="mt-0.5 font-semibold text-white">{priceLabel(res.price)}</dd></div>
+                </dl>
+                <div className="flex flex-wrap gap-2 border-t border-white/[0.06] pt-3 [&>button]:flex-1">{actions(res)}</div>
+              </article>
+            );
+          })
+        )}
       </div>
     </div>
   );

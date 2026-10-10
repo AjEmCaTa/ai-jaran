@@ -3,6 +3,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { createClient } from "@supabase/supabase-js";
 
+// Vraća "+01:00" (zima) ili "+02:00" (ljeto) za dati datum u Sarajevu,
+// umjesto fiksnog "+02:00" koje zimi pomjera provjeru za sat vremena.
+function sarajevoOffset(dateStr: string) {
+  try {
+    const probe = new Date(`${dateStr}T12:00:00Z`);
+    const name =
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Sarajevo",
+        timeZoneName: "shortOffset",
+      })
+        .formatToParts(probe)
+        .find((part) => part.type === "timeZoneName")?.value || "GMT+1";
+    const match = name.match(/GMT([+-])(\d+)/);
+    if (!match) return "+01:00";
+    return `${match[1]}${match[2].padStart(2, "0")}:00`;
+  } catch {
+    return "+01:00";
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -88,8 +108,9 @@ export async function GET(request: NextRequest) {
       auth: oauth2Client,
     });
 
-    const timeMin = `${formattedDate}T00:00:00+02:00`;
-    const timeMax = `${formattedDate}T23:59:59+02:00`;
+    const offset = sarajevoOffset(formattedDate);
+    const timeMin = `${formattedDate}T00:00:00${offset}`;
+    const timeMax = `${formattedDate}T23:59:59${offset}`;
 
     const response = await calendar.freebusy.query({
       requestBody: {

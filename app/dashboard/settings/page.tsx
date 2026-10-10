@@ -3,6 +3,7 @@
 import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Icon from '../_components/icons';
+import TimeInput24 from '../_components/TimeInput24';
 import {
   ACCENTS,
   DEFAULT_THEME,
@@ -269,14 +270,16 @@ export default function SettingsPage() {
               />
             </label>
           ))}
-          <label className="block text-xs font-medium text-slate-300">
-            Početak radnog vremena
-            <input type="time" value={business.work_start.slice(0, 5)} onChange={(event) => setBusiness((current) => ({ ...current, work_start: event.target.value }))} className={inputClass} />
-          </label>
-          <label className="block text-xs font-medium text-slate-300">
-            Kraj radnog vremena
-            <input type="time" value={business.work_end.slice(0, 5)} onChange={(event) => setBusiness((current) => ({ ...current, work_end: event.target.value }))} className={inputClass} />
-          </label>
+          <TimeInput24
+            label="Početak radnog vremena"
+            value={business.work_start.slice(0, 5)}
+            onChange={(value) => setBusiness((current) => ({ ...current, work_start: value }))}
+          />
+          <TimeInput24
+            label="Kraj radnog vremena"
+            value={business.work_end.slice(0, 5)}
+            onChange={(value) => setBusiness((current) => ({ ...current, work_end: value }))}
+          />
           <fieldset className="sm:col-span-2">
             <legend className="mb-2 text-xs font-medium text-slate-300">Radni dani</legend>
             <div className="flex flex-wrap gap-2">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { fullDate } from '../_lib/dates';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -209,7 +210,7 @@ export default function AdminReservationsPage() {
                         {res.customer_phone && <span className="block text-[11px] font-normal text-blue-400">{res.customer_phone}</span>}
                       </td>
                       <td className="px-6 py-4 text-slate-300">{res.service_name || 'Usluga'}</td>
-                      <td className="px-6 py-4 text-slate-300">{res.reservation_date ? new Date(res.reservation_date).toLocaleString('bs-BA') : '-'}</td>
+                      <td className="px-6 py-4 text-slate-300">{res.reservation_date ? fullDate(new Date(res.reservation_date)) : '-'}</td>
                       <td className="px-6 py-4 font-bold text-white">{priceLabel(res.price)}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold ${badgeTone(normalizedStatus(currentStatus))}`}>
@@ -246,7 +247,7 @@ export default function AdminReservationsPage() {
                 </div>
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-white/[0.06] pt-3 text-xs">
                   <div className="col-span-2 min-w-0"><dt className="text-slate-500">Usluga</dt><dd className="mt-0.5 break-words text-slate-200">{res.service_name || 'Usluga'}</dd></div>
-                  <div><dt className="text-slate-500">Datum i vrijeme</dt><dd className="mt-0.5 text-slate-200">{res.reservation_date ? new Date(res.reservation_date).toLocaleString('bs-BA') : '-'}</dd></div>
+                  <div><dt className="text-slate-500">Datum i vrijeme</dt><dd className="mt-0.5 text-slate-200">{res.reservation_date ? fullDate(new Date(res.reservation_date)) : '-'}</dd></div>
                   <div><dt className="text-slate-500">Cijena</dt><dd className="mt-0.5 font-semibold text-white">{priceLabel(res.price)}</dd></div>
                 </dl>
                 <div className="flex flex-wrap gap-2 border-t border-white/[0.06] pt-3 [&>button]:flex-1">{actions(res)}</div>

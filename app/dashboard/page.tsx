@@ -7,6 +7,7 @@ import Icon, { type IconName } from './_components/icons';
 import BookingLinkCard from './_components/BookingLinkCard';
 import SetupChecklist from './_components/SetupChecklist';
 import MonthlyGoal from './_components/MonthlyGoal';
+import { fullDate, longToday, monthShort, shortDateTime, timeOf, weekdayShort } from './_lib/dates';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -161,12 +162,12 @@ function ReservationRow({
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-blue-500/10 text-blue-300">
           <span className="text-base font-bold leading-none">{d.getDate()}</span>
-          <span className="mt-0.5 text-[10px]">{d.toLocaleDateString('bs-BA', { month: 'short' })}</span>
+          <span className="mt-0.5 text-[10px]">{monthShort(d)}</span>
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-white">{res.customer_name || 'Klijent'}</p>
           <p className="truncate text-xs text-slate-400">
-            {d.toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' })} · {res.service_name || 'Usluga'}
+            {timeOf(d)} · {res.service_name || 'Usluga'}
           </p>
         </div>
       </div>
@@ -326,7 +327,7 @@ export default function DashboardPage() {
       const items = reservations.filter((res) => dateKey(res.reservation_date) === key);
       return {
         key,
-        label: d.toLocaleDateString('bs-BA', { weekday: 'short' }),
+        label: weekdayShort(d),
         isToday: key === today,
         count: items.filter((res) => !isCancelledStatus(res.status)).length,
         revenue: revenueOf(items),
@@ -389,7 +390,7 @@ export default function DashboardPage() {
   const chartValues = data.days.map((d) => (chartMode === 'bookings' ? d.count : d.revenue));
   const chartMax = Math.max(...chartValues, 0);
   const chartTotal = chartValues.reduce((a, b) => a + b, 0);
-  const todayLabel = new Date().toLocaleDateString('bs-BA', { weekday: 'long', day: 'numeric', month: 'long' });
+  const todayLabel = longToday();
   const topMax = Math.max(...data.topServices.map((s) => s.count), 1);
   const weekdayMax = Math.max(...data.weekdays.map((d) => d.count), 0);
 
@@ -444,7 +445,7 @@ export default function DashboardPage() {
                 ) : next ? (
                   <>
                     <p className="mt-1 truncate text-base font-semibold text-white">
-                      {new Date(next.reservation_date as string).toLocaleString('bs-BA', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {shortDateTime(new Date(next.reservation_date as string))}
                     </p>
                     <p className="truncate text-sm text-slate-400">
                       {next.customer_name || 'Klijent'} · {next.service_name || 'Usluga'}
@@ -716,7 +717,7 @@ export default function DashboardPage() {
                     <p className="truncate text-xs text-slate-400">{b.customer_phone || 'Telefon nije naveden'}</p>
                   </div>
                   <p className="min-w-0 basis-36 truncate text-sm text-slate-300">{b.service_name || 'Usluga'}</p>
-                  <p className="basis-40 text-xs text-slate-400">{b.reservation_date ? new Date(b.reservation_date).toLocaleString('bs-BA') : '-'}</p>
+                  <p className="basis-40 text-xs text-slate-400">{b.reservation_date ? fullDate(new Date(b.reservation_date)) : '-'}</p>
                   <p className="basis-20 text-sm font-semibold tabular-nums text-white">{price}</p>
                   <StatusBadge status={b.status || 'Na čekanju'} />
                 </li>

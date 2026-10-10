@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Icon from './icons';
+import { dayMonthTime } from '../_lib/dates';
 
 type Item = {
   id: string;
@@ -106,7 +107,7 @@ export default function NotificationBell({ getToken }: { getToken: () => Promise
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-[22rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[var(--po-radius)] border border-white/10 bg-gray-900 shadow-2xl">
+        <div className="fixed inset-x-3 top-[4.25rem] z-50 overflow-hidden sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[22rem] rounded-[var(--po-radius)] border border-white/10 bg-gray-900 shadow-2xl">
           <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
             <p className="text-sm font-semibold text-white">Nove rezervacije</p>
             {newCount > 0 && (
@@ -132,7 +133,7 @@ export default function NotificationBell({ getToken }: { getToken: () => Promise
                       <span className="block truncate text-sm font-medium text-white">{item.customer_name || 'Klijent'}</span>
                       <span className="block truncate text-xs text-slate-400">
                         {item.service_name || 'Usluga'}
-                        {item.reservation_date && ` · ${new Date(item.reservation_date).toLocaleString('bs-BA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`}
+                        {item.reservation_date && ` · ${dayMonthTime(new Date(item.reservation_date))}`}
                       </span>
                     </span>
                   </Link>

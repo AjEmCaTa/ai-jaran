@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Icon from '../_components/icons';
+import { fullDate } from '../_lib/dates';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -39,7 +40,7 @@ const isCompleted = (value: unknown) => ['zavrseno', 'completed', 'finished'].in
 const isCancelled = (value: unknown) => ['otkazano', 'cancelled', 'canceled'].includes(normalize(value));
 
 const money = (n: number) => `${n.toLocaleString('bs-BA', { maximumFractionDigits: 2 })} KM`;
-const formatDate = (value: string) => (value ? new Date(value).toLocaleString('bs-BA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-');
+const formatDate = (value: string) => (value && !Number.isNaN(new Date(value).getTime()) ? fullDate(new Date(value)) : '-');
 
 function waNumber(phone: string) {
   let digits = phone.replace(/\D/g, '');

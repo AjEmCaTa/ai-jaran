@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Icon, { type IconName } from "./_components/icons";
 import { BusinessContext, normalizeBusiness, type DashboardBusiness } from "./_lib/business-context";
+import PartnerLogo from "../../components/PartnerLogo";
+import { PARTNER_LOGOS } from "../../utils/partnerLogos";
 import NotificationBell from "./_components/NotificationBell";
 import { DEFAULT_THEME, THEME_EVENT, loadTheme, themeVars, type ThemeSettings } from "./_lib/theme";
 
@@ -179,6 +181,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const profileBlock = (
     <div className="flex items-center gap-3 overflow-hidden">
+      {PARTNER_LOGOS[business.slug] ? (
+        <PartnerLogo slug={business.slug} name={business.name} className="h-11 w-11" />
+      ) : (
       <div
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[calc(var(--po-radius)*0.8)] text-sm font-bold text-white shadow-lg"
         style={{
@@ -188,6 +193,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         {initials}
       </div>
+      )}
       <div className="min-w-0">
         <span className="block truncate text-sm font-semibold text-white">{fullName}</span>
         <span className="block truncate text-xs font-medium text-blue-400">{businessName}</span>
@@ -313,7 +319,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-2">
-            <NotificationBell getToken={getToken} />
+            <NotificationBell getToken={getToken} businessId={business.id} />
             <Link
               href="/dashboard/settings"
               className="hidden items-center gap-2 rounded-full border border-white/[0.08] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:border-blue-500/40 hover:text-white sm:flex"

@@ -30,5 +30,5 @@
     "**/*.mts"
   ],
 
-  "exclude": ["node_modules"]
+  "exclude": ["tests", "node_modules"]
 }

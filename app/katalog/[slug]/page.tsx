@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
+import PartnerLogo from "../../../components/PartnerLogo";
 
 const EMPTY_PROFILE = {
   name: "",
@@ -233,10 +234,7 @@ export default function CategoryPartnersPage() {
               <div className="group flex flex-col justify-between rounded-3xl border border-white/10 bg-[#0b0f19] p-6 shadow-2xl transition-all duration-300 hover:border-amber-500/40">
                 <div>
                   <div className="mb-5 flex items-center gap-4">
-                    {/* Logo: dodati public/partners/sun-solution.png (vidi public/partners/README.md) */}
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-amber-500/40 bg-[#030712] text-2xl">
-                      ☀️
-                    </div>
+                    <PartnerLogo slug={SUN_SOLUTION_SLUG} name={solarProfile.name} />
                     <div>
                       <h3 className="text-2xl font-extrabold leading-tight text-white transition-colors group-hover:text-amber-400">
                         {solarProfile.name}

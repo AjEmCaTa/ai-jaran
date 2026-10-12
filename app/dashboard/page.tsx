@@ -686,7 +686,7 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <MonthlyGoal revenue={data.revenueMonth} loading={loading} />
+        <MonthlyGoal revenue={data.revenueMonth} loading={loading} businessId={business.id} />
       </div>
 
       {/* NEDAVNE REZERVACIJE */}

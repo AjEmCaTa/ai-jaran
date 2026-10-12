@@ -5,13 +5,11 @@ import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import Background from '../../../components/Background';
+import PartnerLogo from '../../../components/PartnerLogo';
 
 const BUSINESS_SLUG = 'sun-solution-mostar';
 const BUSINESS_NAME = 'Sun Solution d.o.o. Mostar';
 const CATEGORY_NAME = 'Solarni sistemi i elektroinstalacije';
-// Dok logo nije dostavljen ostaje null. Nakon dodavanja public/partners/sun-solution.png
-// postaviti na '/partners/sun-solution.png'.
-const LOGO_SRC: string | null = null;
 
 interface BusinessProfile {
   name: string;
@@ -138,13 +136,7 @@ export default function SunSolutionPage() {
 
         <div className="rounded-3xl border border-white/10 bg-[#0b0f19] p-6 shadow-2xl md:p-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-amber-500/40 bg-[#030712] text-3xl">
-              {LOGO_SRC ? (
-                <img src={LOGO_SRC} alt={`${profile.name} logo`} className="h-full w-full object-cover" />
-              ) : (
-                <span>☀️</span>
-              )}
-            </div>
+            <PartnerLogo slug={BUSINESS_SLUG} name={profile.name} className="h-20 w-20" />
             <div>
               <h1 className="text-2xl font-black text-white md:text-4xl">{profile.name}</h1>
               <span className="text-xs font-medium text-amber-400/90">{profile.category}</span>

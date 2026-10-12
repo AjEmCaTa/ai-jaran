@@ -19,6 +19,16 @@ const businessCategories = [
     city: "Mostar"
   },
   {
+    id: "solarni",
+    title: "Solarni sistemi i elektroinstalacije",
+    description: "Solarne elektrane, elektroinstalacije i energetska rješenja – pregled usluga i slanje upita za procjenu na terenu.",
+    icon: "☀️",
+    count: "Energetika i instalacije",
+    image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80",
+    slug: "solarni-sistemi",
+    city: "Mostar"
+  },
+  {
     id: "apartmani",
     title: "Vile i Apartmani",
     description: "Automatsko preuzimanje rezervacija noćenja, komunikacija sa gostima i upiti preko AI asistenta.",

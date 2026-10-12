@@ -47,20 +47,22 @@ function PushToggle() {
       return setState('unsupported');
     }
     try {
-      const response = await fetch('/api/dashboard/push', { headers: await authHeaders(), cache: 'no-store' });
+      const registration = await navigator.serviceWorker.ready;
+      const existing = await registration.pushManager.getSubscription();
+      const query = existing ? '?endpoint=' + encodeURIComponent(existing.endpoint) : '';
+      const response = await fetch('/api/dashboard/push' + query, { headers: await authHeaders(), cache: 'no-store' });
       const result = await response.json();
       if (!response.ok || !result.configured) return setState('unconfigured');
       if (Notification.permission === 'denied') return setState('denied');
-      const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      setState(existing && result.subscriptions > 0 ? 'on' : 'off');
+      setState(existing && result.subscribed ? 'on' : 'off');
     } catch {
       setState('unconfigured');
     }
   }, []);
 
   useEffect(() => {
-    refresh();
+    const timer = window.setTimeout(refresh, 0);
+    return () => window.clearTimeout(timer);
   }, [refresh]);
 
   const enable = async () => {
@@ -110,7 +112,7 @@ function PushToggle() {
           headers: await authHeaders(),
           body: JSON.stringify({ endpoint: subscription.endpoint }),
         });
-        await subscription.unsubscribe();
+        // Pretplata preglednika se ne ukida: isti uređaj može primati obavijesti i za druge firme.
       }
       setState('off');
     } catch (err) {
@@ -174,7 +176,8 @@ function InquiriesContent() {
   }, []);
 
   useEffect(() => {
-    load();
+    const timer = window.setTimeout(load, 0);
+    return () => window.clearTimeout(timer);
   }, [load, business.id]);
 
   useEffect(() => {
@@ -212,6 +215,12 @@ function InquiriesContent() {
       <PushToggle />
 
       {error && <p className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
+
+      {!loading && highlight && !items.some((item) => item.id === highlight) && (
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
+          Traženi upit nije pronađen u firmi „{business.name}“. Ako ste obavijest primili za drugu firmu, prijavite se na njen račun.
+        </p>
+      )}
 
       {loading ? (
         <div className={`${panel} text-sm text-gray-400`}>Učitavanje upita…</div>

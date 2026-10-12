@@ -102,3 +102,28 @@ test('greška slanja ne ruši ostale i firma bez pretplata ne šalje ništa', as
   const none = await sendPushToBusiness(store, 'nepoznata', payload, async () => {});
   assert.deepEqual(none, { sent: 0, failed: 0, removed: 0 });
 });
+
+test('isti uređaj pretplaćen na dvije firme: svaka firma šalje samo svoj red, brisanje ne dira drugu', async () => {
+  const shared = 'https://push.example/shared-device';
+  const both = [
+    { business_id: 'catic', endpoint: shared, p256dh: 'k', auth: 'a' },
+    { business_id: 'sun', endpoint: shared, p256dh: 'k', auth: 'a' },
+  ];
+  const a = fakeStore(both);
+  const first = await sendPushToBusiness(a.store, 'catic', payload, async () => {});
+  assert.equal(first.sent, 1);
+  const b = fakeStore(both);
+  const second = await sendPushToBusiness(b.store, 'sun', payload, async () => {
+    throw Object.assign(new Error('gone'), { statusCode: 410 });
+  });
+  assert.equal(second.removed, 1);
+  assert.equal(b.deleted.length, 1);
+});
+
+test('migracija: jedinstvenost je (business_id, endpoint), a ne samo endpoint', async () => {
+  const { readFileSync } = await import('node:fs');
+  const sql = readFileSync(new URL('../supabase/migrations/20261012_push_and_inquiries.sql', import.meta.url), 'utf8');
+  assert.match(sql, /unique index if not exists push_subscriptions_business_endpoint_uidx\s+on public\.push_subscriptions \(business_id, endpoint\)/);
+  assert.doesNotMatch(sql, /endpoint text not null unique/);
+  assert.match(sql, /enable row level security/);
+});

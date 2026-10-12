@@ -19,12 +19,17 @@ create table if not exists public.push_subscriptions (
   id uuid primary key default gen_random_uuid(),
   business_id uuid not null references public.businesses(id) on delete cascade,
   user_id uuid not null,
-  endpoint text not null unique,
+  endpoint text not null,
   p256dh text not null,
   auth text not null,
   user_agent text,
   created_at timestamptz not null default now()
 );
+-- Jedan uređaj (endpoint) se smije pretplatiti na VIŠE firmi; jedinstvena je tek kombinacija firma + endpoint.
+-- Ako je tabela ranije kreirana s unique(endpoint), ukloni stari ograničenje (idempotentno).
+alter table public.push_subscriptions drop constraint if exists push_subscriptions_endpoint_key;
+create unique index if not exists push_subscriptions_business_endpoint_uidx
+  on public.push_subscriptions (business_id, endpoint);
 create index if not exists push_subscriptions_business_idx on public.push_subscriptions (business_id);
 
 -- RLS uključen bez ikakvih politika: anon/authenticated ključ NE može čitati ni pisati.

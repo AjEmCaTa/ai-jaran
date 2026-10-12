@@ -8,19 +8,25 @@ import { getVapidPublicKey, isPushConfigured } from '../../../../utils/pushSende
 export async function GET(request: NextRequest) {
   const owner = await getOwnerContext(request);
   if (owner.response) return owner.response;
-  const { admin, businessId, user } = owner.context;
+  const { admin, businessId } = owner.context;
 
   const configured = isPushConfigured();
-  const { count } = await admin
-    .from('push_subscriptions')
-    .select('id', { count: 'exact', head: true })
-    .eq('business_id', businessId)
-    .eq('user_id', user.id);
+  // Je li OVAJ uređaj (endpoint) pretplaćen na OVU firmu; drugi uređaji/firme se ne računaju.
+  const endpoint = request.nextUrl.searchParams.get('endpoint') || '';
+  let subscribed = false;
+  if (endpoint) {
+    const { count } = await admin
+      .from('push_subscriptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('business_id', businessId)
+      .eq('endpoint', endpoint);
+    subscribed = (count ?? 0) > 0;
+  }
 
   return NextResponse.json({
     configured,
     publicKey: configured ? getVapidPublicKey() : '',
-    subscriptions: count ?? 0,
+    subscribed,
   });
 }
 
@@ -36,7 +42,8 @@ export async function POST(request: NextRequest) {
   const subscription = parseSubscription(body?.subscription);
   if (!subscription) return NextResponse.json({ error: 'Neispravna pretplata.' }, { status: 400 });
 
-  // Isti uređaj (endpoint) pripada jednoj firmi/korisniku: nova prijava ga preuzima.
+  // Uređaj može biti pretplaćen na više firmi: ključ je (business_id, endpoint). Pretplata
+  // druge firme se nikad ne mijenja ni ne briše; ovdje se osvježava samo red ove firme.
   const { error } = await admin.from('push_subscriptions').upsert(
     {
       business_id: businessId,
@@ -46,7 +53,7 @@ export async function POST(request: NextRequest) {
       auth: subscription.keys.auth,
       user_agent: (request.headers.get('user-agent') || '').slice(0, 300),
     },
-    { onConflict: 'endpoint' }
+    { onConflict: 'business_id,endpoint' }
   );
   if (error) {
     console.error('push subscribe:', error);

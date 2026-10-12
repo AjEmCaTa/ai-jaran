@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useBusiness } from '../_lib/business-context';
 import Icon from '../_components/icons';
 import TimeInput24 from '../_components/TimeInput24';
 import {
@@ -71,6 +72,7 @@ function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building'; tit
 }
 
 export default function SettingsPage() {
+  const { business: ctxBusiness, ownerName: ctxOwnerName, refresh } = useBusiness();
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
   const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[] });
   const [ownerName, setOwnerName] = useState('');
@@ -81,37 +83,25 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setTheme(loadTheme());
-
-    async function loadBusiness() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Prijavite se ponovo za pristup postavkama.');
-        const response = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${session.access_token}` } });
-        const dashboard = await response.json();
-        if (!response.ok) throw new Error(dashboard.error || 'Podatke nije moguće učitati.');
-        setOwnerName(typeof dashboard.ownerName === 'string' ? dashboard.ownerName : '');
-        const b = dashboard.business;
-        setBusiness({
-          id: b.id || '',
-          name: b.name || '',
-          city: b.city || '',
-          category: b.category || '',
-          phone: b.phone || '',
-          owner_email: b.owner_email || '',
-          address: b.address || '',
-          work_start: b.work_start || '',
-          work_end: b.work_end || '',
-          work_days: Array.isArray(b.work_days) ? b.work_days : [],
-        });
-      } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : 'Podatke nije moguće učitati.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadBusiness();
   }, []);
+
+  // Podaci dolaze iz zajedničkog konteksta layouta (bez ponovnog dohvaćanja).
+  useEffect(() => {
+    setBusiness({
+      id: ctxBusiness.id,
+      name: ctxBusiness.name,
+      city: ctxBusiness.city,
+      category: ctxBusiness.category,
+      phone: ctxBusiness.phone,
+      owner_email: ctxBusiness.owner_email,
+      address: ctxBusiness.address,
+      work_start: ctxBusiness.work_start,
+      work_end: ctxBusiness.work_end,
+      work_days: ctxBusiness.work_days,
+    });
+    setOwnerName(ctxOwnerName);
+    setLoading(false);
+  }, [ctxBusiness, ctxOwnerName]);
 
   const update = (partial: Partial<ThemeSettings>) => {
     const next = { ...theme, ...partial };
@@ -148,7 +138,10 @@ export default function SettingsPage() {
     });
     const result = await response.json();
     if (!response.ok) setErrorMessage(result.error || 'Promjene nije moguće sačuvati.');
-    else setSaveMessage('Podaci biznisa su sačuvani.');
+    else {
+      setSaveMessage('Podaci biznisa su sačuvani.');
+      await refresh();
+    }
     setSaving(false);
   };
 

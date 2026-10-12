@@ -46,7 +46,7 @@ export async function getOwnerContext(request: NextRequest): Promise<OwnerContex
     return { response: NextResponse.json({ error: 'Profil vlasnika nije moguće provjeriti.' }, { status: 500 }) };
   }
   if (!profile?.business_id) {
-    return { response: NextResponse.json({ error: 'Ovaj nalog nije povezan s biznisom.' }, { status: 403 }) };
+    return { response: NextResponse.json({ error: 'Ovaj nalog nije povezan s biznisom.', code: 'no-business' }, { status: 403 }) };
   }
 
   const { data: business, error: businessError } = await admin
@@ -59,10 +59,10 @@ export async function getOwnerContext(request: NextRequest): Promise<OwnerContex
     return { response: NextResponse.json({ error: 'Vlasnički biznis nije moguće provjeriti.' }, { status: 500 }) };
   }
   if (!business) {
-    return { response: NextResponse.json({ error: 'Povezani biznis ne postoji.' }, { status: 403 }) };
+    return { response: NextResponse.json({ error: 'Povezani biznis ne postoji.', code: 'no-business' }, { status: 403 }) };
   }
   if (business.status !== 'active') {
-    return { response: NextResponse.json({ error: 'Pristup ovom biznisu nije aktivan.' }, { status: 403 }) };
+    return { response: NextResponse.json({ error: 'Pristup ovom biznisu nije aktivan.', code: 'pending' }, { status: 403 }) };
   }
 
   return { context: { admin, user: authData.user, businessId: business.id } };

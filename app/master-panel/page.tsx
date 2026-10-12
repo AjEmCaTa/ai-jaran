@@ -8,41 +8,51 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key"
 );
 
-const ADMIN_EMAILS = ['caticharun126@gmail.com'];
-
 export default function MasterPanelPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function checkAndLoad() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
-        setAuthorized(false);
-        setLoading(false);
-        return;
-      }
-      setAuthorized(true);
-      await loadBusinesses();
-    }
-    checkAndLoad();
-  }, []);
+  const authHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session ? { Authorization: `Bearer ${session.access_token}` } : null;
+  };
 
+  // Autorizacija se provjerava na serveru (/api/master/businesses); ovo je samo UI.
   const loadBusinesses = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('businesses')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setBusinesses(data);
+    const headers = await authHeader();
+    if (!headers) {
+      setAuthorized(false);
+      setLoading(false);
+      return;
+    }
+    const response = await fetch('/api/master/businesses', { headers, cache: 'no-store' });
+    if (!response.ok) {
+      setAuthorized(false);
+    } else {
+      const result = await response.json();
+      setBusinesses(result.businesses || []);
+      setAuthorized(true);
+    }
     setLoading(false);
   };
 
+  useEffect(() => {
+    loadBusinesses();
+  }, []);
+
   const updateStatus = async (id: string, newStatus: string) => {
     setUpdatingId(id);
-    await supabase.from('businesses').update({ status: newStatus }).eq('id', id);
+    const headers = await authHeader();
+    if (headers) {
+      await fetch('/api/master/businesses', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+    }
     await loadBusinesses();
     setUpdatingId(null);
   };

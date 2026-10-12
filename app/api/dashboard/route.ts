@@ -27,12 +27,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const { admin, businessId, user } = result.context;
+    // scope=business: lagan odgovor bez rezervacija (za layout i postavke).
+    const lightweight = request.nextUrl.searchParams.get('scope') === 'business';
     const [businessResult, reservations, servicesResult, profileResult] = await Promise.all([
       admin.from('businesses')
         .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days')
         .eq('id', businessId)
         .single(),
-      loadReservations(admin, businessId),
+      lightweight ? Promise.resolve([] as Record<string, unknown>[]) : loadReservations(admin, businessId),
       admin.from('services').select('id', { count: 'exact', head: true }).eq('business_id', businessId),
       admin.from('profiles').select('name').eq('id', user.id).maybeSingle(),
     ]);
@@ -77,6 +79,24 @@ export async function PATCH(request: NextRequest) {
     for (const field of ['category', 'city', 'address', 'phone', 'owner_email', 'work_start', 'work_end'] as const) {
       if (field in changes && changes[field] !== null && typeof changes[field] !== 'string') {
         return NextResponse.json({ error: 'Podaci biznisa nisu važeći.' }, { status: 400 });
+      }
+    }
+
+    const limits: Record<string, number> = { name: 150, category: 150, city: 100, address: 200, phone: 40, owner_email: 120 };
+    for (const [field, max] of Object.entries(limits)) {
+      const value = changes[field];
+      if (typeof value === 'string' && value.trim().length > max) {
+        return NextResponse.json({ error: 'Uneseni podatak je predugačak.' }, { status: 400 });
+      }
+    }
+    const ownerEmail = typeof changes.owner_email === 'string' ? changes.owner_email.trim() : '';
+    if (ownerEmail && !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(ownerEmail)) {
+      return NextResponse.json({ error: 'Unesite ispravnu e-mail adresu.' }, { status: 400 });
+    }
+    for (const field of ['work_start', 'work_end'] as const) {
+      const value = changes[field];
+      if (typeof value === 'string' && value.trim() && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value.trim())) {
+        return NextResponse.json({ error: 'Radno vrijeme nije u ispravnom formatu.' }, { status: 400 });
       }
     }
 

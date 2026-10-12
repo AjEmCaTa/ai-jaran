@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect, useCallback, useMemo, type CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Icon, { type IconName } from "./_components/icons";
+import { BusinessContext, normalizeBusiness, type DashboardBusiness } from "./_lib/business-context";
 import NotificationBell from "./_components/NotificationBell";
 import { DEFAULT_THEME, THEME_EVENT, loadTheme, themeVars, type ThemeSettings } from "./_lib/theme";
 
@@ -37,10 +38,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
 
-  const [fullName, setFullName] = useState("Korisnik");
-  const [businessName, setBusinessName] = useState("Moj Biznis");
-  const [businessCity, setBusinessCity] = useState("");
-  const [initials, setInitials] = useState("PO");
+  const [business, setBusiness] = useState<DashboardBusiness>(normalizeBusiness(null));
+  const [ownerName, setOwnerName] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [accessStatus, setAccessStatus] = useState("none");
@@ -54,60 +53,72 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => window.removeEventListener(THEME_EVENT, onChange);
   }, []);
 
-  useEffect(() => {
-    async function loadLayoutData() {
-      try {
-        const userResult = await supabase.auth.getUser();
-        const user = userResult.data.user;
-
-        if (!user) {
-          setAccessStatus("unauthenticated");
-          router.replace(`/prijava?next=${encodeURIComponent(pathname || "/dashboard")}`);
-          return;
-        }
-
-        const profileResult = await supabase.from("profiles").select("*").eq("id", user.id).single();
-        const profile = profileResult.data;
-
-        if (profile) {
-          const name = profile.name || profile.full_name || "Korisnik";
-          setFullName(name);
-
-          const parts = name.split(" ");
-          if (parts.length >= 2) {
-            setInitials((parts[0][0] + parts[1][0]).toUpperCase());
-          } else if (name.length > 0) {
-            setInitials(name.substring(0, 2).toUpperCase());
-          }
-
-          if (profile.business_id) {
-            const businessResult = await supabase
-              .from("businesses")
-              .select("name, city, status")
-              .eq("id", profile.business_id)
-              .single();
-            const business = businessResult.data;
-
-            if (business) {
-              setBusinessName(business.name || "Moj Biznis");
-              setBusinessCity(business.city || "");
-              setAccessStatus(business.status === "active" ? "active" : "pending");
-            }
-          } else {
-            setAccessStatus("no-business");
-          }
-        } else {
-          setAccessStatus("no-business");
-        }
-      } catch (err) {
-        console.error("Greška pri učitavanju layout podataka:", err);
-      } finally {
-        setCheckingAccess(false);
+  const loadBusiness = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setAccessStatus("unauthenticated");
+        return;
       }
+      // Jedan lagan zahtjev umjesto uzastopnih upita profiles -> businesses.
+      const response = await fetch("/api/dashboard?scope=business", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: "no-store",
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        setAccessStatus("unauthenticated");
+      } else if (response.status === 403) {
+        setAccessStatus(result.code === "pending" ? "pending" : "no-business");
+      } else if (!response.ok) {
+        throw new Error(result.error || "Podatke nije moguće učitati.");
+      } else {
+        const loaded = normalizeBusiness(result.business);
+        setBusiness(loaded);
+        setOwnerName(typeof result.ownerName === "string" ? result.ownerName.trim() : "");
+        setAccessStatus("active");
+      }
+    } catch (err) {
+      console.error("Greška pri učitavanju layout podataka:", err);
+      setAccessStatus("error");
+    } finally {
+      setCheckingAccess(false);
     }
+  }, []);
 
-    loadLayoutData();
-  }, [pathname, router]);
+  // Učitava se jednom po otvaranju dashboarda, ne pri svakoj promjeni stranice.
+  useEffect(() => {
+    loadBusiness();
+  }, [loadBusiness]);
+
+  useEffect(() => {
+    if (accessStatus === "unauthenticated") {
+      router.replace(`/prijava?next=${encodeURIComponent(pathname || "/dashboard")}`);
+    }
+  }, [accessStatus, pathname, router]);
+
+  const fullName = ownerName && !ownerName.includes("@") ? ownerName : "Vlasnik";
+  const businessName = business.name || "Moj Biznis";
+  const businessCity = business.city;
+  const initials = (() => {
+    const source = ownerName && !ownerName.includes("@") ? ownerName : business.name;
+    const parts = source.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return source.trim().slice(0, 2).toUpperCase() || "PO";
+  })();
+
+  const ctx = useMemo(
+    () => ({ business, ownerName, setOwnerName, refresh: loadBusiness }),
+    [business, ownerName, loadBusiness],
+  );
+
+  if (accessStatus === "error") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4 text-center text-sm text-slate-300">
+        Podatke dashboarda trenutno nije moguće učitati. Osvježite stranicu.
+      </div>
+    );
+  }
 
   if (checkingAccess) {
     return (
@@ -317,7 +328,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-8">
-          {children}
+          <BusinessContext.Provider value={ctx}>{children}</BusinessContext.Provider>
         </main>
       </div>
     </div>

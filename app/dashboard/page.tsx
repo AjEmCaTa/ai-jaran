@@ -15,6 +15,7 @@ const supabase = createClient(
 );
 
 const LINK_KEY = 'poslo-booking-link';
+const linkKeyFor = (businessId: string) => `${LINK_KEY}:${businessId}`;
 
 type DashboardReservation = {
   id: string;
@@ -32,6 +33,7 @@ type NewStatus = 'Potvrđeno' | 'Završeno' | 'Otkazano';
 
 type Business = {
   id: string;
+  slug: string;
   name: string;
   city: string;
   address: string;
@@ -136,8 +138,8 @@ function StatusBadge({ status }: { status: string }) {
 
 function greeting() {
   const hour = new Date().getHours();
-  if (hour < 11) return 'Dobro jutro';
-  if (hour < 18) return 'Dobar dan';
+  if (hour >= 5 && hour < 11) return 'Dobro jutro';
+  if (hour >= 11 && hour < 18) return 'Dobar dan';
   return 'Dobro veče';
 }
 
@@ -204,8 +206,8 @@ function ReservationRow({
 }
 
 export default function DashboardPage() {
-  const [business, setBusiness] = useState<Business>({ id: '', name: '', city: '', address: '', phone: '', work_start: '', work_end: '', work_days: [] });
-  const [userName, setUserName] = useState('Korisnik');
+  const [business, setBusiness] = useState<Business>({ id: '', slug: '', name: '', city: '', address: '', phone: '', work_start: '', work_end: '', work_days: [] });
+  const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [reservations, setReservations] = useState<DashboardReservation[]>([]);
@@ -215,30 +217,26 @@ export default function DashboardPage() {
   const [busyId, setBusyId] = useState('');
 
   useEffect(() => {
-    try {
-      setBookingLink(window.localStorage.getItem(LINK_KEY) || '');
-    } catch {
-      /* privatni mod */
-    }
-
     async function loadDashboardData() {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
-          setLoading(false);
-          return;
-        }
-
+        // getSession čita lokalnu sesiju (bez dodatnog mrežnog zahtjeva); server
+        // svejedno provjerava token u getOwnerContext.
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Prijavite se ponovo za pristup dashboardu.');
         const response = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${session.access_token}` } });
         const dashboard = await response.json();
         if (!response.ok) throw new Error(dashboard.error || 'Dashboard nije moguće učitati.');
 
-        setUserName(user.user_metadata?.full_name || user.email || 'Korisnik');
+        setOwnerName(typeof dashboard.ownerName === 'string' ? dashboard.ownerName.trim() : '');
         const b = dashboard.business || {};
+        try {
+          setBookingLink(window.localStorage.getItem(linkKeyFor(b.id || '')) || '');
+        } catch {
+          /* privatni mod */
+        }
         setBusiness({
           id: b.id || '',
+          slug: b.slug || '',
           name: b.name || '',
           city: b.city || '',
           address: b.address || '',
@@ -263,7 +261,7 @@ export default function DashboardPage() {
   const saveLink = (link: string) => {
     setBookingLink(link);
     try {
-      window.localStorage.setItem(LINK_KEY, link);
+      window.localStorage.setItem(linkKeyFor(business.id), link);
     } catch {
       /* privatni mod */
     }
@@ -385,7 +383,10 @@ export default function DashboardPage() {
     };
   }, [reservations]);
 
-  const firstName = (userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0]) || 'Korisnik';
+  // Pozdrav koristi profiles.name, a ako ga nema naziv firme; nikad e-mail.
+  const greetingName = ownerName && !ownerName.includes('@') ? ownerName.split(/\s+/)[0] : business.name;
+  const defaultLink = business.slug && typeof window !== 'undefined' ? `${window.location.origin}/katalog/${business.slug}` : '';
+  const effectiveLink = bookingLink || defaultLink;
   const next = data.upcoming[0];
   const chartValues = data.days.map((d) => (chartMode === 'bookings' ? d.count : d.revenue));
   const chartMax = Math.max(...chartValues, 0);
@@ -398,7 +399,7 @@ export default function DashboardPage() {
     { label: 'Dodajte usluge i cijene', hint: 'Klijenti biraju iz vašeg cjenovnika.', done: serviceCount > 0, href: '/dashboard/services' },
     { label: 'Postavite radno vrijeme', hint: 'Početak, kraj i radni dani.', done: Boolean(business.work_start && business.work_end && business.work_days.length > 0), href: '/dashboard/settings' },
     { label: 'Upišite telefon i adresu', hint: 'Da vas klijenti lako pronađu i nazovu.', done: Boolean(business.phone && business.address), href: '/dashboard/settings' },
-    { label: 'Podijelite link za rezervacije', hint: 'Sačuvajte link ispod i pošaljite ga klijentima.', done: Boolean(bookingLink), href: '#link-rezervacije' },
+    { label: 'Podijelite link za rezervacije', hint: 'Sačuvajte link ispod i pošaljite ga klijentima.', done: Boolean(effectiveLink), href: '#link-rezervacije' },
     { label: 'Primite prvu rezervaciju', hint: 'Pojavit će se na ovoj ploči čim stigne.', done: reservations.length > 0, href: '/dashboard/reservations' },
   ];
   const checklistVisible = !loading && checklist.some((item) => !item.done);
@@ -426,10 +427,10 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <p className="text-sm capitalize text-blue-300/80">{todayLabel}</p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              {greeting()}, {firstName}
+              {loading ? <span className="inline-block h-8 w-56 animate-pulse rounded-lg bg-white/10 align-middle" /> : greetingName ? `${greeting()}, ${greetingName}` : greeting()}
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              {business.name || 'Moj biznis'}
+              {loading ? '' : business.name}
               {business.city && ` · ${business.city}`}
             </p>
 
@@ -484,7 +485,7 @@ export default function DashboardPage() {
       <div className="grid gap-5 lg:grid-cols-2">
         {checklistVisible && <SetupChecklist items={checklist} />}
         <div id="link-rezervacije" className={checklistVisible ? '' : 'lg:col-span-2'}>
-          <BookingLinkCard link={bookingLink} onSave={saveLink} className="h-full" />
+          <BookingLinkCard link={effectiveLink} defaultLink={defaultLink} onSave={saveLink} className="h-full" />
         </div>
       </div>
 

@@ -73,6 +73,7 @@ function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building'; tit
 export default function SettingsPage() {
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
   const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[] });
+  const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -88,6 +89,7 @@ export default function SettingsPage() {
         const response = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${session.access_token}` } });
         const dashboard = await response.json();
         if (!response.ok) throw new Error(dashboard.error || 'Podatke nije moguće učitati.');
+        setOwnerName(typeof dashboard.ownerName === 'string' ? dashboard.ownerName : '');
         const b = dashboard.business;
         setBusiness({
           id: b.id || '',
@@ -133,6 +135,7 @@ export default function SettingsPage() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({
         name: business.name.trim(),
+        owner_name: ownerName.trim() || undefined,
         city: business.city.trim() || null,
         category: business.category.trim() || null,
         phone: business.phone.trim() || null,
@@ -251,6 +254,17 @@ export default function SettingsPage() {
         {errorMessage && <p role="alert" className="mb-4 rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200">{errorMessage}</p>}
 
         <form onSubmit={saveBusiness} className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-xs font-medium text-slate-300">
+            Ime i prezime vlasnika
+            <input
+              type="text"
+              maxLength={100}
+              value={ownerName}
+              onChange={(event) => setOwnerName(event.target.value)}
+              disabled={loading}
+              className={inputClass}
+            />
+          </label>
           {([
             ['name', 'Naziv biznisa', 'text'],
             ['category', 'Djelatnost', 'text'],

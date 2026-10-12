@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
@@ -12,8 +12,6 @@ const CATEGORY_NAME = 'Solarni sistemi i elektroinstalacije';
 // Dok logo nije dostavljen ostaje null. Nakon dodavanja public/partners/sun-solution.png
 // postaviti na '/partners/sun-solution.png'.
 const LOGO_SRC: string | null = null;
-// Opcionalna adresa za primanje upita (mailto); bez nje se prikazuje samo poziv na telefon.
-const INQUIRY_EMAIL = process.env.NEXT_PUBLIC_SUN_SOLUTION_EMAIL || '';
 
 interface BusinessProfile {
   name: string;
@@ -52,7 +50,12 @@ export default function SunSolutionPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [service, setService] = useState('');
+  const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [website, setWebsite] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     fetch(`/api/business-profile?slug=${BUSINESS_SLUG}`, { cache: 'no-store' })
@@ -76,12 +79,45 @@ export default function SunSolutionPage() {
       .finally(() => setLoaded(true));
   }, []);
 
-  const mailtoHref = INQUIRY_EMAIL
-    ? `mailto:${INQUIRY_EMAIL}?subject=${encodeURIComponent(`Upit: ${service || 'solarni sistemi / elektroinstalacije'}`)}&body=${encodeURIComponent(
-        `Ime: ${name}\nTelefon: ${phone}\nUsluga: ${service || '-'}\n\n${message}`,
-      )}`
-    : '';
-  const canSend = Boolean(mailtoHref) && name.trim() !== '' && phone.trim() !== '';
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (sending || sent) return;
+    setFormError('');
+    if (name.trim().length < 2) return setFormError('Unesite ime i prezime.');
+    if (!/^[+\d][\d\s()/.-]{5,}$/.test(phone.trim())) return setFormError('Unesite ispravan broj telefona.');
+    if (email.trim() && !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(email.trim())) {
+      return setFormError('Unesite ispravnu e-mail adresu ili ostavite polje prazno.');
+    }
+    if (message.trim().length < 5) return setFormError('Opišite kratko šta vam treba.');
+
+    setSending(true);
+    try {
+      const response = await fetch('/api/business-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business_slug: BUSINESS_SLUG,
+          name,
+          phone,
+          email,
+          service,
+          message,
+          website,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+      if (response.ok && result?.success) {
+        setSent(true);
+      } else {
+        setFormError(result?.error || 'Upit nije poslan. Pokušajte ponovo ili nas nazovite.');
+      }
+    } catch {
+      setFormError('Greška u mreži. Provjerite vezu i pokušajte ponovo.');
+    } finally {
+      setSending(false);
+    }
+  };
+
   const telHref = profile.phone ? `tel:${profile.phone.replace(/[^\d+]/g, '')}` : '';
 
   const inputClass =
@@ -166,39 +202,63 @@ export default function SunSolutionPage() {
             Procjena solarnog sistema i elektroinstalacija najčešće zahtijeva pregled na terenu, pa se ovdje ne
             zakazuje termin. Pošaljite upit i partner će vas kontaktirati radi dogovora.
           </p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <input className={inputClass} placeholder="Ime i prezime" value={name} onChange={(e) => setName(e.target.value)} />
-            <input className={inputClass} placeholder="Telefon" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            <input
-              className={`${inputClass} md:col-span-2`}
-              placeholder="Usluga (npr. solarni sistem, elektroinstalacije)"
-              value={service}
-              onChange={(e) => setService(e.target.value)}
-            />
-            <textarea
-              className={`${inputClass} md:col-span-2`}
-              rows={4}
-              placeholder="Opišite šta vam treba (lokacija, objekat, okvirna potrošnja…)"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </div>
-          <div className="mt-5 flex flex-wrap gap-3">
-            {canSend ? (
-              <a href={mailtoHref} className="rounded-2xl bg-amber-600 px-6 py-3 text-xs font-bold text-white hover:bg-amber-500">
-                Pošalji upit
-              </a>
-            ) : (
-              <span className="rounded-2xl bg-amber-600/30 px-6 py-3 text-xs font-bold text-white/60">
-                {INQUIRY_EMAIL ? 'Unesite ime i telefon' : 'Slanje upita putem forme još nije aktivirano'}
-              </span>
-            )}
-            {telHref && (
-              <a href={telHref} className="rounded-2xl border border-white/10 px-6 py-3 text-xs font-bold text-white hover:border-amber-500/40">
-                Nazovite {profile.phone}
-              </a>
-            )}
-          </div>
+          {sent ? (
+            <div role="status" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm text-emerald-300">
+              Hvala! Vaš upit je poslan firmi {profile.name}. Javit će vam se uskoro.
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <input className={inputClass} placeholder="Ime i prezime" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
+                <input className={inputClass} placeholder="Telefon" maxLength={40} value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <input className={inputClass} type="email" placeholder="E-mail (nije obavezno)" maxLength={120} value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input
+                  className={inputClass}
+                  placeholder="Usluga (npr. solarni sistem, elektroinstalacije)"
+                  maxLength={150}
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                />
+                <textarea
+                  className={`${inputClass} md:col-span-2`}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="Opišite šta vam treba (lokacija, objekat, okvirna potrošnja…)"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="hidden"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
+              {formError && (
+                <p role="alert" className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+                  {formError}
+                </p>
+              )}
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="rounded-2xl bg-amber-600 px-6 py-3 text-xs font-bold text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {sending ? 'Slanje…' : 'Pošalji upit'}
+                </button>
+                {telHref && (
+                  <a href={telHref} className="rounded-2xl border border-white/10 px-6 py-3 text-xs font-bold text-white hover:border-amber-500/40">
+                    Nazovite {profile.phone}
+                  </a>
+                )}
+              </div>
+            </form>
+          )}
         </section>
       </div>
 

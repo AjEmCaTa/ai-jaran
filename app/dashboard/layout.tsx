@@ -27,6 +27,7 @@ const SECTIONS: { title: string; items: NavItem[] }[] = [
       { href: "/dashboard", label: "Kontrolna ploča", icon: "dashboard", exact: true },
       { href: "/dashboard/reservations", label: "Rezervacije i kalendar", icon: "calendar" },
       { href: "/dashboard/services", label: "Usluge i cijene", icon: "tag" },
+      { href: "/dashboard/inquiries", label: "Upiti", icon: "bell" },
       { href: "/dashboard/customers", label: "Klijenti", icon: "users" },
     ],
   },

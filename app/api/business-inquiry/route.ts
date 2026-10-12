@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { buildInquiryPayload, sendPushToBusiness, type PushStore } from '../../../utils/push';
+import { isPushConfigured, sendWebPush } from '../../../utils/pushSender';
 
 // Univerzalni upit za bilo koju firmu iz tabele `businesses`.
 // Primalac se UVIJEK uzima iz baze (businesses.owner_email) po slug-u firme,
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
   });
   const { data: business, error: businessError } = await admin
     .from('businesses')
-    .select('name, owner_email, status, is_active')
+    .select('id, name, owner_email, status, is_active')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -117,6 +119,29 @@ export async function POST(request: NextRequest) {
   if (!EMAIL_RE.test(recipient)) {
     console.error(`business-inquiry: firma ${slug} nema ispravan owner_email.`);
     return fail('Ova firma trenutno ne može primiti upit putem forme. Nazovite je direktno.', 503);
+  }
+
+  // Upit se čuva za dashboard (odvojeno od rezervacija/prihoda) i šalje push firmi.
+  // Greška ovdje (npr. tabele još nisu kreirane) ne smije blokirati e-mail.
+  try {
+    const { data: saved, error: saveError } = await admin
+      .from('business_inquiries')
+      .insert({ business_id: business.id, name, phone, email: email || null, service: service || null, message })
+      .select('id')
+      .single();
+    if (saveError || !saved) {
+      console.error('business-inquiry: upit nije sačuvan:', saveError);
+    } else if (isPushConfigured()) {
+      const result = await sendPushToBusiness(
+        admin as unknown as PushStore,
+        business.id,
+        buildInquiryPayload({ inquiryId: saved.id, service }),
+        sendWebPush
+      );
+      if (result.failed) console.error(`business-inquiry: push neuspjeh za ${result.failed} uređaja.`);
+    }
+  } catch (error) {
+    console.error('business-inquiry: push/spremanje izuzetak:', error);
   }
 
   const fromAddress = process.env.INQUIRY_FROM_EMAIL || DEFAULT_FROM_ADDRESS;

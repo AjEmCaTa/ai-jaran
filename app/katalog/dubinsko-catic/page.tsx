@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import Background from '../../../components/Background';
+import InquiryForm from '../../../components/InquiryForm';
 
 interface ServicePackage {
   id: string;
@@ -878,6 +879,14 @@ export default function DubinskoCaticPage() {
           </div>
         </div>
       )}
+
+      <section className="mx-auto max-w-2xl px-4 pb-16">
+        <div className="rounded-3xl border border-white/10 bg-[#0b0f19] p-6">
+          <h2 className="mb-1 text-xl font-bold text-white">Imate pitanje?</h2>
+          <p className="mb-4 text-sm text-gray-400">Pošaljite upit, javit ćemo vam se (ovo nije rezervacija termina).</p>
+          <InquiryForm businessSlug={BUSINESS_SLUG} />
+        </div>
+      </section>
 
       <Footer onOpenPrivacy={() => {}} />
     </main>

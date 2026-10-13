@@ -198,7 +198,8 @@ export default function DubinskoCaticPage() {
           name: string;
           description: string | null;
           duration: string | null;
-          price: number;
+          price: number | null;
+          price_on_request?: boolean | null;
         }[] = Array.isArray(result.services) ? result.services : [];
 
         const mapped: ServicePackage[] = services.map((service, index) => {
@@ -214,7 +215,7 @@ export default function DubinskoCaticPage() {
             id: service.id,
             serviceId: service.id,
             name: service.name,
-            price: `${Number.isFinite(price) ? price.toLocaleString('bs-BA') : '0'} KM`,
+            price: service.price_on_request ? 'Na upit' : `${Number.isFinite(price) ? price.toLocaleString('bs-BA') : '0'} KM`,
             duration: duration || '2h',
             durationMinutes: Number.isFinite(numericDuration) && numericDuration >= 30 && numericDuration <= 720
               ? numericDuration

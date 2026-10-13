@@ -6,6 +6,7 @@ import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import Background from '../../../components/Background';
 import PartnerLogo from '../../../components/PartnerLogo';
+import { formatServicePrice } from '../../../utils/servicePrice';
 
 const BUSINESS_SLUG = 'sun-solution-mostar';
 const BUSINESS_NAME = 'Sun Solution d.o.o. Mostar';
@@ -28,6 +29,7 @@ interface ServiceItem {
   description: string | null;
   duration: string | null;
   price: number | null;
+  price_on_request?: boolean | null;
 }
 
 const EMPTY_PROFILE: BusinessProfile = {
@@ -167,18 +169,18 @@ export default function SunSolutionPage() {
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {services.map((item) => (
-                <div key={item.id} className="rounded-3xl border border-white/10 bg-[#0b0f19] p-5">
+                <div key={item.id} className="flex h-full flex-col rounded-3xl border border-white/10 bg-[#0b0f19] p-5">
                   <h3 className="text-lg font-bold text-white">{item.name}</h3>
                   {item.description && <p className="mt-2 text-xs leading-relaxed text-gray-400">{item.description}</p>}
-                  <p className="mt-3 text-xs text-amber-400">
+                  <p className="mb-4 mt-3 text-xs text-amber-400">
                     {item.duration ? `Trajanje: ${item.duration}` : ''}
-                    {item.duration && item.price ? ' · ' : ''}
-                    {item.price ? `Cijena: ${Number(item.price).toLocaleString('bs-BA')} KM` : ''}
+                    {item.duration && formatServicePrice(item) ? ' · ' : ''}
+                    {formatServicePrice(item) ? `Cijena: ${formatServicePrice(item)}` : ''}
                   </p>
                   <button
                     type="button"
                     onClick={() => setService(item.name)}
-                    className="mt-4 rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold text-amber-400 transition-colors hover:bg-amber-500/10"
+                    className="mt-auto self-start rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold text-amber-400 transition-colors hover:bg-amber-500/10"
                   >
                     Pošalji upit za ovu uslugu
                   </button>

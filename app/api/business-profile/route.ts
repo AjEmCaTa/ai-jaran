@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
   const { data: services, error: servicesError } = await admin
     .from('services')
-    .select('id, name, description, duration, price')
+    .select('id, name, description, duration, price, price_on_request')
     .eq('business_id', business.id)
     .order('created_at', { ascending: true });
   if (servicesError) return NextResponse.json({ error: 'Usluge nije moguće učitati.' }, { status: 500 });

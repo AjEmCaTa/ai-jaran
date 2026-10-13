@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Icon from '../_components/icons';
+import { formatServicePrice } from '../../../utils/servicePrice';
 import { useBusiness } from '../_lib/business-context';
 
 const supabase = createClient(
@@ -10,10 +11,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
 );
 
-type Service = { id: string; name: string; description: string | null; duration: string | null; price: number | null };
-type Draft = { id: string; name: string; description: string; duration: string; price: string };
+type Service = { id: string; name: string; description: string | null; duration: string | null; price: number | null; price_on_request?: boolean | null };
+type Draft = { id: string; name: string; description: string; duration: string; price: string; priceOnRequest: boolean };
 
-const EMPTY: Draft = { id: '', name: '', description: '', duration: '', price: '' };
+const EMPTY: Draft = { id: '', name: '', description: '', duration: '', price: '', priceOnRequest: false };
 const panel = 'min-w-0 rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)] backdrop-blur';
 const input =
   'mt-2 w-full rounded-[calc(var(--po-radius)*0.6)] border border-gray-700 bg-gray-950 px-3 py-2.5 text-base text-white outline-none transition sm:text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
@@ -57,7 +58,7 @@ export default function ServicesPage() {
     setMessage('');
     const price = Number(draft.price.replace(',', '.'));
     if (!draft.name.trim()) return setError('Unesite naziv usluge.');
-    if (!Number.isFinite(price) || price < 0) return setError('Unesite ispravnu cijenu.');
+    if (!draft.priceOnRequest && (!draft.price.trim() || !Number.isFinite(price) || price < 0)) return setError('Unesite ispravnu cijenu.');
     setSaving(true);
     try {
       const response = await fetch('/api/dashboard/services', {
@@ -68,7 +69,7 @@ export default function ServicesPage() {
           name: draft.name.trim(),
           description: draft.description.trim(),
           duration: draft.duration.trim() || null,
-          price,
+          ...(draft.priceOnRequest ? { price_on_request: true } : { price, price_on_request: false }),
         }),
       });
       const result = await response.json();
@@ -140,10 +141,22 @@ export default function ServicesPage() {
             Opis
             <textarea className={input} rows={3} maxLength={1000} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
           </label>
-          <label className="block text-xs font-medium text-slate-300">
-            Cijena (KM)
-            <input className={input} inputMode="decimal" required value={draft.price} onChange={(e) => setDraft({ ...draft, price: e.target.value })} />
-          </label>
+          <div className="block text-xs font-medium text-slate-300">
+            Cijena
+            <div className="mt-2 flex gap-4 text-sm text-white">
+              <label className="flex items-center gap-2">
+                <input type="radio" name="price-mode" checked={!draft.priceOnRequest} onChange={() => setDraft({ ...draft, priceOnRequest: false })} />
+                Fiksna cijena (KM)
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" name="price-mode" checked={draft.priceOnRequest} onChange={() => setDraft({ ...draft, priceOnRequest: true })} />
+                Na upit
+              </label>
+            </div>
+            {!draft.priceOnRequest && (
+              <input className={input} inputMode="decimal" required aria-label="Cijena (KM)" value={draft.price} onChange={(e) => setDraft({ ...draft, price: e.target.value })} />
+            )}
+          </div>
           <label className="block text-xs font-medium text-slate-300">
             Trajanje (npr. 2h ili 90 min)
             <input className={input} maxLength={40} value={draft.duration} onChange={(e) => setDraft({ ...draft, duration: e.target.value })} />
@@ -172,8 +185,8 @@ export default function ServicesPage() {
                   <p className="break-words font-semibold text-white">{service.name}</p>
                   {service.description && <p className="mt-1 break-words text-xs text-slate-400">{service.description}</p>}
                   <p className="mt-1 text-xs text-blue-300">
-                    {service.price != null ? `${Number(service.price).toLocaleString('bs-BA')} KM` : ''}
-                    {service.price != null && service.duration ? ' · ' : ''}
+                    {formatServicePrice(service)}
+                    {formatServicePrice(service) && service.duration ? ' · ' : ''}
                     {service.duration || ''}
                   </p>
                 </div>
@@ -189,6 +202,7 @@ export default function ServicesPage() {
                         description: service.description || '',
                         duration: service.duration || '',
                         price: service.price != null ? String(service.price) : '',
+                        priceOnRequest: !!service.price_on_request,
                       });
                     }}
                     className="min-h-10 rounded-lg border border-white/10 px-3 text-xs font-semibold text-slate-200 hover:bg-white/5"

@@ -127,3 +127,13 @@ test('migracija: jedinstvenost je (business_id, endpoint), a ne samo endpoint', 
   assert.doesNotMatch(sql, /endpoint text not null unique/);
   assert.match(sql, /enable row level security/);
 });
+
+test('push o rezervaciji Ćatića ne stiže Sun Solution uređajima', async () => {
+  const { buildReservationPayload } = await import('../utils/reservationFlow.ts');
+  const { store } = fakeStore(rows);
+  const targets: string[] = [];
+  await sendPushToBusiness(store, 'catic', buildReservationPayload({ reservationId: 'r1', kind: 'new-reservation' }), async (s) => {
+    targets.push(s.endpoint);
+  });
+  assert.ok(targets.length > 0 && targets.every((t) => t.includes('catic')));
+});

@@ -361,11 +361,17 @@ export default function DubinskoCaticPage() {
 
     try {
       if (typeof id === 'number' || typeof id === 'string') {
-        await fetch('/api/cancel-appointment', {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Prijavite se ponovo za otkazivanje termina.');
+        const cancelResponse = await fetch('/api/cancel-appointment', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
           body: JSON.stringify({ id }),
         });
+        if (!cancelResponse.ok && cancelResponse.status !== 404) {
+          const cancelResult = await cancelResponse.json().catch(() => null);
+          throw new Error(cancelResult?.error || 'Termin nije otkazan.');
+        }
       }
 
       const updated = myReservations.filter((r) => r.id !== id);

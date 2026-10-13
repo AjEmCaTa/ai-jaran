@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         }
         let serviceQuery = supabase
             .from('services')
-            .select('name, price, duration')
+            .select('name, price, price_on_request, duration')
             .eq('business_id', business.id);
         serviceQuery = typeof body.service_id === 'string' && body.service_id
             ? serviceQuery.eq('id', body.service_id)
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
         const partnerName = business.name;
         const packageName = serviceResult.data.name;
-        const price = Number(serviceResult.data.price) + ' KM';
+        const price = serviceResult.data.price_on_request ? 'Na upit' : Number(serviceResult.data.price) + ' KM';
         const vehicle = body.vehicle || body.vozilo || body.car || '';
         const savedDuration = String(serviceResult.data.duration || '');
         const durationHours = savedDuration.match(/(\d+(?:[.,]\d+)?)\s*h/i);

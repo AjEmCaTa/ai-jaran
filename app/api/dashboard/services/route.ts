@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOwnerContext } from '../../../../utils/ownerAuth';
+import { parseServicePrice } from '../../../../utils/servicePrice';
 
 function serviceFields(body: Record<string, unknown>) {
   if (typeof body.name !== 'string' || !body.name.trim()) return null;
-  const price = Number(body.price);
-  if (!Number.isFinite(price) || price < 0) return null;
+  const priceFields = parseServicePrice(body);
+  if (!priceFields) return null;
   if (body.duration != null && typeof body.duration !== 'string' && typeof body.duration !== 'number') return null;
   if (body.description != null && typeof body.description !== 'string') return null;
   return {
     name: body.name.trim(),
     description: typeof body.description === 'string' ? body.description.trim() || null : null,
     duration: body.duration == null ? null : String(body.duration),
-    price,
+    ...priceFields,
   };
 }
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
   if (result.response) return result.response;
   const { data, error } = await result.context.admin
     .from('services')
-    .select('id, name, description, duration, price, created_at')
+    .select('id, name, description, duration, price, price_on_request, created_at')
     .eq('business_id', result.context.businessId)
     .order('created_at', { ascending: false });
   if (error) return NextResponse.json({ error: 'Usluge nije moguće učitati.' }, { status: 500 });

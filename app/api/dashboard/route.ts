@@ -26,14 +26,17 @@ export async function GET(request: NextRequest) {
   if (result.response) return result.response;
 
   try {
-    const { admin, businessId } = result.context;
-    const [businessResult, reservations, servicesResult] = await Promise.all([
+    const { admin, businessId, user } = result.context;
+    // scope=business: lagan odgovor bez rezervacija (za layout i postavke).
+    const lightweight = request.nextUrl.searchParams.get('scope') === 'business';
+    const [businessResult, reservations, servicesResult, profileResult] = await Promise.all([
       admin.from('businesses')
-        .select('id, name, category, city, address, phone, owner_email, work_start, work_end, work_days')
+        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days')
         .eq('id', businessId)
         .single(),
-      loadReservations(admin, businessId),
+      lightweight ? Promise.resolve([] as Record<string, unknown>[]) : loadReservations(admin, businessId),
       admin.from('services').select('id', { count: 'exact', head: true }).eq('business_id', businessId),
+      admin.from('profiles').select('name').eq('id', user.id).maybeSingle(),
     ]);
 
     if (businessResult.error) throw businessResult.error;
@@ -43,6 +46,7 @@ export async function GET(request: NextRequest) {
       business: businessResult.data,
       reservations,
       serviceCount: servicesResult.count || 0,
+      ownerName: typeof profileResult.data?.name === 'string' ? profileResult.data.name : '',
     });
   } catch (error) {
     console.error('Dashboard podaci nisu učitani:', error);
@@ -61,6 +65,11 @@ export async function PATCH(request: NextRequest) {
       Object.entries(body).filter(([key]) => allowedFields.includes(key)),
     );
 
+    const ownerName = typeof body.owner_name === 'string' ? body.owner_name.trim().slice(0, 100) : null;
+    if (typeof body.owner_name !== 'undefined' && ownerName === null) {
+      return NextResponse.json({ error: 'Ime vlasnika nije važeće.' }, { status: 400 });
+    }
+
     if (typeof changes.name !== 'string' || !changes.name.trim() || Object.keys(changes).length === 0) {
       return NextResponse.json({ error: 'Unesite naziv biznisa.' }, { status: 400 });
     }
@@ -73,6 +82,24 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    const limits: Record<string, number> = { name: 150, category: 150, city: 100, address: 200, phone: 40, owner_email: 120 };
+    for (const [field, max] of Object.entries(limits)) {
+      const value = changes[field];
+      if (typeof value === 'string' && value.trim().length > max) {
+        return NextResponse.json({ error: 'Uneseni podatak je predugačak.' }, { status: 400 });
+      }
+    }
+    const ownerEmail = typeof changes.owner_email === 'string' ? changes.owner_email.trim() : '';
+    if (ownerEmail && !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(ownerEmail)) {
+      return NextResponse.json({ error: 'Unesite ispravnu e-mail adresu.' }, { status: 400 });
+    }
+    for (const field of ['work_start', 'work_end'] as const) {
+      const value = changes[field];
+      if (typeof value === 'string' && value.trim() && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value.trim())) {
+        return NextResponse.json({ error: 'Radno vrijeme nije u ispravnom formatu.' }, { status: 400 });
+      }
+    }
+
     const { data, error } = await result.context.admin
       .from('businesses')
       .update(Object.fromEntries(Object.entries(changes).map(([key, value]) => [key, typeof value === 'string' ? value.trim() || null : value])))
@@ -82,6 +109,14 @@ export async function PATCH(request: NextRequest) {
 
     if (error) throw error;
     if (!data) return NextResponse.json({ error: 'Biznis nije pronađen.' }, { status: 404 });
+    if (ownerName) {
+      // Uvijek vlastiti profil prijavljenog korisnika, nikad id iz zahtjeva.
+      const { error: profileError } = await result.context.admin
+        .from('profiles')
+        .update({ name: ownerName })
+        .eq('id', result.context.user.id);
+      if (profileError) throw profileError;
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Podaci biznisa nisu sačuvani:', error);

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
+import PartnerLogo from "../../../components/PartnerLogo";
 
 const EMPTY_PROFILE = {
   name: "",
@@ -17,6 +18,9 @@ const EMPTY_PROFILE = {
   work_end: "",
   work_days: [] as string[],
 };
+
+const SUN_SOLUTION_SLUG = "sun-solution-mostar";
+const SUN_SOLUTION_NAME = "Sun Solution d.o.o. Mostar";
 
 export default function CategoryPartnersPage() {
   const params = useParams();
@@ -31,6 +35,32 @@ export default function CategoryPartnersPage() {
     slug === "dubinsko-ciscenje" ||
     slug === "dubinsko-catic" ||
     slug === "dubinsko";
+
+  const isSolarCategory =
+    slug === "solarni-sistemi" || slug === "sun-solution";
+  const [solarLoaded, setSolarLoaded] = useState(false);
+  const [solarProfile, setSolarProfile] = useState(EMPTY_PROFILE);
+
+  useEffect(() => {
+    if (!isSolarCategory) return;
+    fetch(`/api/business-profile?slug=${SUN_SOLUTION_SLUG}`, { cache: "no-store" })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((result) => {
+        const business = result?.business;
+        setSolarProfile({
+          name: business?.name || SUN_SOLUTION_NAME,
+          category: business?.category || "Solarni sistemi i elektroinstalacije",
+          city: business?.city || "Mostar",
+          address: business?.address || "",
+          phone: business?.phone || "",
+          work_start: String(business?.work_start || "").slice(0, 5),
+          work_end: String(business?.work_end || "").slice(0, 5),
+          work_days: Array.isArray(business?.work_days) ? business.work_days : [],
+        });
+      })
+      .catch(() => setSolarProfile({ ...EMPTY_PROFILE, name: SUN_SOLUTION_NAME }))
+      .finally(() => setSolarLoaded(true));
+  }, [isSolarCategory]);
 
   useEffect(() => {
     if (!isDubinskoCategory) return;
@@ -60,7 +90,7 @@ export default function CategoryPartnersPage() {
       .finally(() => setDataLoaded(true));
   }, [isDubinskoCategory]);
 
-  if (isDubinskoCategory && !dataLoaded) {
+  if ((isDubinskoCategory && !dataLoaded) || (isSolarCategory && !solarLoaded)) {
     return (
       <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
         <Background />
@@ -182,6 +212,71 @@ export default function CategoryPartnersPage() {
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-center text-xs font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500"
                 >
                   Pogledaj ponudu i zakaži termin →
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : isSolarCategory ? (
+          <div className="space-y-8">
+            <div>
+              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-amber-400">
+                Kategorija Partnera
+              </span>
+              <h1 className="mt-3 mb-2 text-3xl font-black tracking-tight text-white md:text-5xl">
+                Solarni sistemi i elektroinstalacije
+              </h1>
+              <p className="max-w-xl text-sm text-gray-400">
+                Izaberite partnera za solarne sisteme i elektroinstalacije i pošaljite upit.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="group flex flex-col justify-between rounded-3xl border border-white/10 bg-[#0b0f19] p-6 shadow-2xl transition-all duration-300 hover:border-amber-500/40">
+                <div>
+                  <div className="mb-5 flex items-center gap-4">
+                    <PartnerLogo slug={SUN_SOLUTION_SLUG} name={solarProfile.name} />
+                    <div>
+                      <h3 className="text-2xl font-extrabold leading-tight text-white transition-colors group-hover:text-amber-400">
+                        {solarProfile.name}
+                      </h3>
+                      <span className="text-[11px] font-medium text-amber-400/90">
+                        {solarProfile.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="mb-6 text-xs leading-relaxed text-gray-400">
+                    Solarni sistemi i elektroinstalacije. Pogledajte usluge i pošaljite upit
+                    za procjenu.
+                  </p>
+
+                  <div className="mb-6 space-y-2 border-t border-white/5 pt-4 text-xs text-gray-300">
+                    {(solarProfile.address || solarProfile.city) && (
+                      <p className="flex items-center gap-2">
+                        <span className="text-amber-400">📍</span>
+                        {[solarProfile.address, solarProfile.city].filter(Boolean).join(", ")}
+                      </p>
+                    )}
+                    {solarProfile.phone && (
+                      <p className="flex items-center gap-2">
+                        <span className="text-amber-400">📞</span>
+                        {solarProfile.phone}
+                      </p>
+                    )}
+                    {solarProfile.work_days.length > 0 && solarProfile.work_start && (
+                      <p className="flex items-center gap-2 text-gray-400">
+                        <span className="text-amber-400">🕒</span>
+                        {solarProfile.work_days.join(" – ")}: {solarProfile.work_start} – {solarProfile.work_end}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <Link
+                  href={`/katalog/${SUN_SOLUTION_SLUG}`}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-600 py-3.5 text-center text-xs font-bold text-white shadow-lg transition-all hover:bg-amber-500"
+                >
+                  Pogledaj usluge i pošalji upit →
                 </Link>
               </div>
             </div>

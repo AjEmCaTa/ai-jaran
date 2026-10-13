@@ -9,10 +9,12 @@ const btn =
 
 export default function BookingLinkCard({
   link,
+  defaultLink = '',
   onSave,
   className = '',
 }: {
   link: string;
+  defaultLink?: string;
   onSave: (link: string) => void;
   className?: string;
 }) {
@@ -133,6 +135,15 @@ export default function BookingLinkCard({
             >
               Promijeni link
             </button>
+            {defaultLink && link !== defaultLink && (
+              <button
+                type="button"
+                onClick={() => onSave('')}
+                className="px-2 text-xs font-medium text-slate-400 underline-offset-4 hover:text-white hover:underline"
+              >
+                Vrati zadani link
+              </button>
+            )}
           </div>
 
           {showQr && (

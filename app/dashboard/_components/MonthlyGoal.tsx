@@ -1,32 +1,39 @@
 'use client';
 
+import { monthlyGoalKey } from '../_lib/storage-keys';
+
 import { useEffect, useState } from 'react';
 import Icon from './icons';
 
-const STORAGE_KEY = 'poslo-monthly-goal';
+// Stari globalni ključ 'poslo-monthly-goal' se namjerno ignoriše: nije vezan za firmu pa bi
+// drugi vlasnik u istom pregledniku vidio tuđi cilj.
+const storageKey = monthlyGoalKey;
 const fmt = (n: number) => `${n.toLocaleString('bs-BA', { maximumFractionDigits: 2 })} KM`;
 
-export default function MonthlyGoal({ revenue, loading }: { revenue: number; loading: boolean }) {
+export default function MonthlyGoal({ revenue, loading, businessId }: { revenue: number; loading: boolean; businessId: string }) {
   const [goal, setGoal] = useState(0);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
 
   useEffect(() => {
+    setGoal(0);
+    setEditing(false);
+    if (!businessId) return;
     try {
-      const saved = Number(window.localStorage.getItem(STORAGE_KEY));
+      const saved = Number(window.localStorage.getItem(storageKey(businessId)));
       if (Number.isFinite(saved) && saved > 0) setGoal(saved);
     } catch {
       /* privatni mod */
     }
-  }, []);
+  }, [businessId]);
 
   const save = () => {
     const value = Number(draft.replace(',', '.'));
-    if (!Number.isFinite(value) || value < 0) return;
+    if (!businessId || !Number.isFinite(value) || value < 0) return;
     setGoal(value);
     setEditing(false);
     try {
-      window.localStorage.setItem(STORAGE_KEY, String(value));
+      window.localStorage.setItem(storageKey(businessId), String(value));
     } catch {
       /* privatni mod */
     }

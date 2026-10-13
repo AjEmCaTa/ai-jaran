@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import path from 'path';
+import { buildReservationPayload } from '../../../utils/reservationFlow';
+import { notifyBusinessPush } from '../../../utils/pushSender';
 
 let Database: any;
 try {
@@ -47,7 +49,19 @@ export async function POST(request: NextRequest) {
         if (supabaseUrl && serviceRoleKey) {
             const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-            const selectResult = await supabase.from('reservations').select('*').eq('id', id).maybeSingle();
+            // Otkazivanje smije samo prijavljeni klijent koji je napravio rezervaciju.
+            const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+            if (!token || !anonKey) {
+                return NextResponse.json({ success: false, error: "Prijavite se za otkazivanje termina." }, { status: 401 });
+            }
+            const authClient = createClient(supabaseUrl, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
+            const authResult = await authClient.auth.getUser(token);
+            if (authResult.error || !authResult.data.user) {
+                return NextResponse.json({ success: false, error: "Sesija nije važeća. Prijavite se ponovo." }, { status: 401 });
+            }
+
+            const selectResult = await supabase.from('reservations').select('*').eq('id', id).eq('user_id', authResult.data.user.id).maybeSingle();
             const data = selectResult.data;
 
             if (data) {
@@ -82,7 +96,15 @@ export async function POST(request: NextRequest) {
                     clientPhone: data.customer_phone,
                     clientEmail: data.customer_email || ''
                 };
-                await supabase.from('reservations').delete().eq('id', id);
+                await supabase.from('reservations').delete().eq('id', id).eq('user_id', authResult.data.user.id);
+                if (data.business_id) {
+                    await notifyBusinessPush(supabase, data.business_id, buildReservationPayload({
+                        reservationId: String(data.id),
+                        kind: 'cancelled-reservation',
+                        service: data.service_name,
+                        when: data.reservation_date ? String(data.reservation_date).replace('T', ' ').slice(0, 16) : '',
+                    }));
+                }
             }
         }
 

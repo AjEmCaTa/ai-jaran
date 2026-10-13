@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { buildReservationPayload, durationOf, findConflict, startMs } from '../../../utils/reservationFlow';
+import { notifyBusinessPush } from '../../../utils/pushSender';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -129,6 +131,20 @@ export async function POST(request: NextRequest) {
         const vehicleSuffix = vehicle ? (' - Vozilo: ' + vehicle) : '';
         const vehicleInfo = vehicle ? (' | Vozilo: ' + vehicle) : '';
 
+        // Server provjerava preklapanje (ne samo javna stranica): otkazani termini se ne računaju.
+        const startTime = startMs(reservationDate);
+        if (startTime === null) {
+            return NextResponse.json({ success: false, error: 'Datum i vrijeme termina nisu ispravni.' }, { status: 400 });
+        }
+        const existingResult = await supabase
+            .from('reservations')
+            .select('id, reservation_date, duration_minutes, status, created_at')
+            .eq('business_id', business.id);
+        if (existingResult.error) throw existingResult.error;
+        if (findConflict({ start: startTime, durationMinutes: durationMinutes }, existingResult.data || [])) {
+            return NextResponse.json({ success: false, error: 'Odabrani termin je upravo zauzet. Odaberite drugo vrijeme.' }, { status: 409 });
+        }
+
         const insertResult = await supabase.from('reservations').insert([
             {
                 business_id: business.id,
@@ -147,6 +163,31 @@ export async function POST(request: NextRequest) {
         if (insertResult.error) {
             console.error("Greska pri upisu u Supabase:", insertResult.error);
             return NextResponse.json({ success: false, error: insertResult.error.message }, { status: 500 });
+        }
+
+        // Zaštita od istovremenih zahtjeva: ako se nakon upisa pojavi stariji preklapajući zapis, ovaj se povlači.
+        const created = insertResult.data && insertResult.data[0];
+        if (created) {
+            const afterResult = await supabase
+                .from('reservations')
+                .select('id, reservation_date, duration_minutes, status, created_at')
+                .eq('business_id', business.id)
+                .neq('id', created.id);
+            const earlier = (afterResult.data || []).filter(function (o: { created_at?: string }) {
+                return !o.created_at || !created.created_at || o.created_at <= created.created_at;
+            });
+            if (findConflict({ start: startTime, durationMinutes: durationOf(durationMinutes) }, earlier)) {
+                await supabase.from('reservations').delete().eq('id', created.id).eq('business_id', business.id);
+                return NextResponse.json({ success: false, error: 'Odabrani termin je upravo zauzet. Odaberite drugo vrijeme.' }, { status: 409 });
+            }
+
+            // Push obavijest vlasniku ove firme (business_id), bez podataka klijenta.
+            await notifyBusinessPush(supabase, business.id, buildReservationPayload({
+                reservationId: String(created.id),
+                kind: 'new-reservation',
+                service: packageName,
+                when: displayDate + ' ' + time,
+            }));
         }
 
         // ---------- TELEGRAM ----------

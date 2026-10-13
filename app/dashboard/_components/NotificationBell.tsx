@@ -1,5 +1,7 @@
 'use client';
 
+import { lastSeenKey } from '../_lib/storage-keys';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Icon from './icons';
@@ -13,9 +15,10 @@ type Item = {
   created_at?: string | null;
 };
 
-const SEEN_KEY = 'poslo-last-seen';
+// Vezano za firmu; stari globalni ključ 'poslo-last-seen' se ignoriše.
+const seenKey = lastSeenKey;
 
-export default function NotificationBell({ getToken }: { getToken: () => Promise<string | null> }) {
+export default function NotificationBell({ getToken, businessId }: { getToken: () => Promise<string | null>; businessId: string }) {
   const [items, setItems] = useState<Item[]>([]);
   const [lastSeen, setLastSeen] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
@@ -23,19 +26,20 @@ export default function NotificationBell({ getToken }: { getToken: () => Promise
 
   // Prvi put: počni brojati od sada, da novi nalog ne dobije "lavinu" starih obavijesti
   useEffect(() => {
+    if (!businessId) return;
     try {
-      const raw = window.localStorage.getItem(SEEN_KEY);
+      const raw = window.localStorage.getItem(seenKey(businessId));
       if (raw) {
         setLastSeen(Number(raw));
       } else {
         const now = Date.now();
-        window.localStorage.setItem(SEEN_KEY, String(now));
+        window.localStorage.setItem(seenKey(businessId), String(now));
         setLastSeen(now);
       }
     } catch {
       setLastSeen(Date.now());
     }
-  }, []);
+  }, [businessId]);
 
   const load = useCallback(async () => {
     try {
@@ -80,7 +84,7 @@ export default function NotificationBell({ getToken }: { getToken: () => Promise
     const now = Date.now();
     setLastSeen(now);
     try {
-      window.localStorage.setItem(SEEN_KEY, String(now));
+      window.localStorage.setItem(seenKey(businessId), String(now));
     } catch {
       /* privatni mod */
     }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useBusiness } from '../_lib/business-context';
 import Icon from '../_components/icons';
 import TimeInput24 from '../_components/TimeInput24';
 import {
@@ -71,8 +72,10 @@ function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building'; tit
 }
 
 export default function SettingsPage() {
+  const { business: ctxBusiness, ownerName: ctxOwnerName, refresh } = useBusiness();
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
   const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[] });
+  const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -80,36 +83,25 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setTheme(loadTheme());
-
-    async function loadBusiness() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Prijavite se ponovo za pristup postavkama.');
-        const response = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${session.access_token}` } });
-        const dashboard = await response.json();
-        if (!response.ok) throw new Error(dashboard.error || 'Podatke nije moguće učitati.');
-        const b = dashboard.business;
-        setBusiness({
-          id: b.id || '',
-          name: b.name || '',
-          city: b.city || '',
-          category: b.category || '',
-          phone: b.phone || '',
-          owner_email: b.owner_email || '',
-          address: b.address || '',
-          work_start: b.work_start || '',
-          work_end: b.work_end || '',
-          work_days: Array.isArray(b.work_days) ? b.work_days : [],
-        });
-      } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : 'Podatke nije moguće učitati.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadBusiness();
   }, []);
+
+  // Podaci dolaze iz zajedničkog konteksta layouta (bez ponovnog dohvaćanja).
+  useEffect(() => {
+    setBusiness({
+      id: ctxBusiness.id,
+      name: ctxBusiness.name,
+      city: ctxBusiness.city,
+      category: ctxBusiness.category,
+      phone: ctxBusiness.phone,
+      owner_email: ctxBusiness.owner_email,
+      address: ctxBusiness.address,
+      work_start: ctxBusiness.work_start,
+      work_end: ctxBusiness.work_end,
+      work_days: ctxBusiness.work_days,
+    });
+    setOwnerName(ctxOwnerName);
+    setLoading(false);
+  }, [ctxBusiness, ctxOwnerName]);
 
   const update = (partial: Partial<ThemeSettings>) => {
     const next = { ...theme, ...partial };
@@ -133,6 +125,7 @@ export default function SettingsPage() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({
         name: business.name.trim(),
+        owner_name: ownerName.trim() || undefined,
         city: business.city.trim() || null,
         category: business.category.trim() || null,
         phone: business.phone.trim() || null,
@@ -145,7 +138,10 @@ export default function SettingsPage() {
     });
     const result = await response.json();
     if (!response.ok) setErrorMessage(result.error || 'Promjene nije moguće sačuvati.');
-    else setSaveMessage('Podaci biznisa su sačuvani.');
+    else {
+      setSaveMessage('Podaci biznisa su sačuvani.');
+      await refresh();
+    }
     setSaving(false);
   };
 
@@ -251,6 +247,17 @@ export default function SettingsPage() {
         {errorMessage && <p role="alert" className="mb-4 rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200">{errorMessage}</p>}
 
         <form onSubmit={saveBusiness} className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-xs font-medium text-slate-300">
+            Ime i prezime vlasnika
+            <input
+              type="text"
+              maxLength={100}
+              value={ownerName}
+              onChange={(event) => setOwnerName(event.target.value)}
+              disabled={loading}
+              className={inputClass}
+            />
+          </label>
           {([
             ['name', 'Naziv biznisa', 'text'],
             ['category', 'Djelatnost', 'text'],

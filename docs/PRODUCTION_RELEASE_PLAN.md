@@ -186,3 +186,22 @@ therefore talks to the production database and can send real messages. **Until i
 - Free-plan backups: the external dump is the only real backup; please do it before P3.
 - `app/prijava` hardcodes an admin email, and leaked-password protection is off: both are outside this release (Phase 6 / P6).
 - The first release window should be low-traffic; the migration takes seconds, and rollback takes seconds.
+
+---
+
+## Dodatak (2026-10-27): Faza 2, pravila rezervacija
+
+Novo u grani `test/rls-server-registration` (commit `6a77d7b`, Preview build zelen):
+- 2 h pravilo otkazivanja, istek zahtjeva (24 h ili početak termina), podsjetnik 24 h prije, status `Isteklo`, otkazivanje označava `Otkazano` umjesto brisanja, ispravka izgubljenog tokena u `/api/moje-rezervacije`, termini se tumače u Europe/Sarajevo.
+- Nova kolona `reservations.reminder_sent_at` (`supabase/migrations/20261029_reservation_lifecycle.sql`, rollback priložen). Samo dodavanje kolone; stari kod je ignoriše.
+
+Dopuna redoslijeda (produkcija, svaki korak traži odobrenje i nijedan nije izvršen):
+1. Backup (P-backup) i `01_preflight_readonly.sql`.
+2. Migracija `20261029_reservation_lifecycle.sql` (aditivna; ide PRIJE koda, jer novi kod čita kolonu).
+3. RLS migracija `03_migrate.sql`, zatim `04_verify_readonly.sql` (44 provjere).
+4. Merge grane u `main` i produkcijski deploy.
+5. Produkcijska varijabla `CRON_SECRET` + GitHub tajne `CRON_URL`/`CRON_SECRET` (bez njih podsjetnici i istek ne rade; ruta je zatvorena, ne otvorena).
+6. Smoke test: javni katalog, rezervacija, dashboard, otkazivanje.
+
+Uvjeti prije koraka 2-4 (tvoji, ostaju na snazi): provjeren backup, kompatibilnost ruta, uspješan `scripts/e2e-preview.mjs` na izoliranom Previewu (još NIJE pokrenut).
+Rollback: `20261029_reservation_lifecycle_rollback.sql`, `05_rollback.sql`, produkcijski deployment `dpl_Fxki2qsmjj2fTna6UBkFNPqmbJio` (`9299fba`).

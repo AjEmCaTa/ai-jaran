@@ -178,13 +178,13 @@ export default function Navbar({
 
       {/* MOBILE MENU DROPDOWN */}
       {isOpen && (
-        <div className="border-t border-white/[0.05] bg-[#030712]/98 px-6 py-6 shadow-2xl backdrop-blur-2xl md:hidden">
-          <div className="flex flex-col gap-4">
+        <div className="max-h-[calc(100dvh-82px)] overflow-y-auto overscroll-contain border-t border-white/[0.05] bg-[#030712]/98 px-6 py-5 shadow-2xl backdrop-blur-2xl md:hidden">
+          <div className="flex flex-col gap-2">
 
             <Link
               href="/"
               onClick={handleLogoOrHomeClick}
-              className="py-1 text-base font-medium text-slate-300 hover:text-white"
+              className="py-3 text-base font-medium text-slate-300 hover:text-white"
             >
               Početna
             </Link>
@@ -192,7 +192,7 @@ export default function Navbar({
             <Link
               href="/#faq"
               onClick={(e) => handleSmoothScroll(e, "#faq")}
-              className="py-1 text-base font-medium text-slate-300 hover:text-white"
+              className="py-3 text-base font-medium text-slate-300 hover:text-white"
             >
               FAQ
             </Link>
@@ -202,7 +202,7 @@ export default function Navbar({
               <Link
                 href="/cjenovnik"
                 onClick={() => setIsOpen(false)}
-                className="py-1 text-base font-medium text-slate-300 hover:text-white"
+                className="py-3 text-base font-medium text-slate-300 hover:text-white"
               >
                 Cjenovnik
               </Link>
@@ -211,7 +211,7 @@ export default function Navbar({
             <Link
               href="/dashboard"
               onClick={() => setIsOpen(false)}
-              className="py-1 text-base font-semibold text-blue-400 hover:text-blue-300"
+              className="py-3 text-base font-semibold text-blue-400 hover:text-blue-300"
             >
               Moj Panel
             </Link>

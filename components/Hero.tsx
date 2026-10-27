@@ -19,7 +19,7 @@ export default function Hero({
     <section
       key={animationKey}
       id="početna"
-      className="relative min-h-screen overflow-hidden bg-[#030712] pt-24"
+      className="relative overflow-hidden bg-[#030712] pt-[82px] lg:min-h-screen lg:pt-24"
     >
       {/* POZADINSKO SVJETLO */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -28,23 +28,23 @@ export default function Hero({
       </div>
 
       {/* GLAVNI SADRŽAJ */}
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] max-w-[1500px] items-center px-6 py-16 sm:px-10 lg:px-14 xl:px-20">
+      <div className="relative z-10 mx-auto flex max-w-[1500px] items-center px-6 py-8 sm:px-10 sm:py-12 lg:min-h-[calc(100vh-96px)] lg:py-16 lg:px-14 xl:px-20">
         <div className="grid w-full items-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12 xl:gap-16">
 
           {/* LIJEVA STRANA */}
           <div className="max-w-2xl">
 
             {/* BADGE */}
-            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/[0.08] px-4 py-2 backdrop-blur-xl">
+            <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/[0.08] px-3.5 py-1.5 backdrop-blur-xl sm:mb-7 sm:px-4 sm:py-2">
               <span className="h-2.5 w-2.5 rounded-full bg-blue-400" />
 
-              <span className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300">
+              <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-blue-300 sm:text-xs sm:tracking-[0.16em]">
                 DIGITALNI ASISTENT ZA TVOJE POSLOVANJE
               </span>
             </div>
 
             {/* NASLOV */}
-            <h1 className="text-[3.4rem] font-extrabold leading-[0.98] tracking-[-0.045em] text-white sm:text-6xl md:text-7xl lg:text-[4.5rem] xl:text-[5.2rem]">
+            <h1 className="text-[clamp(2rem,9.6vw,3.4rem)] font-extrabold leading-[1.02] tracking-[-0.045em] text-white sm:text-6xl md:text-7xl lg:text-[4.5rem] xl:text-[5.2rem]">
               Poslovanje koje
               <br />
 
@@ -54,13 +54,13 @@ export default function Hero({
             </h1>
 
             {/* OPIS */}
-            <p className="mt-7 max-w-xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+            <p className="mt-5 max-w-xl text-base leading-7 text-slate-300 sm:mt-7 sm:text-lg sm:leading-8">
               POSLO ONE automatizuje rezervacije, komunikaciju s klijentima i
               svakodnevne poslovne zadatke — sve na jednom mjestu.
             </p>
 
             {/* DUGMAD */}
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row">
               <button
                 onClick={onStartFree}
                 className="flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-7 py-4 font-bold text-white shadow-[0_15px_45px_rgba(37,99,235,0.25)] transition hover:bg-blue-500 cursor-pointer"
@@ -78,7 +78,7 @@ export default function Hero({
             </div>
 
             {/* BENEFITI */}
-            <div className="mt-11 flex flex-wrap gap-x-7 gap-y-4 border-t border-white/[0.07] pt-7">
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/[0.07] pt-6 sm:mt-11 sm:gap-x-7 sm:gap-y-4 sm:pt-7">
               <div className="flex items-center gap-2 text-sm text-slate-400">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full border border-blue-500/40 bg-blue-500/10 text-xs text-blue-400">
                   ✓
@@ -145,7 +145,7 @@ export default function Hero({
           <div className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-[#030712] p-6 md:p-8 shadow-2xl z-10">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer"
+              aria-label="Zatvori" className="absolute top-3 right-3 flex h-11 w-11 items-center justify-center text-gray-400 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer"
             >
               ✕
             </button>

@@ -22,7 +22,7 @@ export default function Footer({
   const brandName = "POSLO ONE";
 
   return (
-    <footer className="relative z-20 border-t border-white/5 bg-[#030712] py-16 pb-20">
+    <footer className="relative z-20 border-t border-white/5 bg-[#030712] py-12 pb-20 sm:py-16">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col items-center justify-between gap-6 px-6 sm:px-8 md:flex-row lg:px-12 xl:px-16">
 
         {/* LOGO I NAZIV - Vraća na početnu */}
@@ -58,7 +58,7 @@ export default function Footer({
           {!isPricing && (
             <Link
               href="/cjenovnik"
-              className="transition-colors hover:text-white"
+              className="py-2 transition-colors hover:text-white"
             >
               Cjenovnik
             </Link>
@@ -68,7 +68,7 @@ export default function Footer({
           {!isCatalog && (
             <Link
               href="/katalog"
-              className="transition-colors hover:text-white"
+              className="py-2 transition-colors hover:text-white"
             >
               Biznisi
             </Link>

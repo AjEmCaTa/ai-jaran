@@ -26,14 +26,14 @@ const items: FeatureItem[] = [
 
 export default function Features() {
   return (
-    <section className="py-28 px-8 bg-[#030712] relative z-20 overflow-hidden">
+    <section className="py-16 px-6 sm:py-28 sm:px-8 bg-[#030712] relative z-20 overflow-hidden">
       {/* Suptilni plavi sjaj u pozadini */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-600/[0.05] blur-[140px]" />
 
       <div className="relative z-10 max-w-4xl mx-auto">
 
         {/* NASLOV I OPIS */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
             Šta nudi{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">

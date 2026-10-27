@@ -2,24 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key"
-);
-
-const slugify = (text: string) => {
-  return text
-    .toLowerCase()
-    .replace(/[čć]/g, 'c')
-    .replace(/š/g, 's')
-    .replace(/ž/g, 'z')
-    .replace(/đ/g, 'dj')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-};
 
 export default function RegistracijaPage() {
   const [ownerName, setOwnerName] = useState('');
@@ -40,44 +23,13 @@ export default function RegistracijaPage() {
     setErrorMsg('');
 
     try {
-      const authResult = await supabase.auth.signUp({
-        email,
-        password,
+      const response = await fetch('/api/register-business', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerName, businessName, email, password, phone, city, category }),
       });
-
-      if (authResult.error) throw authResult.error;
-      if (!authResult.data.user) throw new Error('Nalog nije kreiran, pokusaj ponovo.');
-
-      const baseSlug = slugify(businessName);
-      const uniqueSlug = baseSlug + '-' + Math.floor(Math.random() * 10000);
-
-      const businessResult = await supabase
-        .from('businesses')
-        .insert([{
-          name: businessName,
-          slug: uniqueSlug,
-          category: category || null,
-          city: city || null,
-          phone: phone || null,
-          owner_email: email,
-          status: 'pending'
-        }])
-        .select()
-        .single();
-
-      if (businessResult.error) throw businessResult.error;
-
-      const profileResult = await supabase
-        .from('profiles')
-        .insert([{
-          id: authResult.data.user.id,
-          email: email,
-          name: ownerName,
-          business_id: businessResult.data.id,
-          must_change_password: false
-        }]);
-
-      if (profileResult.error) throw profileResult.error;
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Došlo je do greške prilikom registracije.');
 
       setSuccess(true);
     } catch (err: any) {

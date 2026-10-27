@@ -6,6 +6,7 @@ import Hero from "../components/Hero";
 import Features from "../components/Features";
 import Comparison from "../components/Comparison";
 import FAQ from "../components/FAQ";
+import FounderSection from "../components/FounderSection";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
@@ -86,6 +87,8 @@ export default function Home() {
       <Features />
 
       <Comparison />
+
+      <FounderSection />
 
       <CTASection
         onDemoClick={() => {

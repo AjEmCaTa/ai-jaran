@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { statusKind } from '../../../utils/reservationFlow';
+import { POST as cancelAppointment } from '../cancel-appointment/route';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -29,7 +31,8 @@ export async function GET(request: NextRequest) {
             .order('reservation_date', { ascending: true });
         if (result.error) throw result.error;
 
-        const rows = result.data || [];
+        // Otkazani i istekli termini ostaju u bazi (historija firme), ali se klijentu više ne prikazuju kao aktivni.
+        const rows = (result.data || []).filter((r: any) => !['cancelled', 'expired'].includes(statusKind(r.status)));
         const businessIds = Array.from(new Set(rows.map((r: any) => r.business_id).filter(Boolean)));
         const names: Record<string, string> = {};
         if (businessIds.length > 0) {
@@ -77,14 +80,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'Termin nije pronađen.' }, { status: 404 });
         }
 
-        const cancelUrl = new URL('/api/cancel-appointment', request.url);
-        const cancelRes = await fetch(cancelUrl.toString(), {
+        // Poziva se direktno (bez HTTP kruga), s istim tokenom: cancel-appointment ga zahtijeva i provjerava pravilo od 2 sata.
+        const cancelRequest = new NextRequest(new URL('/api/cancel-appointment', request.url), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: request.headers.get('authorization') || '',
+            },
             body: JSON.stringify({ id })
         });
-        const cancelJson = await cancelRes.json().catch(() => ({}));
-        return NextResponse.json(cancelJson, { status: cancelRes.status });
+        return await cancelAppointment(cancelRequest);
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }

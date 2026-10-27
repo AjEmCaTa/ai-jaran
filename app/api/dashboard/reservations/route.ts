@@ -10,6 +10,7 @@ import {
   startMs,
   statusKind,
 } from '../../../../utils/reservationFlow';
+import { reservationStartMs } from '../../../../utils/reservationRules';
 
 const reservationFields = 'id, business_id, user_id, customer_name, customer_phone, customer_email, service_name, reservation_date, status, created_at, price, duration_minutes';
 
@@ -77,7 +78,9 @@ export async function PATCH(request: NextRequest) {
       if (action === 'reschedule') {
         start = startMs(body?.reservation_date);
         if (start === null) return NextResponse.json({ error: 'Unesite ispravan novi datum i vrijeme.' }, { status: 400 });
-        if (start < Date.now() - 5 * 60000) return NextResponse.json({ error: 'Novi termin mora biti u budućnosti.' }, { status: 400 });
+        // Vrijeme je lokalno (Europe/Sarajevo), ne UTC: bez ovoga je provjera "u budućnosti" kasnila 1-2 sata.
+        const realStart = reservationStartMs(body?.reservation_date);
+        if (realStart === null || realStart < Date.now() - 5 * 60000) return NextResponse.json({ error: 'Novi termin mora biti u budućnosti.' }, { status: 400 });
         update.reservation_date = body.reservation_date;
       }
       if (start !== null) {

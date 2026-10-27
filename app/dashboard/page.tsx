@@ -54,7 +54,7 @@ function parsePrice(value: unknown) {
 function normalizeStatus(value: unknown) {
   return String(value ?? '').trim().toLocaleLowerCase('bs').replace(/đ/g, 'dj').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
-const isCancelledStatus = (v: unknown) => ['otkazano', 'cancelled', 'canceled'].includes(normalizeStatus(v));
+const isCancelledStatus = (v: unknown) => ['otkazano', 'cancelled', 'canceled', 'isteklo', 'expired'].includes(normalizeStatus(v));
 const isCompletedStatus = (v: unknown) => ['zavrseno', 'completed', 'finished'].includes(normalizeStatus(v));
 const isConfirmedStatus = (v: unknown) => ['potvrdjeno', 'confirmed'].includes(normalizeStatus(v));
 const isOpenStatus = (v: unknown) => !isCancelledStatus(v) && !isCompletedStatus(v);

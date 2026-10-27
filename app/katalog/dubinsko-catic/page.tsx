@@ -259,7 +259,7 @@ export default function DubinskoCaticPage() {
       const json = await res.json();
       if (res.ok && json.data) {
         const ranges: BusyRange[] = json.data
-          .filter((item: any) => !['otkazano', 'cancelled', 'canceled'].includes(String(item.status || '').toLocaleLowerCase('bs')))
+          .filter((item: any) => !['otkazano', 'cancelled', 'canceled', 'isteklo', 'expired'].includes(String(item.status || '').toLocaleLowerCase('bs')))
           .map((item: any) => {
             const start = new Date(item.reservation_date).getTime();
             const durationMin = item.duration_minutes || 120;

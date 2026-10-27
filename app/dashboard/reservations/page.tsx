@@ -27,7 +27,7 @@ type Reservation = {
 const normalizedStatus = (status: string | null) =>
   (status || 'Aktivno').toLowerCase().replace(/đ/g, 'dj').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-const isCancelledKey = (key: string) => ['otkazano', 'cancelled', 'canceled'].includes(key);
+const isCancelledKey = (key: string) => ['otkazano', 'cancelled', 'canceled', 'isteklo', 'expired'].includes(key);
 const isFinishedKey = (key: string) => ['zavrseno', 'completed', 'finished'].includes(key);
 const isConfirmedKey = (key: string) => ['potvrdjeno', 'confirmed'].includes(key);
 

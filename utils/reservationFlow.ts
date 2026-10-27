@@ -2,7 +2,7 @@
 // Statusi se čuvaju kao tekst u postojećoj koloni reservations.status; ovdje se samo
 // normalizuju i provjeravaju prijelazi. Prihod se i dalje računa isključivo iz 'Završeno'.
 
-export type StatusKind = 'pending' | 'confirmed' | 'rescheduling' | 'completed' | 'cancelled';
+export type StatusKind = 'pending' | 'confirmed' | 'rescheduling' | 'completed' | 'cancelled' | 'expired';
 export type ReservationAction = 'confirm' | 'reschedule' | 'cancel' | 'complete';
 
 export const STATUS_LABEL = {
@@ -10,6 +10,7 @@ export const STATUS_LABEL = {
   rescheduling: 'Dogovor termina',
   completed: 'Završeno',
   cancelled: 'Otkazano',
+  expired: 'Isteklo',
 } as const;
 
 const norm = (value: unknown) =>
@@ -24,6 +25,7 @@ const norm = (value: unknown) =>
 export function statusKind(status: unknown): StatusKind {
   const key = norm(status);
   if (['otkazano', 'cancelled', 'canceled'].includes(key)) return 'cancelled';
+  if (['isteklo', 'expired'].includes(key)) return 'expired';
   if (['zavrseno', 'completed', 'finished'].includes(key)) return 'completed';
   if (['potvrdjeno', 'confirmed'].includes(key)) return 'confirmed';
   if (['dogovor termina', 'rescheduling'].includes(key)) return 'rescheduling';
@@ -36,6 +38,7 @@ const ALLOWED: Record<StatusKind, ReservationAction[]> = {
   rescheduling: ['confirm', 'reschedule', 'cancel', 'complete'],
   completed: [],
   cancelled: [],
+  expired: [],
 };
 
 export function allowedActions(status: unknown): ReservationAction[] {
@@ -80,12 +83,12 @@ export function durationOf(minutes: unknown) {
 
 export type Slot = { id?: string; reservation_date: unknown; duration_minutes?: unknown; status?: unknown };
 
-// Preklapanje s drugim rezervacijama iste firme. Otkazane se ne računaju (kao i na javnoj stranici).
+// Preklapanje s drugim rezervacijama iste firme. Otkazane i istekle se ne računaju (kao i na javnoj stranici): njihov termin je slobodan.
 export function findConflict(candidate: { id?: string; start: number; durationMinutes: number }, others: Slot[]) {
   const end = candidate.start + candidate.durationMinutes * 60000;
   for (const other of others) {
     if (candidate.id && other.id === candidate.id) continue;
-    if (statusKind(other.status) === 'cancelled') continue;
+    if (['cancelled', 'expired'].includes(statusKind(other.status))) continue;
     const s = startMs(other.reservation_date);
     if (s === null) continue;
     const e = s + durationOf(other.duration_minutes) * 60000;

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import path from 'path';
-import { buildReservationPayload } from '../../../utils/reservationFlow';
+import { buildReservationPayload, statusKind } from '../../../utils/reservationFlow';
+import { customerCancelDecision } from '../../../utils/reservationRules';
 import { notifyBusinessPush } from '../../../utils/pushSender';
 
 let Database: any;
@@ -65,6 +66,20 @@ export async function POST(request: NextRequest) {
             const data = selectResult.data;
 
             if (data) {
+                // Samo aktivne rezervacije se mogu otkazati; završeno/otkazano/isteklo se ne dira (prihod i historija ostaju).
+                const kind = statusKind(data.status);
+                if (kind === 'cancelled' || kind === 'expired') {
+                    return NextResponse.json({ success: false, error: 'Termin je već otkazan ili istekao.' }, { status: 409 });
+                }
+                if (kind === 'completed') {
+                    return NextResponse.json({ success: false, error: 'Završen termin se ne može otkazati.' }, { status: 409 });
+                }
+                // Pravilo: najkasnije 2 sata prije početka (vrijeme se tumači u zoni Europe/Sarajevo).
+                const decision = customerCancelDecision(data.reservation_date, Date.now());
+                if (!decision.ok) {
+                    return NextResponse.json({ success: false, error: decision.message, code: decision.code }, { status: 409 });
+                }
+
                 let businessName = 'Dubinsko Catic';
                 let ownerEmail = 'caticharun126@gmail.com';
                 let telegramChatId = null;
@@ -96,7 +111,15 @@ export async function POST(request: NextRequest) {
                     clientPhone: data.customer_phone,
                     clientEmail: data.customer_email || ''
                 };
-                await supabase.from('reservations').delete().eq('id', id).eq('user_id', authResult.data.user.id);
+                // Termin se NE briše nego dobija status 'Otkazano': slobodan je za druge (otkazani se ne računaju u preklapanje),
+                // a firma zadržava historiju. Atomarno: mijenja se samo ako je još u statusu koji smo pročitali.
+                let cancelQuery = supabase.from('reservations').update({ status: 'Otkazano' }).eq('id', id).eq('user_id', authResult.data.user.id);
+                cancelQuery = data.status === null ? cancelQuery.is('status', null) : cancelQuery.eq('status', data.status);
+                const cancelResult = await cancelQuery.select('id').maybeSingle();
+                if (cancelResult.error) throw cancelResult.error;
+                if (!cancelResult.data) {
+                    return NextResponse.json({ success: false, error: 'Termin je u međuvremenu promijenjen. Osvježite prikaz.' }, { status: 409 });
+                }
                 if (data.business_id) {
                     await notifyBusinessPush(supabase, data.business_id, buildReservationPayload({
                         reservationId: String(data.id),

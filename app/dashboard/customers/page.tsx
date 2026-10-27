@@ -37,7 +37,7 @@ function parsePrice(value: unknown) {
 const normalize = (value: unknown) =>
   String(value || '').toLocaleLowerCase('bs').replace(/đ/g, 'dj').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const isCompleted = (value: unknown) => ['zavrseno', 'completed', 'finished'].includes(normalize(value));
-const isCancelled = (value: unknown) => ['otkazano', 'cancelled', 'canceled'].includes(normalize(value));
+const isCancelled = (value: unknown) => ['otkazano', 'cancelled', 'canceled', 'isteklo', 'expired'].includes(normalize(value));
 
 const money = (n: number) => `${n.toLocaleString('bs-BA', { maximumFractionDigits: 2 })} KM`;
 const formatDate = (value: string) => (value && !Number.isNaN(new Date(value).getTime()) ? fullDate(new Date(value)) : '-');

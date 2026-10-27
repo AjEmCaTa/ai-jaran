@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { buildReservationPayload, durationOf, findConflict, startMs } from '../../../utils/reservationFlow';
 import { notifyBusinessPush } from '../../../utils/pushSender';
+import { reservationStartMs } from '../../../utils/reservationRules';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -135,6 +136,11 @@ export async function POST(request: NextRequest) {
         const startTime = startMs(reservationDate);
         if (startTime === null) {
             return NextResponse.json({ success: false, error: 'Datum i vrijeme termina nisu ispravni.' }, { status: 400 });
+        }
+        // Termin u prošlosti se ne može zakazati (vrijeme se tumači u zoni Europe/Sarajevo).
+        const realStart = reservationStartMs(reservationDate);
+        if (realStart === null || realStart <= Date.now()) {
+            return NextResponse.json({ success: false, error: 'Odaberite termin u budućnosti.' }, { status: 400 });
         }
         const existingResult = await supabase
             .from('reservations')

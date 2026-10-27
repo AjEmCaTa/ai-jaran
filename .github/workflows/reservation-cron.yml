@@ -1,0 +1,18 @@
+# Planer za istek zahtjeva i podsjetnike 24 h prije termina (Vercel Hobby nema sat-po-sat cron).
+# Radi tek kad je spojen u glavnu granu i kad su postavljene GitHub tajne CRON_URL i CRON_SECRET.
+name: reservation-cron
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pozovi /api/cron/reservations
+        env:
+          CRON_URL: ${{ secrets.CRON_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_URL" ] || [ -z "$CRON_SECRET" ]; then echo "CRON_URL/CRON_SECRET nisu postavljeni; preskačem."; exit 0; fi
+          curl --fail --silent --show-error --max-time 60 -H "Authorization: Bearer $CRON_SECRET" "$CRON_URL/api/cron/reservations"

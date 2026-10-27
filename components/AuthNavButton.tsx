@@ -30,7 +30,7 @@ export default function AuthNavButton({ variant = "desktop", onClick }: AuthNavB
       <Link
         href="/nalog"
         onClick={onClick}
-        className="py-1 text-base font-semibold text-white hover:text-slate-200"
+        className="flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] text-sm font-semibold text-white hover:bg-white/10"
       >
         {label}
       </Link>

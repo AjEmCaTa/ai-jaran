@@ -178,21 +178,30 @@ export default function Navbar({
 
       {/* MOBILE MENU DROPDOWN */}
       {isOpen && (
-        <div className="border-t border-white/[0.05] bg-[#030712]/98 px-6 py-6 shadow-2xl backdrop-blur-2xl md:hidden">
-          <div className="flex flex-col gap-4">
+        <div className="max-h-[calc(100dvh-82px)] overflow-y-auto overscroll-contain border-t border-white/[0.05] bg-[#030712]/98 px-5 pb-4 pt-2 shadow-2xl backdrop-blur-2xl md:hidden">
 
+          {/* GLAVNI LINKOVI */}
+          <div className="flex flex-col divide-y divide-white/[0.05]">
             <Link
               href="/"
               onClick={handleLogoOrHomeClick}
-              className="py-1 text-base font-medium text-slate-300 hover:text-white"
+              className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
             >
               Početna
             </Link>
 
             <Link
+              href="/#osnivac"
+              onClick={(e) => handleSmoothScroll(e, "#osnivac")}
+              className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
+            >
+              O nama
+            </Link>
+
+            <Link
               href="/#faq"
               onClick={(e) => handleSmoothScroll(e, "#faq")}
-              className="py-1 text-base font-medium text-slate-300 hover:text-white"
+              className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
             >
               FAQ
             </Link>
@@ -202,36 +211,41 @@ export default function Navbar({
               <Link
                 href="/cjenovnik"
                 onClick={() => setIsOpen(false)}
-                className="py-1 text-base font-medium text-slate-300 hover:text-white"
+                className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
               >
                 Cjenovnik
               </Link>
             )}
-
-            <Link
-              href="/dashboard"
-              onClick={() => setIsOpen(false)}
-              className="py-1 text-base font-semibold text-blue-400 hover:text-blue-300"
-            >
-              Moj Panel
-            </Link>
-
-            {/* PRIJAVA / MOJ NALOG (za klijente) */}
-            <AuthNavButton
-              variant="mobile"
-              onClick={() => setIsOpen(false)}
-            />
 
             {/* BIZNISI - ne prikazuj na katalog stranici */}
             {!isCatalog && (
               <Link
                 href="/katalog"
                 onClick={() => setIsOpen(false)}
-                className="w-full rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] py-3 text-center text-sm font-semibold text-emerald-400"
+                className="flex min-h-[42px] items-center text-[15px] font-medium text-emerald-400 hover:text-emerald-300"
               >
                 Biznisi
               </Link>
             )}
+          </div>
+
+          {/* RAČUN I AKCIJE */}
+          <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.08] pt-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setIsOpen(false)}
+                className="flex h-10 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10 text-sm font-semibold text-blue-400 hover:bg-blue-500/20"
+              >
+                Moj Panel
+              </Link>
+
+              {/* PRIJAVA / MOJ NALOG (za klijente) */}
+              <AuthNavButton
+                variant="mobile"
+                onClick={() => setIsOpen(false)}
+              />
+            </div>
 
             {/* PWA Install Button integrisan u mobilni meni */}
             <InstallButton />
@@ -241,11 +255,10 @@ export default function Navbar({
                 setIsOpen(false);
                 onOpenContact();
               }}
-              className="w-full rounded-xl bg-blue-600 py-3 text-center text-sm font-bold text-white shadow-lg"
+              className="flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-lg"
             >
               Kontakt
             </button>
-
           </div>
         </div>
       )}

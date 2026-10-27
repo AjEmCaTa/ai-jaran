@@ -48,10 +48,10 @@ export default function InstallButton() {
 
   return (
     <>
-      <div className="md:hidden w-full py-1">
+      <div className="md:hidden w-full">
         <button
           onClick={handleClick}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 border border-blue-500/30"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-transparent px-4 text-sm font-semibold text-blue-300 transition-all hover:bg-blue-500/10 active:scale-95"
         >
           <span>📲</span> Instaliraj aplikaciju
         </button>

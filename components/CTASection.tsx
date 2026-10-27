@@ -10,8 +10,8 @@ export default function CtaSection({
   onContactClick,
 }: CtaSectionProps) {
   return (
-    <section className="py-24 px-8 bg-[#030712] relative z-20 text-center">
-      <div className="max-w-4xl mx-auto rounded-[32px] border border-blue-500/25 bg-gradient-to-b from-[#080d1c] to-[#040814] p-10 sm:p-16 shadow-2xl relative overflow-hidden">
+    <section className="py-16 px-4 sm:py-24 sm:px-8 bg-[#030712] relative z-20 text-center">
+      <div className="max-w-4xl mx-auto rounded-[32px] border border-blue-500/25 bg-gradient-to-b from-[#080d1c] to-[#040814] p-6 sm:p-16 shadow-2xl relative overflow-hidden">
         
         {/* Pozadinski sjaj */}
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />

@@ -39,10 +39,10 @@ export default function FAQ() {
   return (
     <section
       id="faq"
-      className="py-24 px-4 sm:px-8 bg-[#030712] relative"
+      className="py-16 px-4 sm:py-24 sm:px-8 bg-[#030712] relative"
     >
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
             Često postavljana pitanja
           </h2>

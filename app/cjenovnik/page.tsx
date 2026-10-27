@@ -35,7 +35,7 @@ export default function CjenovnikPage() {
         }}
       />
 
-      <section className="pt-32 pb-20 px-6 sm:px-8 text-center relative overflow-hidden">
+      <section className="pt-28 pb-12 px-6 sm:pt-32 sm:pb-20 sm:px-8 text-center relative overflow-hidden">
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto relative z-10">

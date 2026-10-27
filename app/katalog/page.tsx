@@ -77,7 +77,7 @@ export default function KatalogPage() {
         onOpenCatalog={() => {}}
       />
 
-      <div className="pt-36 pb-24 px-4 max-w-7xl mx-auto relative z-10">
+      <div className="pt-28 pb-16 px-4 sm:pt-36 sm:pb-24 max-w-7xl mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <span className="px-3.5 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20 uppercase tracking-wider inline-block">
             Katalog Biznisa

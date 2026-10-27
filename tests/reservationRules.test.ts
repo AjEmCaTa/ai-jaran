@@ -6,8 +6,8 @@ import {
   selectExpired,
   selectReminders,
   CANCEL_MIN_NOTICE_MIN,
+  runReservationLifecycle,
 } from '../utils/reservationRules.ts';
-import { runReservationLifecycle } from '../utils/reservationLifecycle.ts';
 import { statusKind, findConflict, canApply } from '../utils/reservationFlow.ts';
 
 const H = 3600000;

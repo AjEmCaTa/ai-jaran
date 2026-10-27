@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { timingSafeEqual } from 'crypto';
-import { runReservationLifecycle } from '../../../../utils/reservationLifecycle';
+import { runReservationLifecycle } from '../../../../utils/reservationRules';
 
 export const dynamic = 'force-dynamic';
 

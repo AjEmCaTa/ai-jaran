@@ -29,7 +29,7 @@ export default function Hero({
 
       {/* GLAVNI SADRŽAJ */}
       <div className="relative z-10 mx-auto flex max-w-[1500px] items-center px-6 py-8 sm:px-10 sm:py-12 lg:min-h-[calc(100vh-96px)] lg:py-16 lg:px-14 xl:px-20">
-        <div className="grid w-full items-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12 xl:gap-16">
+        <div className="grid w-full items-center gap-8 sm:gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12 xl:gap-16">
 
           {/* LIJEVA STRANA */}
           <div className="max-w-2xl">
@@ -63,7 +63,7 @@ export default function Hero({
             <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row">
               <button
                 onClick={onStartFree}
-                className="flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-7 py-4 font-bold text-white shadow-[0_15px_45px_rgba(37,99,235,0.25)] transition hover:bg-blue-500 cursor-pointer"
+                className="flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-7 py-3.5 font-bold sm:py-4 text-white shadow-[0_15px_45px_rgba(37,99,235,0.25)] transition hover:bg-blue-500 cursor-pointer"
               >
                 Započni besplatno
                 <span className="text-2xl font-bold">→</span>
@@ -71,7 +71,7 @@ export default function Hero({
 
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-7 py-4 font-semibold text-white backdrop-blur-xl transition hover:bg-white/[0.07] cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-7 py-3.5 font-semibold sm:py-4 text-white backdrop-blur-xl transition hover:bg-white/[0.07] cursor-pointer"
               >
                 Kako radi?
               </button>
@@ -112,7 +112,7 @@ export default function Hero({
                   <img
                     src="/hero-ai-jaran.png"
                     alt="POSLO ONE – digitalno poslovanje"
-                    className="block h-auto w-full object-cover"
+                    className="block aspect-[5/4] h-auto w-full object-cover sm:aspect-auto"
                   />
 
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020617]/20 via-transparent to-blue-500/[0.03]" />

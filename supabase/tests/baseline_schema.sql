@@ -1,5 +1,7 @@
 -- Osnovna šema (kolone kao na produkciji) za PRAZAN testni projekat. Samo CREATE (bez DROP/DELETE/UPDATE).
--- Ne sadrži politike ni grantove: tabele dobijaju zadane dozvole projekta (Supabase default privileges).
+-- Politike su u zasebnom fajlu. Grantovi ispod ODGOVARAJU PRODUKCIJI (anon/authenticated/service_role imaju sve):
+-- TEST projekat ima strože zadane dozvole (anon/authenticated nemaju SELECT/INSERT/UPDATE/DELETE na novim tabelama),
+-- pa bi bez ovoga test "prije" pokazao "denied" iz pogrešnog razloga. Sve je unutar transakcije koja se poništava.
 -- Ne kopira produkcijske podatke. Vidi docs/SECURITY_PHASE1.md za redoslijed pokretanja.
 create extension if not exists "uuid-ossp";
 
@@ -52,3 +54,10 @@ alter table public.business_inquiries enable row level security;
 alter table public.customer_notes enable row level security;
 alter table public.google_calendar_tokens enable row level security;
 alter table public.push_subscriptions enable row level security;
+-- TEST ima event trigger ensure_rls (automatski uključuje RLS na novim tabelama); produkcija ima reservations BEZ RLS:
+alter table public.reservations disable row level security;
+
+-- stanje produkcije prije migracije: široke dozvole (migracija ih ukida za anon/authenticated)
+grant all on public.businesses, public.profiles, public.reservations, public.services, public.appointments,
+  public.clients, public.business_inquiries, public.customer_notes, public.google_calendar_tokens,
+  public.push_subscriptions to anon, authenticated, service_role;

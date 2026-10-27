@@ -61,6 +61,17 @@ profila, `must_change_password`, service_role). Izlaz je lista `{t, expected, ob
 - Napomena: psql izvršava naredbe zasebno; zato `build_runs.py` pakuje šemu + politike/migraciju + test u JEDAN `DO` blok
   (atomarno, uvijek poništeno). Pokretati generisane `run1_before.sql` / `run2_after.sql`, ne ručno spojene fajlove.
 
+## Stvarni rezultati na TEST projektu `woixwqpnpqteguntgmcq` (2026-10-27)
+
+- Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` su po JEDNA varijabla za `preview` + `production`
+  (vrijednosti sensitive, nisu čitane): Preview i Production koriste isti Supabase projekat. TEST projekat nema tabela, pa ga sajt ne može koristiti.
+  Posljedica: Vercel preview grane piše u produkcijsku bazu; ne testirati registraciju/upis na preview URL-u.
+- Run 1 (ranjivo): 15 FAIL / 8 PASS. Run 2 (ranjive politike + migracija): 0 FAIL / 23 PASS. Oba su se poništila (0 tabela, 0 korisnika,
+  0 politika, nepromijenjeni default privileges nakon svakog pokretanja).
+- Otkriveno testiranjem (ispravljeno u skriptama): TEST ima strože default privileges i event trigger `ensure_rls` (automatski uključuje RLS na novim tabelama).
+  Baseline zato eksplicitno daje produkcijske grantove i isključuje RLS na `reservations`. Prvi pokušaj run 1 je dao 13 FAIL jer RLS na rezervacijama nije bio isključen.
+- Run 2 pozvan jednom neuspješno (`Invalid or expired requestState`, ništa se nije izvršilo; TEST provjeren čistim) i ponovljen.
+
 ## Plan izvršenja na TEST projektu (`woixwqpnpqteguntgmcq`), NIJE izvršeno
 
 Princip: nikad ne ostaju otvorene politike u TEST bazi. Ranjivo stanje se gradi **unutar transakcije koja se uvijek
@@ -72,7 +83,7 @@ poništava** (test na kraju baca izuzetak).
    (šema + ranjive politike + test u jednom `DO` bloku). Očekivano: **FAIL** na napadima (anon čita/briše rezervacije, A i B preuzimaju
    dashboard preko `business_id`, čitaju PII, kreiraju aktivan biznis); **PASS** na kontrolama. Ako napadi PASS-uju,
    test ili baza nisu ispravni i staje se.
-2. **Pokretanje 2 (poslije):** `run2_after.sql` (šema + migracija + test).
+2. **Pokretanje 2 (poslije):** `run2_after.sql` (šema + ranjive politike + migracija + test).
    Očekivano: **sve PASS (0 FAIL)**, uključujući „MORA RADITI“ kontrole.
 3. Provjera da ništa nije ostalo: 0 tabela u `public` na TEST projektu (obje transakcije poništene).
 4. (Posebno odobrenje) Trajno primijeniti `baseline_schema.sql` + migraciju na TEST radi e2e probe registracije;

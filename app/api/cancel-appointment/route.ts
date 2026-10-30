@@ -1,27 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import path from 'path';
 import { buildReservationPayload, statusKind } from '../../../utils/reservationFlow';
 import { customerCancelDecision } from '../../../utils/reservationRules';
 import { notifyBusinessPush } from '../../../utils/pushSender';
-
-let Database: any;
-try {
-    Database = require('better-sqlite3');
-} catch (e) {
-    // Na Vercel serverless okruzenju sqlite modul se preskace
-}
-
-const getDb = () => {
-    if (!Database) return null;
-    try {
-        const dbPath = path.join(process.cwd(), 'ai_jaran.db');
-        return new Database(dbPath);
-    } catch (e) {
-        return null;
-    }
-};
 
 // Posiljalac mora biti na domeni koja je verifikovana u Resendu
 const FROM_EMAIL = 'POSLO ONE <info@poslo.one>';
@@ -128,17 +110,6 @@ export async function POST(request: NextRequest) {
                         when: data.reservation_date ? String(data.reservation_date).replace('T', ' ').slice(0, 16) : '',
                     }));
                 }
-            }
-        }
-
-        if (!reservation) {
-            const db = getDb();
-            if (db) {
-                reservation = db.prepare('SELECT * FROM narudzbe_firmi WHERE id = ?').get(id);
-                if (reservation) {
-                    db.prepare('DELETE FROM narudzbe_firmi WHERE id = ?').run(id);
-                }
-                db.close();
             }
         }
 

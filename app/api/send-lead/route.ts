@@ -63,7 +63,7 @@ Poruka: ${message || 'Nema poruke'}`;
     if (email && email.trim() !== '') {
       try {
         const emailResult = await resend.emails.send({
-          from: 'POSLO ONE <info@aijaran.ba>',
+          from: 'POSLO ONE <info@poslo.one>',
           to: [email, 'caticharun126@gmail.com'],
           subject: 'Uspješno poslan zahtjev – POSLO ONE',
           html: `

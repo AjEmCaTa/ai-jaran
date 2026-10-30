@@ -4,7 +4,7 @@ import { statusKind } from '../../../utils/reservationFlow';
 import { POST as cancelAppointment } from '../cancel-appointment/route';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'missing-service-role-key';
 const supabase = createClient(supabaseUrl, serviceKey);
 const authSupabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 

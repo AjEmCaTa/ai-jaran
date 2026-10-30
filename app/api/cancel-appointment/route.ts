@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({ success: false, error: decision.message, code: decision.code }, { status: 409 });
                 }
 
-                let businessName = 'Dubinsko Catic';
-                let ownerEmail = 'caticharun126@gmail.com';
+                let businessName = 'POSLO ONE';
+                let ownerEmail = '';
                 let telegramChatId = null;
 
                 if (data.business_id) {
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
                     if (businessResult.data) {
                         businessName = businessResult.data.name;
-                        ownerEmail = businessResult.data.owner_email || ownerEmail;
+                        ownerEmail = businessResult.data.owner_email || '';
                         telegramChatId = businessResult.data.telegram_chat_id;
                     }
                 }
@@ -206,6 +206,7 @@ export async function POST(request: NextRequest) {
                     '</td></tr></table>';
 
                 // Mail vlasniku
+                if (reservation.ownerEmail) {
                 const ownerResult = await resend.emails.send({
                     from: FROM_EMAIL,
                     to: reservation.ownerEmail,
@@ -217,6 +218,9 @@ export async function POST(request: NextRequest) {
                     console.error("Resend greska (vlasnik):", JSON.stringify(ownerResult.error));
                 } else {
                     console.log("Mail vlasniku poslan:", ownerResult.data?.id);
+                }
+                } else {
+                    console.error("Firma nema owner_email; obavijest vlasniku nije poslana.");
                 }
 
                 // Mail klijentu (samo ako je upisao email)

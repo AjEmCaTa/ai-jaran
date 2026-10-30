@@ -15,4 +15,13 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           if [ -z "$CRON_URL" ] || [ -z "$CRON_SECRET" ]; then echo "CRON_URL/CRON_SECRET nisu postavljeni; preskačem."; exit 0; fi
-          curl --fail --silent --show-error --max-time 60 -H "Authorization: Bearer $CRON_SECRET" "$CRON_URL/api/cron/reservations"
+          # Ako je adresa upisana bez https://, dodaj ga; ukloni završne kose crte.
+          case "$CRON_URL" in http://*|https://*) ;; *) CRON_URL="https://$CRON_URL" ;; esac
+          CRON_URL="${CRON_URL/#http:\/\//https://}"   # http -> https (Vercel inače vraća 308 "Redirecting...")
+          CRON_URL="${CRON_URL%/}"
+          status=$(curl --silent --show-error --max-time 60 --output response.txt --write-out '%{http_code}' \
+            -H "Authorization: Bearer $CRON_SECRET" "$CRON_URL/api/cron/reservations") || { echo "curl nije uspio"; exit 1; }
+          echo "HTTP $status"
+          cat response.txt; echo
+          # Uspjeh je samo 200; preusmjerenje, 401 ili 503 znače da cron nije izvršen.
+          [ "$status" = "200" ]

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test tests/isolation.test.ts tests/push.test.ts tests/reservationFlow.test.ts tests/servicePrice.test.ts tests/registration.test.ts tests/reservationRules.test.ts"
+    "test": "node --test tests/isolation.test.ts tests/push.test.ts tests/reservationFlow.test.ts tests/servicePrice.test.ts tests/registration.test.ts tests/reservationRules.test.ts tests/clientNotify.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

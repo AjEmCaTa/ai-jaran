@@ -9,6 +9,7 @@ import { BusinessContext, normalizeBusiness, type DashboardBusiness } from "./_l
 import PartnerLogo from "../../components/PartnerLogo";
 import { PARTNER_LOGOS } from "../../utils/partnerLogos";
 import NotificationBell from "./_components/NotificationBell";
+import InstallButton from "../../components/InstallButton";
 import { DEFAULT_THEME, THEME_EVENT, loadTheme, themeVars, type ThemeSettings } from "./_lib/theme";
 
 const supabase = createClient(
@@ -238,6 +239,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const sidebarFooter = (
     <div className="space-y-3 border-t border-white/[0.06] p-4">
+      <InstallButton mobileOnly={false} />
       <Link
         href="/"
         onClick={() => setMobileMenuOpen(false)}

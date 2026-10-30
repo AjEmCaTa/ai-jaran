@@ -1,6 +1,23 @@
-// Service worker POSLO ONE: prima web push obavijesti za nove upite.
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+// Service worker POSLO ONE: web push obavijesti + offline poruka. Podaci se NE keširaju (rezervacije moraju biti uvijek svježe).
+const OFFLINE_CACHE = 'poslo-offline-v1';
+const OFFLINE_URL = '/offline.html';
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(OFFLINE_CACHE).then((cache) => cache.addAll([OFFLINE_URL, '/icons/icon-192.png'])).catch(() => {}).then(() => self.skipWaiting())
+  );
+});
+self.addEventListener('activate', (event) =>
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== OFFLINE_CACHE && k.startsWith('poslo-offline-')).map((k) => caches.delete(k)))).then(() => self.clients.claim())
+  )
+);
+
+// Samo navigacije: ako nema mreže, prikaži offline stranicu. API i ostalo ide uvijek direktno na mrežu.
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode !== 'navigate') return;
+  event.respondWith(fetch(event.request).catch(() => caches.match(OFFLINE_URL).then((r) => r || Response.error())));
+});
 
 self.addEventListener('push', (event) => {
   let data = {};

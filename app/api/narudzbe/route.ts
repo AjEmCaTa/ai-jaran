@@ -5,12 +5,11 @@ import { notifyBusinessPush } from '../../../utils/pushSender';
 import { reservationStartMs } from '../../../utils/reservationRules';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'missing-service-role-key';
 const supabase = createClient(supabaseUrl, supabaseKey);
 const authSupabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
 // Posiljalac mora biti na domeni koja je VERIFIKOVANA u Resendu (resend.com -> Domains).
-// Ako poslo.one nije verifikovan, stavi ovdje: 'info@aijaran.ba'
 const FROM_ADDRESS = 'info@poslo.one';
 
 function formatToBalkanDate(dateStr: string) {
@@ -241,17 +240,22 @@ export async function POST(request: NextRequest) {
                     '<p style="font-size:13px;color:#6b7280;margin:0;">' + partnerName + ' & POSLO ONE</p>' +
                     '</td></tr></table>';
 
-                const ownerResult = await resend.emails.send({
-                    from: fromHeader,
-                    to: business.owner_email || 'caticharun126@gmail.com',
-                    subject: 'Nova rezervacija: ' + clientName + ' - ' + displayDate + ' u ' + time,
-                    html: ownerEmailHtml
-                });
+                // Obavijest ide samo vlasniku TE firme; bez owner_email se ne šalje nikome drugom.
+                if (business.owner_email) {
+                    const ownerResult = await resend.emails.send({
+                        from: fromHeader,
+                        to: business.owner_email,
+                        subject: 'Nova rezervacija: ' + clientName + ' - ' + displayDate + ' u ' + time,
+                        html: ownerEmailHtml
+                    });
 
-                if (ownerResult.error) {
-                    console.error("Resend greska (vlasnik):", JSON.stringify(ownerResult.error));
+                    if (ownerResult.error) {
+                        console.error("Resend greska (vlasnik):", JSON.stringify(ownerResult.error));
+                    } else {
+                        console.log("Mail vlasniku poslan:", ownerResult.data?.id);
+                    }
                 } else {
-                    console.log("Mail vlasniku poslan:", ownerResult.data?.id);
+                    console.error("Firma nema owner_email; obavijest vlasniku nije poslana:", business.id);
                 }
 
                 if (clientEmail) {

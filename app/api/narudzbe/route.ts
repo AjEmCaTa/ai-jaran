@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { createClient } from '@supabase/supabase-js';
 import { buildReservationPayload, durationOf, findConflict, startMs } from '../../../utils/reservationFlow';
 import { notifyBusinessPush } from '../../../utils/pushSender';
@@ -53,7 +54,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    try {
+
+  {
+    const rl = checkRateLimit('narudzbe:' + clientIp(request), 20, 600000);
+    if (!rl.allowed) {
+      return NextResponse.json({ success: false, error: 'Previše pokušaja. Pokušajte ponovo za nekoliko minuta.' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } });
+    }
+  }    try {
         const body = await request.json().catch(function () { return {}; });
         const accessToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
         if (!accessToken) {

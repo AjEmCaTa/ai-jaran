@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSlug, parseRegistration } from '../../../utils/registration';
 
@@ -7,7 +8,13 @@ import { buildSlug, parseRegistration } from '../../../utils/registration';
 // - profil se veže samo za biznis koji je upravo kreiran ovdje (klijent business_id ne šalje),
 // - nalog koji već postoji nikad ne dobija novi profil/biznis.
 export async function POST(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  {
+    const rl = checkRateLimit('register-business:' + clientIp(request), 5, 3600000);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Previše pokušaja registracije. Pokušajte kasnije.' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } });
+    }
+  }  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {

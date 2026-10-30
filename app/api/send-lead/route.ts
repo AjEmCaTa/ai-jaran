@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
-  try {
+
+  {
+    const rl = checkRateLimit('send-lead:' + clientIp(request), 5, 600000);
+    if (!rl.allowed) {
+      return NextResponse.json({ success: false, error: 'Previše zahtjeva. Pokušajte ponovo za nekoliko minuta.' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } });
+    }
+  }  try {
     const body = await request.json();
     const { name, email, phone, package: selectedPackage, message } = body;
 

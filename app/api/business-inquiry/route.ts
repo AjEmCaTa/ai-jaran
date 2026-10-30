@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { buildInquiryPayload, sendPushToBusiness, type PushStore } from '../../../utils/push';
@@ -65,6 +66,10 @@ function fail(error: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
+  {
+    const rl = checkRateLimit('business-inquiry:' + clientIp(request), 8, 600000);
+    if (!rl.allowed) return fail('Previše upita u kratkom vremenu. Pokušajte ponovo za nekoliko minuta.', 429);
+  }
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const resendApiKey = process.env.RESEND_API_KEY;

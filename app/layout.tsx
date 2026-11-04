@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "POSLO ONE",
   description:
-    "POSLO ONE – vaš digitalni radnik za svakodnevno poslovanje.",
+    "POSLO ONE – online zakazivanje termina za male firme u BiH. Klijenti zakazuju sami, ti dobiješ obavijest. 30 dana besplatno.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

@@ -5,15 +5,15 @@ import { useState } from "react";
 const faqs = [
   {
     q: "Šta je POSLO ONE?",
-    a: "POSLO ONE je platforma za biznise koja omogućava predstavljanje poslovanja u katalogu, jednostavnije upravljanje rezervacijama i, uz Pro paket, vlastiti dashboard za upravljanje poslovnim informacijama.",
+    a: "POSLO ONE je online zakazivanje termina za male firme. Tvoji klijenti preko tvoje stranice sami biraju uslugu i slobodan termin, a ti dobiješ obavijest i sve vidiš u svom panelu.",
   },
   {
     q: "Kako mogu dodati svoj biznis u POSLO ONE katalog?",
     a: "Prijaviš svoj biznis, dostaviš osnovne informacije o poslovanju i nakon obrade tvoj biznis može biti predstavljen u POSLO ONE katalogu, gdje ga potencijalni klijenti mogu pronaći.",
   },
   {
-    q: "Šta dobijam u besplatnom paketu?",
-    a: "Besplatni paket omogućava da tvoj biznis bude prisutan u POSLO ONE katalogu i da koristi osnovne funkcionalnosti rezervacija i povezivanja kalendara.",
+    q: "Koliko košta?",
+    a: "Starter je 15 KM, a Pro 50 KM mjesečno. Prvih 30 dana je besplatno za oba paketa, a stranicu ti postavimo mi.",
   },
   {
     q: "Šta dobijam sa Pro paketom?",

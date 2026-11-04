@@ -3,58 +3,53 @@ interface AdvantageItem {
   desc: string;
 }
 
-const icons = ["💬", "⏰", "📊", "🛡️", "⚡", "🎯"];
+const icons = ["📞", "✅", "📱", "🤝", "🛡️", "💶"];
 
 const items: AdvantageItem[] = [
   {
-    title: "24/7 korisnička podrška",
-    desc: "POSLO ONE odgovara na pitanja vaših kupaca u bilo koje doba dana i noći, čak i kada vi spavate.",
+    title: "Manje poziva i poruka",
+    desc: "Klijenti ne moraju zvati da pitaju ima li slobodno. Vide sami i zakažu, a ti ne prekidaš posao zbog telefona.",
   },
   {
-    title: "Ušteda vremena",
-    desc: "Automatizirajte dosadne administrativne zadatke i fokusirajte se na ono što najbolje radite — rast vašeg biznisa.",
+    title: "Nema duplih termina",
+    desc: "Sistem ne dozvoljava dva klijenta u isto vrijeme. Kalendar je uvijek tačan.",
   },
   {
-    title: "Bolje poslovne odluke",
-    desc: "Dobijajte brze analize, izvještaje i uvide koji vam pomažu da donosite pametnije odluke svaki dan.",
+    title: "Sve s mobitela",
+    desc: "Rezervacije vodiš s mobitela, a POSLO ONE možeš dodati na početni ekran kao aplikaciju.",
   },
   {
-    title: "Pouzdan i siguran",
-    desc: "Vaši poslovni podaci su zaštićeni. POSLO ONE je dizajniran s privatnošću i sigurnošću na prvom mjestu.",
+    title: "Postavimo sve za tebe",
+    desc: "Pošalji nam usluge i cijene, a mi pripremimo tvoju stranicu. Ne trebaš znati ništa o računarima.",
   },
   {
-    title: "Jednostavan za korištenje",
-    desc: "Bez kompliciranih podešavanja. POSLO ONE se brzo integrira u postojeće alate koje već koristite.",
+    title: "Tvoji podaci su zaštićeni",
+    desc: "Podaci svake firme su odvojeni. Tvoje rezervacije i klijente vidiš samo ti.",
   },
   {
-    title: "Prilagođen malim biznisima",
-    desc: "Razumijemo izazove malih biznisa. POSLO ONE je cjenovno i funkcionalno prilagođen vašim potrebama.",
+    title: "Jasna cijena",
+    desc: "Starter 15 KM, Pro 50 KM mjesečno. Prvih 30 dana besplatno za oba paketa.",
   },
 ];
 
 export default function Comparison() {
   return (
     <section className="py-16 px-6 sm:py-28 sm:px-8 bg-[#030712] relative z-25 overflow-hidden">
-      {/* Suptilni plavi sjaj u pozadini */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-600/[0.06] blur-[140px]" />
 
       <div className="relative z-10 max-w-7xl mx-auto">
-
-        {/* NASLOV I OPIS */}
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-            Glavne{" "}
+            Zašto{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
-              prednosti
+              POSLO ONE?
             </span>
           </h2>
-
           <p className="text-gray-400 text-base md:text-lg">
-            Otkrijte zašto vlasnici malih biznisa i autopraonica vjeruju POSLO ONE-u za svakodnevne poslovne izazove.
+            Napravljen za male firme koje rade po terminima i nemaju vremena za komplikovane programe.
           </p>
         </div>
 
-        {/* 3x2 GRID KARTICA */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 items-stretch">
           {items.map((item, index) => (
             <div
@@ -65,19 +60,12 @@ export default function Comparison() {
                 <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/25 mb-6 text-2xl group-hover:scale-110 transition-transform duration-300 shadow-inner">
                   {icons[index]}
                 </div>
-
-                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide mb-3">
-                  {item.title}
-                </h3>
-
-                <p className="text-slate-300 leading-relaxed text-sm sm:text-base">
-                  {item.desc}
-                </p>
+                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide mb-3">{item.title}</h3>
+                <p className="text-slate-300 leading-relaxed text-sm sm:text-base">{item.desc}</p>
               </div>
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );

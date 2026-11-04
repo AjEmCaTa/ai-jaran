@@ -3,81 +3,64 @@ interface FeatureItem {
   desc: string;
 }
 
-const icons = ["🤖", "📅", "📦", "🏢"];
+const icons = ["🔗", "📅", "🔔", "⏰"];
 
 const items: FeatureItem[] = [
   {
-    title: "AI radnik 24/7",
-    desc: "Tvoj digitalni asistent radi bez pauze, odgovara klijentima i pruža im potrebne informacije u bilo koje doba dana i noći.",
+    title: "Dobiješ svoju stranicu za zakazivanje",
+    desc: "Unesemo tvoje usluge, cijene i radno vrijeme. Dobiješ link i QR kod koji staviš na Instagram, WhatsApp, Google ili vrata radnje.",
   },
   {
-    title: "Pametne rezervacije",
-    desc: "Klijenti sami biraju slobodan termin, a POSLO ONE ga automatski upisuje u tvoj kalendar i sprječava duplo zakazivanje.",
+    title: "Klijent sam izabere termin",
+    desc: "Vidi usluge, cijene i slobodne termine i zakaže za par sekundi, u bilo koje doba. Zauzeti termini se ne mogu duplo zakazati.",
   },
   {
-    title: "Katalog za biznise",
-    desc: "Predstavi svoj biznis u POSLO ONE katalogu i omogući novim klijentima da lako pronađu tvoje usluge i rezervišu termin.",
+    title: "Ti odmah dobiješ obavijest",
+    desc: "Novi zahtjev stiže na email i telefon. Potvrdiš ili predložiš drugi termin jednim klikom, a klijent automatski dobije mail.",
   },
   {
-    title: "Za svaki biznis",
-    desc: "Autopraonice, vile, restorani, saloni, čišćenje i druge djelatnosti – POSLO ONE se prilagođava načinu rada tvog biznisa.",
+    title: "Podsjetnik i pošteno otkazivanje",
+    desc: "Klijent dobije podsjetnik 24 sata prije termina. Može otkazati najkasnije 2 sata ranije, pa se termin oslobađa za nekog drugog.",
   },
 ];
 
 export default function Features() {
   return (
-    <section className="py-16 px-6 sm:py-28 sm:px-8 bg-[#030712] relative z-20 overflow-hidden">
-      {/* Suptilni plavi sjaj u pozadini */}
+    <section id="demo" className="scroll-mt-24 py-16 px-6 sm:py-28 sm:px-8 bg-[#030712] relative z-20 overflow-hidden">
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-600/[0.05] blur-[140px]" />
 
       <div className="relative z-10 max-w-4xl mx-auto">
-
-        {/* NASLOV I OPIS */}
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-            Šta nudi{" "}
+            Kako{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
-              POSLO ONE?
+              radi?
             </span>
           </h2>
+          <p className="text-gray-400 text-base md:text-lg">Četiri koraka, a prvi za tebe uradimo mi.</p>
         </div>
 
-        {/* HORIZONTALNI RED (JEDNA ISPOD DRUGE) */}
         <div className="space-y-6">
-          {items.map((item, index) => {
-            const stepNum = `0${index + 1}`;
-
-            return (
-              <div
-                key={index}
-                className="group relative overflow-hidden rounded-[24px] border border-blue-500/15 bg-[#080d1c]/80 p-6 sm:p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-blue-500/40 hover:bg-[#0b1329] hover:shadow-[0_10px_30px_rgba(37,99,235,0.1)] flex flex-col sm:flex-row items-start sm:items-center gap-6"
-              >
-                {/* IKONA / ILLUSTRACIJA */}
-                <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/25 text-3xl group-hover:scale-110 transition-transform duration-300 shadow-inner">
-                  {icons[index]}
-                </div>
-
-                {/* SADRŽAJ */}
-                <div className="flex-grow">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs tracking-wider">
-                      {stepNum}
-                    </span>
-
-                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
-                      {item.title}
-                    </h3>
-                  </div>
-
-                  <p className="text-slate-300 leading-relaxed text-sm sm:text-base">
-                    {item.desc}
-                  </p>
-                </div>
+          {items.map((item, index) => (
+            <div
+              key={index}
+              className="group relative overflow-hidden rounded-[24px] border border-blue-500/15 bg-[#080d1c]/80 p-6 sm:p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-blue-500/40 hover:bg-[#0b1329] hover:shadow-[0_10px_30px_rgba(37,99,235,0.1)] flex flex-col sm:flex-row items-start sm:items-center gap-6"
+            >
+              <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/25 text-3xl group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                {icons[index]}
               </div>
-            );
-          })}
+              <div className="flex-grow">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs tracking-wider">
+                    {`0${index + 1}`}
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide">{item.title}</h3>
+                </div>
+                <p className="text-slate-300 leading-relaxed text-sm sm:text-base">{item.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
-
       </div>
     </section>
   );

@@ -17,12 +17,12 @@ export default function CtaSection({
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
 
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-          Pokreni svoje poslovanje uz POSLO ONE
+          Probaj POSLO ONE 30 dana besplatno
         </h2>
         
         <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
-          Automatizuj svakodnevne zadatke, odgovaraj klijentima i upravljaj
-          poslovanjem jednostavnije — sve na jednom mjestu.
+          Pošalji nam svoje usluge i cijene, a mi ti pripremimo stranicu za zakazivanje.
+          Ako ti se ne svidi, ne plaćaš ništa.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

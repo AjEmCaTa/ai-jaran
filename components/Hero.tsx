@@ -80,10 +80,10 @@ export default function Hero({ onStartFree, onHowItWorks, animationKey }: HeroPr
           {/* Pravi prikaz proizvoda */}
           <div className="relative flex items-center justify-center">
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-[380px] w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/[0.14] blur-[110px]" />
-            <div className="relative z-10 w-full max-w-[230px] sm:max-w-[300px] lg:max-w-[330px]">
+            <div className="relative z-10 w-full max-w-[300px] sm:max-w-[360px] lg:max-w-[400px]">
               <div className="overflow-hidden rounded-[30px] border border-blue-400/25 bg-[#020617] p-1.5 shadow-[0_0_80px_rgba(37,99,235,0.18)] sm:rounded-[36px] sm:p-2">
                 <video
-                  className="block aspect-[9/16] w-full rounded-[24px] object-cover sm:rounded-[28px]"
+                  className="block aspect-[540/844] w-full rounded-[24px] object-cover sm:rounded-[28px]"
                   src="/video/poslo-one-demo.mp4"
                   poster="/video/poslo-one-demo-poster.jpg"
                   autoPlay

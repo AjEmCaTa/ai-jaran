@@ -17,13 +17,13 @@ export default function FounderSection() {
   return (
     <section
       id="osnivac"
-      className="py-16 px-6 sm:py-28 sm:px-8 bg-[#030712] relative z-20 overflow-hidden"
+      className="py-12 px-5 sm:py-28 sm:px-8 bg-[#030712] relative z-20 overflow-hidden"
     >
       {/* Suptilni plavi sjaj u pozadini */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-600/[0.05] blur-[140px]" />
 
       <div className="relative z-10 max-w-5xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+        <div className="text-center max-w-2xl mx-auto mb-7 sm:mb-14">
           <span className="inline-block mb-4 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs tracking-wider uppercase">
             Upoznaj osnivača
           </span>
@@ -35,11 +35,11 @@ export default function FounderSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-10 md:gap-14 items-center rounded-[32px] border border-blue-500/15 bg-[#080d1c]/80 p-6 sm:p-10 shadow-xl backdrop-blur-xl">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-6 md:gap-14 items-center rounded-[28px] sm:rounded-[32px] border border-blue-500/15 bg-[#080d1c]/80 p-5 sm:p-10 shadow-xl backdrop-blur-xl">
           {/* PORTRET */}
-          <div className="relative mx-auto w-full max-w-[320px] md:max-w-none">
+          <div className="relative mx-auto w-full max-w-[150px] sm:max-w-[260px] md:max-w-none">
             <div className="absolute -inset-3 rounded-[28px] bg-blue-600/10 blur-2xl pointer-events-none" />
-            <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] border border-blue-500/25 bg-gradient-to-b from-[#0b1329] to-[#050914]">
+            <div className="relative aspect-square md:aspect-[3/4] overflow-hidden rounded-full md:rounded-[24px] border border-blue-500/25 bg-gradient-to-b from-[#0b1329] to-[#050914]">
               {photoFailed ? (
                 <div
                   className="flex h-full w-full items-center justify-center text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-blue-300 to-blue-600"
@@ -63,10 +63,10 @@ export default function FounderSection() {
 
           {/* TEKST */}
           <div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-wide">
+            <h3 className="text-center md:text-left text-2xl sm:text-3xl font-bold text-white tracking-wide">
               {FOUNDER_NAME}
             </h3>
-            <p className="mt-1 mb-6 text-sm sm:text-base font-semibold text-blue-400">
+            <p className="text-center md:text-left mt-1 mb-4 sm:mb-6 text-sm sm:text-base font-semibold text-blue-400">
               Osnivač i kreator POSLO ONE platforme
             </p>
 

@@ -10,7 +10,7 @@ export default function CtaSection({
   onContactClick,
 }: CtaSectionProps) {
   return (
-    <section className="py-16 px-4 sm:py-24 sm:px-8 bg-[#030712] relative z-20 text-center">
+    <section className="py-10 px-4 sm:py-24 sm:px-8 bg-[#030712] relative z-20 text-center">
       <div className="max-w-4xl mx-auto rounded-[32px] border border-blue-500/25 bg-gradient-to-b from-[#080d1c] to-[#040814] p-6 sm:p-16 shadow-2xl relative overflow-hidden">
         
         {/* Pozadinski sjaj */}
@@ -20,7 +20,7 @@ export default function CtaSection({
           Probaj POSLO ONE 30 dana besplatno
         </h2>
         
-        <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
+        <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto mb-7 sm:mb-10 leading-relaxed">
           Pošalji nam svoje usluge i cijene, a mi ti pripremimo stranicu za zakazivanje.
           Ako ti se ne svidi, ne plaćaš ništa.
         </p>

@@ -1,21 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import "./globals.css";
-
-// Naslovi: Bricolage Grotesque (upečatljiv, s karakterom). Tekst: Manrope (čitljiv na mobitelu).
-const displayFont = Bricolage_Grotesque({
-  subsets: ["latin", "latin-ext"],
-  weight: ["600", "700", "800"],
-  variable: "--font-display-face",
-  display: "swap",
-});
-const bodyFont = Manrope({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-body-face",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "POSLO ONE",
@@ -44,7 +29,7 @@ export default function RootLayout({
     <html
       lang="bs"
       data-scroll-behavior="smooth"
-      className={`antialiased ${displayFont.variable} ${bodyFont.variable}`}
+      className="antialiased"
     >
       <body className="min-h-screen bg-[#030712] text-white">
         {children}

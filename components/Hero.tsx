@@ -16,62 +16,59 @@ export default function Hero({ onStartFree, onHowItWorks, animationKey }: HeroPr
       id="početna"
       className="relative overflow-hidden bg-[#030712] pt-[82px] lg:min-h-screen lg:pt-24"
     >
-      {/* POZADINSKO SVJETLO */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[35%] top-[15%] h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-blue-600/[0.08] blur-[140px]" />
         <div className="absolute right-[-150px] top-[10%] h-[500px] w-[500px] rounded-full bg-indigo-600/[0.07] blur-[140px]" />
       </div>
 
-      <div className="relative z-10 mx-auto flex max-w-[1500px] items-center px-6 py-8 sm:px-10 sm:py-12 lg:min-h-[calc(100vh-96px)] lg:py-16 lg:px-14 xl:px-20">
-        <div className="grid w-full items-center gap-10 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12 xl:gap-16">
+      <div className="relative z-10 mx-auto flex max-w-[1500px] items-center px-5 pb-10 pt-6 sm:px-10 sm:py-12 lg:min-h-[calc(100vh-96px)] lg:py-16 lg:px-14 xl:px-20">
+        <div className="grid w-full items-center gap-8 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12 xl:gap-16">
 
-          {/* LIJEVA STRANA */}
           <div className="max-w-2xl">
-            <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/[0.08] px-3.5 py-1.5 backdrop-blur-xl sm:mb-7 sm:px-4 sm:py-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-blue-400" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-blue-300 sm:text-xs sm:tracking-[0.16em]">
-                Online zakazivanje termina za male firme u BiH
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/[0.08] px-3 py-1.5 sm:mb-7 sm:px-4 sm:py-2">
+              <span className="h-2 w-2 rounded-full bg-blue-400" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-blue-300 sm:text-xs sm:tracking-[0.16em]">
+                Online zakazivanje za male firme
               </span>
             </div>
 
-            <h1 className="text-[clamp(2rem,9.6vw,3.4rem)] font-extrabold leading-[1.04] tracking-[-0.045em] text-white sm:text-6xl md:text-7xl lg:text-[4.3rem] xl:text-[5rem]">
-              Klijenti zakazuju sami.
+            <h1 className="text-[2.75rem] font-extrabold leading-[0.98] text-white sm:text-7xl lg:text-[5rem] xl:text-[5.8rem]">
+              Manje poziva.
               <br />
-              <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-blue-500 bg-clip-text text-transparent">
-                Ti radiš svoj posao.
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent">
+                Više termina.
               </span>
             </h1>
 
-            <p className="mt-5 max-w-xl text-base leading-7 text-slate-300 sm:mt-7 sm:text-lg sm:leading-8">
-              Tvoja stranica za zakazivanje: klijent izabere uslugu i slobodan termin za par sekundi,
-              a ti odmah dobiješ obavijest. Bez stalnih poziva, bez poruka kasno navečer i bez duplih termina.
+            <p className="mt-4 max-w-xl text-[15px] leading-6 text-slate-300 sm:mt-7 sm:text-lg sm:leading-8">
+              Klijenti sami zakazuju preko tvoje stranice, a ti odmah dobiješ obavijest.
+              Bez poruka u 11 navečer i bez duplih termina.
             </p>
 
-            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400 sm:text-base">
-              Za frizere, kozmetičke salone, autopraonice, servise, čišćenje i sve koji rade po terminima.
+            <p className="mt-2 max-w-xl text-[13px] leading-5 text-slate-400 sm:mt-3 sm:text-base">
+              Za salone, servise, autopraonice i sve koji rade po terminima.
             </p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-2.5 sm:mt-9 sm:flex-row sm:gap-3">
               <button
                 onClick={onStartFree}
-                className="flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-7 py-3.5 font-bold sm:py-4 text-white shadow-[0_15px_45px_rgba(37,99,235,0.25)] transition hover:bg-blue-500 cursor-pointer"
+                className="flex items-center justify-center gap-3 rounded-xl bg-blue-600 px-7 py-3.5 font-bold text-white shadow-[0_15px_45px_rgba(37,99,235,0.25)] transition hover:bg-blue-500 cursor-pointer sm:py-4"
               >
                 Probaj 30 dana besplatno
-                <span className="text-2xl font-bold">→</span>
+                <span className="text-xl font-bold">→</span>
               </button>
-
               <button
                 onClick={onHowItWorks}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-7 py-3.5 font-semibold sm:py-4 text-white backdrop-blur-xl transition hover:bg-white/[0.07] cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-7 py-3 font-semibold text-white transition hover:bg-white/[0.07] cursor-pointer sm:py-4"
               >
                 Pogledaj kako radi
               </button>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/[0.07] pt-6 sm:mt-11 sm:gap-x-7 sm:gap-y-4 sm:pt-7">
+            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-t border-white/[0.07] pt-4 sm:mt-11 sm:gap-x-7 sm:gap-y-4 sm:pt-7">
               {benefits.map((b) => (
-                <div key={b} className="flex items-center gap-2 text-sm text-slate-300">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-blue-500/40 bg-blue-500/10 text-xs text-blue-400">
+                <div key={b} className="flex items-center gap-1.5 text-[13px] text-slate-300 sm:gap-2 sm:text-sm">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full border border-blue-500/40 bg-blue-500/10 text-[10px] text-blue-400 sm:h-5 sm:w-5 sm:text-xs">
                     ✓
                   </span>
                   {b}
@@ -80,14 +77,13 @@ export default function Hero({ onStartFree, onHowItWorks, animationKey }: HeroPr
             </div>
           </div>
 
-          {/* DESNA STRANA: pravi prikaz proizvoda */}
+          {/* Pravi prikaz proizvoda */}
           <div className="relative flex items-center justify-center">
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/[0.14] blur-[120px]" />
-
-            <div className="relative z-10 w-full max-w-[300px] sm:max-w-[330px]">
-              <div className="overflow-hidden rounded-[36px] border border-blue-400/25 bg-[#020617] p-2 shadow-[0_0_80px_rgba(37,99,235,0.18)]">
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-[380px] w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/[0.14] blur-[110px]" />
+            <div className="relative z-10 w-full max-w-[230px] sm:max-w-[300px] lg:max-w-[330px]">
+              <div className="overflow-hidden rounded-[30px] border border-blue-400/25 bg-[#020617] p-1.5 shadow-[0_0_80px_rgba(37,99,235,0.18)] sm:rounded-[36px] sm:p-2">
                 <video
-                  className="block aspect-[9/16] w-full rounded-[28px] object-cover"
+                  className="block aspect-[9/16] w-full rounded-[24px] object-cover sm:rounded-[28px]"
                   src="/video/poslo-one-demo.mp4"
                   poster="/video/poslo-one-demo-poster.jpg"
                   autoPlay

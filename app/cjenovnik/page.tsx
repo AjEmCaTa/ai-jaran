@@ -88,29 +88,39 @@ export default function CjenovnikPage() {
                 </div>
 
                 <p className="text-slate-300 text-sm mb-8">
-                  Osnovno prisustvo tvog biznisa u POSLO ONE sistemu,
-                  uz 30 dana besplatnog korištenja.
+                  Klijenti zakazuju sami, a ti samo potvrđuješ termine.
+                  Sve ostalo podesimo mi.
                 </p>
 
                 <ul className="space-y-4 text-sm text-slate-300 mb-8">
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Prisustvo u POSLO ONE katalogu</span>
+                    <span>Tvoja stranica za online zakazivanje</span>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Osnovni profil biznisa</span>
+                    <span>Prisustvo u POSLO ONE katalogu, s logom</span>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Osnovne funkcije rezervacija</span>
+                    <span>Obavijesti o novim terminima i upitima</span>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Povezivanje sa kalendarom</span>
+                    <span>Podsjetnik klijentu 24 h prije termina</span>
+                  </li>
+
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-400">✓</span>
+                    <span>Panel za potvrđivanje i otkazivanje termina</span>
+                  </li>
+
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-400">✓</span>
+                    <span>Usluge, cijene i radno vrijeme postavimo mi</span>
                   </li>
 
                   <li className="flex items-start gap-3">
@@ -120,13 +130,12 @@ export default function CjenovnikPage() {
                 </ul>
               </div>
 
-              <button
-                type="button"
-                onClick={() => openContact("Starter")}
+              <a
+                href="/registracija?paket=starter"
                 className="w-full inline-flex items-center justify-center rounded-xl border border-slate-700 bg-transparent py-4 font-semibold text-white transition-all hover:bg-slate-800 cursor-pointer"
               >
-                Dodaj svoj biznis
-              </button>
+                Probaj 30 dana besplatno
+              </a>
             </div>
 
             {/* PRO */}
@@ -163,22 +172,27 @@ export default function CjenovnikPage() {
 
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Vlastiti poslovni dashboard</span>
+                    <span>Sam mijenjaš usluge, cijene i radno vrijeme</span>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Samostalno uređivanje cijena i usluga</span>
+                    <span>Zaključani dani i godišnji odmor</span>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Upravljanje radnim vremenom i terminima</span>
+                    <span>Molba za Google recenziju nakon termina</span>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">✓</span>
-                    <span>Naprednije upravljanje poslovnim profilom</span>
+                    <span>Automatski poziv klijentu da ponovo zakaže</span>
+                  </li>
+
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-400">✓</span>
+                    <span>QR poster i preporuke</span>
                   </li>
 
                   <li className="flex items-start gap-3">
@@ -193,15 +207,18 @@ export default function CjenovnikPage() {
                 </ul>
               </div>
 
-              <button
-                type="button"
-                onClick={() => openContact("POSLO ONE Pro (50 KM)")}
+              <a
+                href="/registracija?paket=pro"
                 className="w-full inline-flex items-center justify-center rounded-xl bg-blue-600 py-4 font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-500 hover:scale-[1.01] cursor-pointer"
               >
-                Zatraži Pro pristup
-              </button>
+                Probaj Pro 30 dana besplatno
+              </a>
             </div>
           </div>
+
+          <p className="mt-6 text-center text-sm text-slate-400">
+            Prvih 30 dana ne plaćaš ništa i ne treba ti kartica. Nakon toga plaćaš mjesečno, a otkazati možeš bilo kada.
+          </p>
 
           {/* DODATNE OPCIJE */}
           <div className="mt-16 rounded-3xl border border-blue-500/15 bg-[#080d1c]/60 p-8 text-left backdrop-blur-xl">

@@ -26,7 +26,7 @@ export default function RegistracijaPage() {
       const response = await fetch('/api/register-business', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ownerName, businessName, email, password, phone, city, category }),
+        body: JSON.stringify({ ownerName, businessName, email, password, phone, city, category, ref: new URLSearchParams(window.location.search).get('ref') || undefined }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Došlo je do greške prilikom registracije.');

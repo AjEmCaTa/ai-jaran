@@ -21,9 +21,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Registracija trenutno nije dostupna.' }, { status: 503 });
   }
 
-  const parsed = parseRegistration(await request.json().catch(() => null));
+  const rawBody = await request.json().catch(() => null);
+  const parsed = parseRegistration(rawBody);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
   const input = parsed.value;
+  // Ko je preporučio (slug firme iz linka /registracija?ref=...). Samo bezopasni znakovi.
+  const rawRef = rawBody && typeof rawBody === 'object' ? (rawBody as Record<string, unknown>).ref : undefined;
+  const referredBy = typeof rawRef === 'string' && /^[a-z0-9-]{1,80}$/.test(rawRef) ? rawRef : null;
 
   const options = { auth: { autoRefreshToken: false, persistSession: false } };
   const authClient = createClient(supabaseUrl, anonKey, options);
@@ -53,6 +57,7 @@ export async function POST(request: NextRequest) {
           phone: input.phone,
           owner_email: input.email,
           status: 'pending',
+          referred_by: referredBy,
         })
         .select('id')
         .single();

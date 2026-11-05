@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { timingSafeEqual } from 'crypto';
 import { runReservationLifecycle } from '../../../../utils/reservationRules';
+import { processRebookReminders } from '../../../../utils/growthEmails';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +63,15 @@ export async function GET(request: NextRequest) {
       });
       return !result.error;
     });
-    return NextResponse.json({ success: true, ...summary });
+    // Poziv na ponovni termin: greška ovdje ne ruši ostatak crona.
+    let rebook: { rebookSent: number } | { rebookError: true } = { rebookSent: 0 };
+    try {
+      rebook = await processRebookReminders(admin);
+    } catch (e) {
+      console.error('Poziv na ponovni termin nije obrađen:', e);
+      rebook = { rebookError: true };
+    }
+    return NextResponse.json({ success: true, ...summary, ...rebook });
   } catch (error) {
     console.error('Cron rezervacija nije uspio:', error);
     return NextResponse.json({ error: 'Obrada nije uspjela.' }, { status: 500 });

@@ -1,4 +1,5 @@
 "use client";
+import Icon from "./Icon";
 
 import { useState, useEffect } from "react";
 
@@ -61,7 +62,7 @@ export default function InstallButton({ mobileOnly = true }: { mobileOnly?: bool
           onClick={handleClick}
           className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-transparent px-4 text-sm font-semibold text-blue-300 transition-all hover:bg-blue-500/10 active:scale-95"
         >
-          <span aria-hidden="true">📲</span> Instaliraj aplikaciju
+          <Icon name="download" className="h-4 w-4" /> Instaliraj aplikaciju
         </button>
       </div>
 

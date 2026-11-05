@@ -63,6 +63,8 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* Vercel Web Analytics (radi kad je uključen u Vercel projektu) */}
+        <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
       </body>
     </html>
   );

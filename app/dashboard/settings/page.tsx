@@ -5,16 +5,6 @@ import { createClient } from '@supabase/supabase-js';
 import { useBusiness } from '../_lib/business-context';
 import Icon from '../_components/icons';
 import TimeInput24 from '../_components/TimeInput24';
-import {
-  ACCENTS,
-  DEFAULT_THEME,
-  loadTheme,
-  saveTheme,
-  type Density,
-  type Radius,
-  type Surface,
-  type ThemeSettings,
-} from '../_lib/theme';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -26,38 +16,7 @@ const panel =
 const inputClass =
   'mt-2 w-full rounded-[calc(var(--po-radius)*0.6)] border border-gray-700 bg-gray-950 px-3 py-2.5 text-base text-white outline-none transition sm:text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
 
-function Segmented<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div>
-      <p className="mb-2 text-xs font-medium text-slate-300">{label}</p>
-      <div className="flex rounded-full border border-white/10 p-0.5 text-xs">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onChange(option.value)}
-            aria-pressed={value === option.value}
-            className={`flex-1 rounded-full px-3 py-1.5 font-medium transition ${value === option.value ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building'; title: string; text: ReactNode }) {
+function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building' | 'star' | 'calendar'; title: string; text: ReactNode }) {
   return (
     <div className="mb-5 flex items-start gap-3">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
@@ -71,19 +30,32 @@ function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building'; tit
   );
 }
 
+// Raspon datuma (uključivo) kao lista 'YYYY-MM-DD'.
+function dateRange(from: string, to: string) {
+  const out: string[] = [];
+  const start = new Date(`${from}T12:00:00`);
+  const end = new Date(`${(to || from)}T12:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return out;
+  for (const d = new Date(start); d <= end && out.length < 120; d.setDate(d.getDate() + 1)) {
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+  }
+  return out;
+}
+const prettyDate = (key: string) => {
+  const [y, m, d] = key.split('-');
+  return `${d}.${m}.${y}.`;
+};
+
 export default function SettingsPage() {
   const { business: ctxBusiness, ownerName: ctxOwnerName, refresh } = useBusiness();
-  const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
-  const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[] });
+  const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[], google_review_url: '', rebook_weeks: null as number | null, closed_dates: [] as string[] });
+  const [newClosed, setNewClosed] = useState('');
+  const [closedTo, setClosedTo] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    setTheme(loadTheme());
-  }, []);
 
   // Podaci dolaze iz zajedničkog konteksta layouta (bez ponovnog dohvaćanja).
   useEffect(() => {
@@ -98,16 +70,13 @@ export default function SettingsPage() {
       work_start: ctxBusiness.work_start,
       work_end: ctxBusiness.work_end,
       work_days: ctxBusiness.work_days,
+      google_review_url: ctxBusiness.google_review_url,
+      rebook_weeks: ctxBusiness.rebook_weeks,
+      closed_dates: ctxBusiness.closed_dates,
     });
     setOwnerName(ctxOwnerName);
     setLoading(false);
   }, [ctxBusiness, ctxOwnerName]);
-
-  const update = (partial: Partial<ThemeSettings>) => {
-    const next = { ...theme, ...partial };
-    setTheme(next);
-    saveTheme(next);
-  };
 
   const saveBusiness = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -134,6 +103,9 @@ export default function SettingsPage() {
         work_start: business.work_start || null,
         work_end: business.work_end || null,
         work_days: business.work_days,
+        google_review_url: business.google_review_url.trim() || null,
+        rebook_weeks: business.rebook_weeks,
+        closed_dates: business.closed_dates,
       }),
     });
     const result = await response.json();
@@ -148,97 +120,9 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-12">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">Postavke</h2>
-        <p className="mt-1 text-sm text-slate-400">Prilagodite izgled panela i uredite podatke o biznisu.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Podaci o firmi</h2>
+        <p className="mt-1 text-sm text-slate-400">Naziv, kontakt i radno vrijeme koje klijenti vide na vašoj stranici.</p>
       </div>
-
-      {/* IZGLED */}
-      <section className={panel} aria-label="Izgled">
-        <SectionTitle icon="palette" title="Izgled" text="Promjene se primjenjuju odmah i pamte se u ovom pregledniku." />
-
-        <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr]">
-          <div className="space-y-6">
-            <div>
-              <p className="mb-3 text-xs font-medium text-slate-300">Boja panela</p>
-              <div className="flex flex-wrap items-center gap-3">
-                {ACCENTS.map((accent) => {
-                  const selected = theme.accent.toLowerCase() === accent.hex.toLowerCase();
-                  return (
-                    <button
-                      key={accent.hex}
-                      type="button"
-                      onClick={() => update({ accent: accent.hex })}
-                      aria-label={accent.name}
-                      aria-pressed={selected}
-                      title={accent.name}
-                      className={`h-9 w-9 rounded-full transition ${selected ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : 'hover:scale-110'}`}
-                      style={{ backgroundColor: accent.hex }}
-                    />
-                  );
-                })}
-                <label className="flex cursor-pointer items-center gap-2 rounded-full border border-white/10 py-1 pl-1 pr-3 text-xs text-slate-300 hover:border-blue-500/40">
-                  <input
-                    type="color"
-                    value={theme.accent}
-                    onChange={(event) => update({ accent: event.target.value })}
-                    className="h-7 w-7 cursor-pointer rounded-full border-0 bg-transparent p-0"
-                    aria-label="Vlastita boja"
-                  />
-                  Vlastita
-                </label>
-              </div>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Segmented<Surface>
-                label="Pozadina"
-                value={theme.surface}
-                onChange={(surface) => update({ surface })}
-                options={[{ value: 'midnight', label: 'Ponoćna' }, { value: 'graphite', label: 'Grafit' }]}
-              />
-              <Segmented<Density>
-                label="Razmak"
-                value={theme.density}
-                onChange={(density) => update({ density })}
-                options={[{ value: 'compact', label: 'Kompaktno' }, { value: 'comfortable', label: 'Udobno' }]}
-              />
-              <div className="sm:col-span-2">
-                <Segmented<Radius>
-                  label="Zaobljenost kartica"
-                  value={theme.radius}
-                  onChange={(radius) => update({ radius })}
-                  options={[{ value: 'sharp', label: 'Oštro' }, { value: 'soft', label: 'Meko' }, { value: 'round', label: 'Zaobljeno' }]}
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => update(DEFAULT_THEME)}
-              className="text-xs font-medium text-slate-400 underline-offset-4 transition hover:text-white hover:underline"
-            >
-              Vrati početni izgled
-            </button>
-          </div>
-
-          {/* Pregled uživo */}
-          <div
-            className="rounded-[var(--po-radius)] border border-blue-500/20 p-[var(--po-pad)]"
-            style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-blue-500) 22%, var(--color-gray-900)), var(--color-gray-900) 70%)' }}
-            aria-hidden="true"
-          >
-            <p className="text-xs text-slate-400">Pregled</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums text-white">12</p>
-            <p className="text-xs text-slate-400">rezervacija ovaj mjesec</p>
-            <div className="mt-4 flex h-16 items-end gap-1.5">
-              {[35, 55, 40, 75, 60, 90, 70].map((h, i) => (
-                <div key={i} className={`flex-1 rounded-t-md ${i === 6 ? 'bg-gradient-to-t from-blue-600 to-blue-400' : 'bg-blue-500/30'}`} style={{ height: `${h}%` }} />
-              ))}
-            </div>
-            <div className="mt-4 inline-flex rounded-[calc(var(--po-radius)*0.7)] bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white">Dugme</div>
-          </div>
-        </div>
-      </section>
 
       {/* PODACI O BIZNISU */}
       <section className={panel} aria-label="Podaci o biznisu">
@@ -308,6 +192,88 @@ export default function SettingsPage() {
               ))}
             </div>
           </fieldset>
+          <div className="space-y-5 border-t border-white/[0.06] pt-6 sm:col-span-2">
+            <SectionTitle icon="star" title="Više klijenata i recenzija" text="Automatski mailovi koji vam vraćaju klijente i donose recenzije." />
+            <label className="block text-xs font-medium text-slate-300">
+              Link za Google recenzije
+              <input
+                type="url"
+                inputMode="url"
+                placeholder="https://g.page/r/..."
+                maxLength={500}
+                value={business.google_review_url}
+                onChange={(event) => setBusiness((current) => ({ ...current, google_review_url: event.target.value }))}
+                className={inputClass}
+              />
+              <span className="mt-1.5 block text-[11px] font-normal leading-relaxed text-slate-500">
+                Kad kliknete „Završi” na terminu, klijent dobije mail s molbom za recenziju. Link nađete u Google Business profilu pod „Zatražite recenzije”. Prazno = isključeno.
+              </span>
+            </label>
+            <label className="block text-xs font-medium text-slate-300">
+              Poziv klijentu da ponovo zakaže
+              <select
+                value={business.rebook_weeks ?? ''}
+                onChange={(event) => setBusiness((current) => ({ ...current, rebook_weeks: event.target.value ? Number(event.target.value) : null }))}
+                className={inputClass}
+              >
+                <option value="">Isključeno</option>
+                {[2, 3, 4, 5, 6, 8, 10, 12, 26].map((w) => (
+                  <option key={w} value={w}>{`${w} sedmica nakon posjete`}</option>
+                ))}
+              </select>
+              <span className="mt-1.5 block text-[11px] font-normal leading-relaxed text-slate-500">
+                Ako klijent od tada nije ništa zakazao, dobije mail „Vrijeme je za novi termin?” s linkom vaše stranice.
+              </span>
+            </label>
+          </div>
+
+          <div className="space-y-4 border-t border-white/[0.06] pt-6 sm:col-span-2">
+            <SectionTitle icon="calendar" title="Pauza i godišnji odmor" text="Zaključani dani se klijentima ne nude za zakazivanje." />
+            <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <label className="block text-xs font-medium text-slate-300">
+                Od
+                <input type="date" value={newClosed} onChange={(e) => setNewClosed(e.target.value)} className={inputClass} />
+              </label>
+              <label className="block text-xs font-medium text-slate-300">
+                Do (nije obavezno)
+                <input type="date" value={closedTo} min={newClosed || undefined} onChange={(e) => setClosedTo(e.target.value)} className={inputClass} />
+              </label>
+              <button
+                type="button"
+                disabled={!newClosed}
+                onClick={() => {
+                  const add = dateRange(newClosed, closedTo);
+                  setBusiness((current) => ({ ...current, closed_dates: [...new Set([...current.closed_dates, ...add])].sort() }));
+                  setNewClosed('');
+                  setClosedTo('');
+                }}
+                className="min-h-11 rounded-[calc(var(--po-radius)*0.6)] border border-blue-500/40 px-4 text-sm font-semibold text-blue-300 transition hover:bg-blue-500/10 disabled:opacity-40"
+              >
+                Zaključaj
+              </button>
+            </div>
+            {business.closed_dates.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {business.closed_dates.map((day) => (
+                  <span key={day} className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 py-1 pl-3 pr-1 text-xs font-medium text-amber-200">
+                    {prettyDate(day)}
+                    <button
+                      type="button"
+                      aria-label={`Otključaj ${prettyDate(day)}`}
+                      onClick={() => setBusiness((current) => ({ ...current, closed_dates: current.closed_dates.filter((d) => d !== day) }))}
+                      className="flex h-5 w-5 items-center justify-center rounded-full text-amber-300 hover:bg-amber-500/20"
+                    >
+                      <Icon name="close" className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">Nema zaključanih dana.</p>
+            )}
+            <p className="text-[11px] text-slate-500">Promjene se primjenjuju kad kliknete „Sačuvaj podatke”.</p>
+          </div>
+
           <div className="flex items-center gap-3 sm:col-span-2">
             <button
               type="submit"

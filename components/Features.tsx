@@ -1,9 +1,10 @@
+import Icon, { type IconName } from "./Icon";
 interface FeatureItem {
   title: string;
   desc: string;
 }
 
-const icons = ["🔗", "📅", "🔔", "⏰"];
+const icons: IconName[] = ["link", "calendar", "bell", "clock"];
 
 const items: FeatureItem[] = [
   {
@@ -46,8 +47,8 @@ export default function Features() {
               key={index}
               className="group relative overflow-hidden rounded-[24px] border border-blue-500/15 bg-[#080d1c]/80 p-4 sm:p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-blue-500/40 hover:bg-[#0b1329] hover:shadow-[0_10px_30px_rgba(37,99,235,0.1)] flex flex-row items-start sm:items-center gap-4 sm:gap-6"
             >
-              <div className="w-11 h-11 sm:w-16 sm:h-16 flex-shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/25 text-xl sm:text-3xl group-hover:scale-110 transition-transform duration-300 shadow-inner">
-                {icons[index]}
+              <div className="w-11 h-11 sm:w-16 sm:h-16 flex-shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/25 text-blue-300 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                <Icon name={icons[index]} className="h-5 w-5 sm:h-7 sm:w-7" />
               </div>
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">

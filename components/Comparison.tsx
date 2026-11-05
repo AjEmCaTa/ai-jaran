@@ -1,9 +1,10 @@
+import Icon, { type IconName } from "./Icon";
 interface AdvantageItem {
   title: string;
   desc: string;
 }
 
-const icons = ["📞", "✅", "📱", "🤝", "🛡️", "💶"];
+const icons: IconName[] = ["phone", "check", "smartphone", "handshake", "shield", "banknote"];
 
 const items: AdvantageItem[] = [
   {
@@ -57,8 +58,8 @@ export default function Comparison() {
               className="group relative overflow-hidden rounded-[24px] border border-blue-500/15 bg-[#080d1c]/80 p-4 sm:p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-blue-500/40 hover:bg-[#0b1329] hover:shadow-[0_10px_30px_rgba(37,99,235,0.1)] flex flex-col justify-between"
             >
               <div className="flex flex-row items-start gap-4 sm:block">
-                <div className="w-11 h-11 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/25 sm:mb-6 text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-300 shadow-inner">
-                  {icons[index]}
+                <div className="w-11 h-11 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/25 sm:mb-6 text-blue-300 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                  <Icon name={icons[index]} className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-[17px] leading-snug sm:text-2xl font-bold text-white mb-1 sm:mb-3">{item.title}</h3>

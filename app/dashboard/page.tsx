@@ -95,7 +95,7 @@ function PanelTitle({ icon, title, hint }: { icon: IconName; title: string; hint
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
           <Icon name={icon} className="h-4 w-4" />
         </span>
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        <h3 className="font-display text-[15px] font-semibold tracking-tight text-white">{title}</h3>
       </div>
       {hint}
     </div>
@@ -117,7 +117,7 @@ function Stat({ label, value, loading, tone = 'text-white', trend }: { label: st
   return (
     <div className="min-w-0">
       <p className="text-xs text-slate-400">{label}</p>
-      <p className={`mt-1 break-words text-2xl font-bold tabular-nums ${tone}`}>
+      <p className={`mt-1 break-words font-display text-2xl font-bold tabular-nums ${tone}`}>
         {loading ? <Skeleton /> : value}
         {!loading && trend !== undefined && <Trend value={trend} />}
       </p>
@@ -163,7 +163,7 @@ function ReservationRow({
     <li className="rounded-[calc(var(--po-radius)*0.7)] bg-white/[0.03] p-3">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-blue-500/10 text-blue-300">
-          <span className="text-base font-bold leading-none">{d.getDate()}</span>
+          <span className="font-display text-base font-bold leading-none">{d.getDate()}</span>
           <span className="mt-0.5 text-[10px]">{monthShort(d)}</span>
         </div>
         <div className="min-w-0 flex-1">
@@ -189,6 +189,11 @@ function ReservationRow({
             {wa && (
               <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer" className={`${actionBtn} border-white/10 text-slate-200 hover:border-emerald-500/40`}>
                 <Icon name="message" className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
+              </a>
+            )}
+            {wa && (
+              <a href={`viber://chat?number=%2B${wa}`} className={`${actionBtn} border-white/10 text-slate-200 hover:border-violet-500/40`}>
+                <Icon name="message" className="h-3.5 w-3.5 text-violet-400" /> Viber
               </a>
             )}
           </>
@@ -363,6 +368,9 @@ export default function DashboardPage() {
 
     return {
       today: todayItems.length,
+      todayList: todayItems
+        .filter((res) => !isCancelledStatus(res.status) && res.reservation_date && !Number.isNaN(new Date(res.reservation_date).getTime()))
+        .sort((a, b) => new Date(a.reservation_date as string).getTime() - new Date(b.reservation_date as string).getTime()),
       month: monthItems.length,
       completed: reservations.filter((res) => isCompletedStatus(res.status)).length,
       cancelled,
@@ -407,7 +415,7 @@ export default function DashboardPage() {
   const quickActions: { href: string; label: string; icon: IconName }[] = [
     { href: '/dashboard/services', label: 'Usluge', icon: 'tag' },
     { href: '/dashboard/customers', label: 'Klijenti', icon: 'users' },
-    { href: '/dashboard/settings', label: 'Izgled', icon: 'palette' },
+    { href: '/dashboard/qr-poster', label: 'QR poster', icon: 'qr' },
   ];
 
   return (
@@ -437,7 +445,7 @@ export default function DashboardPage() {
             <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-4">
               <div>
                 <p className="text-xs text-slate-400">Rezervacija danas</p>
-                <p className="mt-1 text-5xl font-bold tabular-nums text-white">{loading ? <Skeleton /> : data.today}</p>
+                <p className="mt-1 font-display text-5xl font-bold tabular-nums text-white">{loading ? <Skeleton /> : data.today}</p>
               </div>
               <div className="min-w-0 max-w-sm border-l border-white/10 pl-6">
                 <p className="text-xs text-slate-400">Sljedeći termin</p>
@@ -479,6 +487,55 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* MOJ DAN */}
+      <section className={panel} aria-label="Moj dan">
+        <PanelTitle
+          icon="clock"
+          title="Moj dan"
+          hint={<span className="text-xs capitalize text-slate-400">{todayLabel}</span>}
+        />
+        {loading ? (
+          <div className="space-y-3">{[0, 1].map((i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-white/5" />)}</div>
+        ) : data.todayList.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-white/10 px-4 py-8 text-center">
+            <p className="text-sm font-medium text-slate-300">Danas nema zakazanih termina</p>
+            <p className="mt-1 text-xs text-slate-500">Podijelite link ili QR poster da klijenti zakažu sami.</p>
+          </div>
+        ) : (
+          <ol className="relative">
+            {data.todayList.map((res, index) => {
+              const d = new Date(res.reservation_date as string);
+              const past = d.getTime() < Date.now();
+              const last = index === data.todayList.length - 1;
+              return (
+                <li key={res.id} className="relative flex gap-4 pb-4 last:pb-0">
+                  <div className="w-12 shrink-0 pt-0.5 text-right font-display text-sm font-semibold tabular-nums text-white">{timeOf(d)}</div>
+                  <div className="relative flex flex-col items-center">
+                    <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${past ? 'bg-slate-600' : 'bg-blue-400 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]'}`} />
+                    {!last && <span className="mt-1 w-px flex-1 bg-white/10" />}
+                  </div>
+                  <div className={`min-w-0 flex-1 rounded-[calc(var(--po-radius)*0.7)] bg-white/[0.03] px-3 py-2.5 ${past ? 'opacity-60' : ''}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="truncate text-sm font-semibold text-white">{res.customer_name || 'Klijent'}</p>
+                      <StatusBadge status={res.status || 'Na čekanju'} />
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-slate-400">
+                      {res.service_name || 'Usluga'}
+                      {res.customer_phone && (
+                        <>
+                          {' · '}
+                          <a href={`tel:${res.customer_phone.replace(/\s/g, '')}`} className="text-blue-400 hover:text-blue-300">{res.customer_phone}</a>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </section>
 
       {/* LISTA ZA POČETAK + LINK */}

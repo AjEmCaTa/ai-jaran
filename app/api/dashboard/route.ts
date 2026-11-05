@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getOwnerContext } from '../../../utils/ownerAuth';
+import { safeHttpUrl } from '../../../utils/growthEmails';
 
 const RESERVATION_FIELDS = 'id, business_id, user_id, customer_name, customer_phone, customer_email, service_name, reservation_date, status, created_at, price, duration_minutes';
 
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     const lightweight = request.nextUrl.searchParams.get('scope') === 'business';
     const [businessResult, reservations, servicesResult, profileResult] = await Promise.all([
       admin.from('businesses')
-        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days')
+        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates')
         .eq('id', businessId)
         .single(),
       lightweight ? Promise.resolve([] as Record<string, unknown>[]) : loadReservations(admin, businessId),
@@ -60,7 +61,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const allowedFields = ['name', 'category', 'city', 'address', 'phone', 'owner_email', 'work_start', 'work_end', 'work_days'];
+    const allowedFields = ['name', 'category', 'city', 'address', 'phone', 'owner_email', 'work_start', 'work_end', 'work_days', 'google_review_url', 'rebook_weeks', 'closed_dates'];
     const changes = Object.fromEntries(
       Object.entries(body).filter(([key]) => allowedFields.includes(key)),
     );
@@ -80,6 +81,27 @@ export async function PATCH(request: NextRequest) {
       if (field in changes && changes[field] !== null && typeof changes[field] !== 'string') {
         return NextResponse.json({ error: 'Podaci biznisa nisu važeći.' }, { status: 400 });
       }
+    }
+
+    if ('google_review_url' in changes && changes.google_review_url !== null) {
+      const raw = typeof changes.google_review_url === 'string' ? changes.google_review_url.trim() : '';
+      if (raw) {
+        const safe = safeHttpUrl(raw);
+        if (!safe || raw.length > 500) return NextResponse.json({ error: 'Link za Google recenzije nije ispravan.' }, { status: 400 });
+        changes.google_review_url = safe;
+      } else changes.google_review_url = null;
+    }
+    if ('rebook_weeks' in changes && changes.rebook_weeks !== null) {
+      const weeks = Number(changes.rebook_weeks);
+      if (!Number.isInteger(weeks) || weeks < 1 || weeks > 52) return NextResponse.json({ error: 'Broj sedmica nije ispravan.' }, { status: 400 });
+      changes.rebook_weeks = weeks;
+    }
+    if ('closed_dates' in changes) {
+      const list = changes.closed_dates;
+      if (!Array.isArray(list) || list.length > 366 || list.some((d) => typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d))) {
+        return NextResponse.json({ error: 'Zaključani dani nisu ispravni.' }, { status: 400 });
+      }
+      changes.closed_dates = [...new Set(list as string[])].sort();
     }
 
     const limits: Record<string, number> = { name: 150, category: 150, city: 100, address: 200, phone: 40, owner_email: 120 };

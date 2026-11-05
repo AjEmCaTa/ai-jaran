@@ -91,7 +91,7 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
                         </span>
                         <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
                           <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />
-                          Online zakazivanje
+                          Online
                         </span>
                       </div>
                       <div className="flex items-center gap-4">
@@ -108,7 +108,7 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
                       </div>
                     </div>
                     <span className="mt-6 block w-full rounded-xl bg-blue-600 py-3 text-center text-sm font-bold text-white transition group-hover:bg-blue-500">
-                      Pogledaj usluge i zakaži termin
+                      Pogledaj ponudu
                     </span>
                   </Link>
                 ))}

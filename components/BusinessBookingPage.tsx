@@ -9,6 +9,9 @@ import Footer from './Footer';
 import Background from './Background';
 import InquiryForm from './InquiryForm';
 import Icon from './Icon';
+import PartnerLogo from './PartnerLogo';
+import { categoryLabel } from '../utils/catalog';
+import { PARTNER_LOGOS } from '../utils/partnerLogos';
 
 interface ServicePackage {
   id: string;
@@ -48,6 +51,7 @@ interface BusinessProfile {
   work_end: string;
   work_days: string[];
   closed_dates: string[];
+  logo_url: string;
 }
 
 const supabase = createClient(
@@ -118,7 +122,7 @@ const LEGACY_PACKAGES: ServicePackage[] = [
 
 const EMPTY_PROFILE: BusinessProfile = {
   name: '', category: '', city: '', address: '', phone: '',
-  work_start: '', work_end: '', work_days: [], closed_dates: [],
+  work_start: '', work_end: '', work_days: [], closed_dates: [], logo_url: '',
 };
 
 export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { slug: string; backHref?: string }) {
@@ -211,6 +215,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           work_end: String(profile.work_end || '').slice(0, 5),
           work_days: Array.isArray(profile.work_days) ? profile.work_days : [],
           closed_dates: Array.isArray(profile.closed_dates) ? profile.closed_dates : [],
+          logo_url: typeof profile.logo_url === 'string' ? profile.logo_url : '',
         });
 
         const services: {
@@ -466,9 +471,19 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
                 Certificirani partner
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
-                {businessProfile.name}
-              </h1>
+              <div className="flex items-center gap-4">
+                {(businessProfile.logo_url || PARTNER_LOGOS[slug]) && (
+                  <PartnerLogo slug={slug} name={businessProfile.name} src={businessProfile.logo_url} className="h-16 w-16 md:h-20 md:w-20" />
+                )}
+                <div className="min-w-0">
+                  <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                    {businessProfile.name}
+                  </h1>
+                  {businessProfile.category && (
+                    <p className="mt-1 text-sm font-medium text-blue-300/90">{categoryLabel(businessProfile.category)}</p>
+                  )}
+                </div>
+              </div>
               <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-gray-300 pt-1">
                 {(businessProfile.address || businessProfile.city) && (
                   <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">

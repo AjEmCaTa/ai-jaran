@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useBusiness } from '../_lib/business-context';
 import Icon from '../_components/icons';
+import { categoryLabel } from '../../../utils/catalog';
 
 const LINK_KEY = 'poslo-booking-link';
 
@@ -63,8 +64,12 @@ export default function QrPosterPage() {
             }}
           >
             <div className="w-full">
+              {business.logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={business.logo_url} alt="" className="mx-auto mb-[5%] h-[clamp(44px,12vw,72px)] w-[clamp(44px,12vw,72px)] rounded-full object-contain" style={{ background: '#fff' }} />
+              )}
               <p className="text-[clamp(9px,2.2vw,12px)] font-bold uppercase tracking-[0.3em]" style={{ color: dark ? '#a9bcff' : '#2563eb' }}>
-                {business.category || 'Online rezervacije'}
+                {categoryLabel(business.category) || 'Online rezervacije'}
               </p>
               <p className="mt-[4%] break-words font-display text-[clamp(26px,7vw,44px)] font-bold leading-[1.02] tracking-tight">
                 {business.name || 'Vaša firma'}

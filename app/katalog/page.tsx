@@ -1,70 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Background from '../../components/Background';
 import ContactModal from '../../components/ContactModal';
 import PrivacyModal from '../../components/PrivacyModal';
-import Icon, { type IconName } from '../../components/Icon';
+import Icon from '../../components/Icon';
+import PartnerLogo from '../../components/PartnerLogo';
+import { CATALOG_CATEGORIES, categoryBySlug } from '../../utils/catalog';
 
-const businessCategories = [
-  {
-    id: "dubinsko",
-    title: "Dubinsko čišćenje i Autopraonice",
-    description: "Sve za vozila i namještaj – dubinsko pranje, autopraonice, detailing i keramička zaštita uz automatsko vođenje termina.",
-    icon: "car" as IconName,
-    count: "Mreža partnera",
-    image: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=800&q=80",
-    slug: "dubinsko-ciscenje",
-    city: "Mostar"
-  },
-  {
-    id: "solarni",
-    title: "Solarni sistemi i elektroinstalacije",
-    description: "Solarne elektrane, elektroinstalacije i energetska rješenja – pregled usluga i slanje upita za procjenu na terenu.",
-    icon: "sun" as IconName,
-    count: "Energetika i instalacije",
-    image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80",
-    slug: "solarni-sistemi",
-    city: "Mostar"
-  },
-  {
-    id: "apartmani",
-    title: "Vile i Apartmani",
-    description: "Automatsko preuzimanje rezervacija noćenja, komunikacija sa gostima i upiti preko AI asistenta.",
-    icon: "home" as IconName,
-    count: "Turistički smještaj",
-    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
-    slug: "vile-apartmani",
-    city: "Svi gradovi"
-  },
-  {
-    id: "stanovi",
-    title: "Agencije za čišćenje stanova",
-    description: "Organizacija i raspored čišćenja stambenih i poslovnih objekata, redovno ili generalno čišćenje.",
-    icon: "sparkles" as IconName,
-    count: "Usluge čišćenja",
-    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
-    slug: "agencije-za-ciscenje",
-    city: "Svi gradovi"
-  },
-  {
-    id: "beauty",
-    title: "Frizeri i Beauty Saloni",
-    description: "Zakazivanje termina za šišanje, njegu lica, tretmane i kozmetičke usluge bez gužve na telefonu.",
-    icon: "scissors" as IconName,
-    count: "Beauty sektor",
-    image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
-    slug: "beauty-saloni",
-    city: "Svi gradovi"
-  }
-];
-
-const cities = ["Svi gradovi", "Mostar", "Sarajevo", "Banja Luka", "Tuzla", "Zenica"];
+type CatalogBusiness = { slug: string; name: string; city: string; category: string; logo_url: string };
 
 export default function KatalogPage() {
   const [selectedCity, setSelectedCity] = useState("Svi gradovi");
+  const [businesses, setBusinesses] = useState<CatalogBusiness[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/catalog")
+      .then((r) => (r.ok ? r.json() : { businesses: [] }))
+      .then((json) => setBusinesses(Array.isArray(json.businesses) ? json.businesses : []))
+      .catch(() => setBusinesses([]))
+      .finally(() => setLoaded(true));
+  }, []);
+
+  const cities = useMemo(
+    () => ["Svi gradovi", ...Array.from(new Set(businesses.map((b) => b.city.trim()).filter(Boolean))).sort((x, y) => x.localeCompare(y, "bs"))],
+    [businesses]
+  );
+  const visible = useMemo(
+    () => (selectedCity === "Svi gradovi" ? businesses : businesses.filter((b) => b.city.trim() === selectedCity)),
+    [businesses, selectedCity]
+  );
+  const categories = useMemo(
+    () =>
+      CATALOG_CATEGORIES.map((c) => ({ ...c, count: visible.filter((b) => b.category === c.slug).length }))
+        .filter((c) => c.slug !== "ostale-usluge" || c.count > 0)
+        .sort((x, y) => y.count - x.count),
+    [visible]
+  );
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -117,10 +92,10 @@ export default function KatalogPage() {
 
         {/* Kartice */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {businessCategories.map(cat => (
+          {categories.map(cat => (
             <a
-              key={cat.id}
-              href={`/katalog/${cat.slug}`}
+              key={cat.slug}
+              href={`/katalog/${cat.slug}${selectedCity !== 'Svi gradovi' ? `?grad=${encodeURIComponent(selectedCity)}` : ''}`}
               className="katalog-kartica rounded-3xl overflow-hidden flex flex-col justify-between cursor-pointer shadow-2xl transition-all duration-300 hover:border-slate-700 bg-gray-900/40 border border-slate-800/80 backdrop-blur-md"
             >
               <div>
@@ -135,7 +110,7 @@ export default function KatalogPage() {
 
                   <div className="absolute top-3 left-3 bg-[#030712]/90 px-3 py-1 rounded-full text-xs font-medium text-slate-300 border border-slate-800/80 flex items-center gap-1.5 shadow-md">
                     <Icon name={cat.icon} className="h-4 w-4" />
-                    <span>{cat.count}</span>
+                    <span>{!loaded ? '...' : cat.count === 0 ? 'Uskoro' : cat.count === 1 ? '1 firma' : `${cat.count} firmi`}</span>
                   </div>
                 </div>
 
@@ -162,6 +137,34 @@ export default function KatalogPage() {
             </a>
           ))}
         </div>
+
+        {/* Sve firme */}
+        {visible.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold tracking-tight text-white">
+              Firme{selectedCity !== "Svi gradovi" ? ` u gradu ${selectedCity}` : ""}
+            </h2>
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {visible.map((b) => (
+                <a
+                  key={b.slug}
+                  href={`/katalog/${b.slug}`}
+                  className="group flex items-center gap-4 rounded-2xl border border-slate-800/80 bg-gray-900/40 p-4 transition hover:border-blue-500/50"
+                >
+                  <PartnerLogo slug={b.slug} name={b.name} src={b.logo_url} className="h-14 w-14" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold text-white group-hover:text-blue-300">{b.name}</p>
+                    <p className="truncate text-xs text-slate-400">
+                      {categoryBySlug(b.category)?.short || "Usluge"}
+                      {b.city ? ` · ${b.city}` : ""}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-blue-300">Zakaži →</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Sekcija za prijavu biznisa */}
         <div className="mt-16 bg-gray-900/40 border border-slate-800/80 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden shadow-2xl backdrop-blur-md">

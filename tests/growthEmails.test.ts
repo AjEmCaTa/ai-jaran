@@ -67,3 +67,20 @@ test('poziv na povratak: šalje samo starim završenim bez novijeg termina, jedn
   await processRebookReminders(admin, now, 20, async (to) => { again.push(to); return true; });
   assert.deepEqual(again, []);
 });
+
+import { categoryOf } from '../utils/catalog.ts';
+import { canEditCatalogData, normalizePlan } from '../utils/plan.ts';
+
+test('kategorija iz upisane djelatnosti', () => {
+  assert.equal(categoryOf('dubinsko-ciscenje'), 'dubinsko-ciscenje');
+  assert.equal(categoryOf('Solarni sistemi i elektroinstalacije'), 'solarni-sistemi');
+  assert.equal(categoryOf('frizerski salon'), 'beauty-saloni');
+  assert.equal(categoryOf('Vulkanizer'), 'ostale-usluge');
+  assert.equal(categoryOf(''), 'ostale-usluge');
+});
+
+test('paketi: starter ne uređuje, pro i nepoznato uređuju', () => {
+  assert.equal(canEditCatalogData('starter'), false);
+  assert.equal(canEditCatalogData('pro'), true);
+  assert.equal(normalizePlan(null), 'pro');
+});

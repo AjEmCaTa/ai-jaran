@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import { useBusiness } from '../_lib/business-context';
 import Icon from '../_components/icons';
 import TimeInput24 from '../_components/TimeInput24';
+import PartnerLogo from '../../../components/PartnerLogo';
+import { CATALOG_CATEGORIES, categoryOf } from '../../../utils/catalog';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -51,6 +53,41 @@ export default function SettingsPage() {
   const [business, setBusiness] = useState({ id: '', name: '', city: '', category: '', phone: '', owner_email: '', address: '', work_start: '', work_end: '', work_days: [] as string[], google_review_url: '', rebook_weeks: null as number | null, closed_dates: [] as string[] });
   const [newClosed, setNewClosed] = useState('');
   const [closedTo, setClosedTo] = useState('');
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoMessage, setLogoMessage] = useState('');
+  const locked = ctxBusiness.plan === 'starter';
+
+  const changeLogo = async (file: File | null) => {
+    setLogoMessage('');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setLogoMessage('Prijavite se ponovo.');
+      return;
+    }
+    if (file && file.size > 1024 * 1024) {
+      setLogoMessage('Slika je veća od 1 MB.');
+      return;
+    }
+    setLogoBusy(true);
+    try {
+      let response: Response;
+      if (file) {
+        const form = new FormData();
+        form.append('logo', file);
+        response = await fetch('/api/dashboard/logo', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` }, body: form });
+      } else {
+        response = await fetch('/api/dashboard/logo', { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+      }
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) setLogoMessage(result.error || 'Logo nije sačuvan.');
+      else {
+        setLogoMessage(file ? 'Logo je sačuvan.' : 'Logo je uklonjen.');
+        await refresh();
+      }
+    } finally {
+      setLogoBusy(false);
+    }
+  };
   const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -96,7 +133,7 @@ export default function SettingsPage() {
         name: business.name.trim(),
         owner_name: ownerName.trim() || undefined,
         city: business.city.trim() || null,
-        category: business.category.trim() || null,
+        category: categoryOf(business.category),
         phone: business.phone.trim() || null,
         owner_email: business.owner_email.trim() || null,
         address: business.address.trim() || null,
@@ -130,7 +167,55 @@ export default function SettingsPage() {
 
         {errorMessage && <p role="alert" className="mb-4 rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200">{errorMessage}</p>}
 
+        <div className="mb-6 flex flex-wrap items-center gap-4 rounded-[calc(var(--po-radius)*0.7)] bg-white/[0.03] p-4">
+          <PartnerLogo slug={ctxBusiness.slug} name={business.name || 'Firma'} src={ctxBusiness.logo_url} className="h-16 w-16" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-white">Logo firme</p>
+            <p className="mt-0.5 text-xs text-slate-400">Prikazuje se na vašoj stranici, u katalogu i na QR posteru. PNG, JPG ili WEBP, do 1 MB, najbolje kvadratni.</p>
+            {logoMessage && <p role="status" className="mt-1.5 text-xs text-blue-300">{logoMessage}</p>}
+          </div>
+          <div className="flex gap-2">
+            <label className={`inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg bg-blue-500 px-4 text-xs font-semibold text-white transition hover:bg-blue-400 ${logoBusy ? 'pointer-events-none opacity-50' : ''}`}>
+              <Icon name="download" className="h-4 w-4 rotate-180" />
+              {logoBusy ? 'Čuvanje...' : ctxBusiness.logo_url ? 'Promijeni' : 'Dodaj logo'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] || null;
+                  e.target.value = '';
+                  if (f) void changeLogo(f);
+                }}
+              />
+            </label>
+            {ctxBusiness.logo_url && (
+              <button type="button" disabled={logoBusy} onClick={() => void changeLogo(null)} className="min-h-10 rounded-lg border border-white/10 px-3 text-xs font-semibold text-slate-300 transition hover:border-red-500/40 hover:text-red-300 disabled:opacity-50">
+                Ukloni
+              </button>
+            )}
+          </div>
+        </div>
+
+        {locked && (
+          <p className="mb-5 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
+            Vaš paket je Starter: radno vrijeme, radne dane i zaključane dane za vas mijenja POSLO ONE. Javite nam izmjenu ili pređite na Pro paket da ih uređujete sami.
+          </p>
+        )}
+
         <form onSubmit={saveBusiness} className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-xs font-medium text-slate-300">
+            Djelatnost (kategorija u katalogu)
+            <select
+              value={CATALOG_CATEGORIES.some((c) => c.slug === business.category) ? business.category : categoryOf(business.category)}
+              onChange={(event) => setBusiness((current) => ({ ...current, category: event.target.value }))}
+              className={inputClass}
+            >
+              {CATALOG_CATEGORIES.map((c) => (
+                <option key={c.slug} value={c.slug}>{c.short}</option>
+              ))}
+            </select>
+          </label>
           <label className="block text-xs font-medium text-slate-300">
             Ime i prezime vlasnika
             <input
@@ -144,7 +229,6 @@ export default function SettingsPage() {
           </label>
           {([
             ['name', 'Naziv biznisa', 'text'],
-            ['category', 'Djelatnost', 'text'],
             ['city', 'Grad / lokacija', 'text'],
             ['phone', 'Telefon', 'tel'],
             ['owner_email', 'Email biznisa', 'email'],
@@ -161,6 +245,7 @@ export default function SettingsPage() {
               />
             </label>
           ))}
+          <fieldset disabled={locked} className={`grid gap-4 sm:col-span-2 sm:grid-cols-2 ${locked ? 'opacity-60' : ''}`}>
           <TimeInput24
             label="Početak radnog vremena"
             value={business.work_start.slice(0, 5)}
@@ -191,6 +276,7 @@ export default function SettingsPage() {
                 </label>
               ))}
             </div>
+          </fieldset>
           </fieldset>
           <div className="space-y-5 border-t border-white/[0.06] pt-6 sm:col-span-2">
             <SectionTitle icon="star" title="Više klijenata i recenzija" text="Automatski mailovi koji vam vraćaju klijente i donose recenzije." />
@@ -227,7 +313,7 @@ export default function SettingsPage() {
             </label>
           </div>
 
-          <div className="space-y-4 border-t border-white/[0.06] pt-6 sm:col-span-2">
+          <fieldset disabled={locked} className={`space-y-4 border-t border-white/[0.06] pt-6 sm:col-span-2 ${locked ? 'opacity-60' : ''}`}>
             <SectionTitle icon="calendar" title="Pauza i godišnji odmor" text="Zaključani dani se klijentima ne nude za zakazivanje." />
             <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
               <label className="block text-xs font-medium text-slate-300">
@@ -272,7 +358,7 @@ export default function SettingsPage() {
               <p className="text-xs text-slate-500">Nema zaključanih dana.</p>
             )}
             <p className="text-[11px] text-slate-500">Promjene se primjenjuju kad kliknete „Sačuvaj podatke”.</p>
-          </div>
+          </fieldset>
 
           <div className="flex items-center gap-3 sm:col-span-2">
             <button

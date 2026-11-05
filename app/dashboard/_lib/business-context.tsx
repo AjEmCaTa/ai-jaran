@@ -17,6 +17,8 @@ export type DashboardBusiness = {
   google_review_url: string;
   rebook_weeks: number | null;
   closed_dates: string[];
+  logo_url: string;
+  plan: "starter" | "pro";
 };
 
 export type BusinessContextValue = {
@@ -51,5 +53,7 @@ export function normalizeBusiness(b: Record<string, unknown> | null | undefined)
     google_review_url: str(b?.google_review_url),
     rebook_weeks: typeof b?.rebook_weeks === "number" ? b.rebook_weeks : null,
     closed_dates: Array.isArray(b?.closed_dates) ? (b!.closed_dates as unknown[]).filter((d): d is string => typeof d === "string") : [],
+    logo_url: str(b?.logo_url),
+    plan: b?.plan === "starter" ? "starter" : "pro",
   };
 }

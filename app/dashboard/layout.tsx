@@ -195,8 +195,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const profileBlock = (
     <div className="flex items-center gap-3 overflow-hidden">
-      {PARTNER_LOGOS[business.slug] ? (
-        <PartnerLogo slug={business.slug} name={business.name} className="h-11 w-11" />
+      {business.logo_url || PARTNER_LOGOS[business.slug] ? (
+        <PartnerLogo slug={business.slug} name={business.name} src={business.logo_url} className="h-11 w-11" />
       ) : (
       <div
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[calc(var(--po-radius)*0.8)] text-sm font-bold text-white shadow-lg"

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildSlug, parseRegistration } from '../../../utils/registration';
 
 // Serverska registracija biznisa. Zamjenjuje direktan upis iz browsera:
-// - status je UVIJEK 'pending' (aktivira ga administrator),
+// - firma je aktivna odmah (30 dana besplatno, Pro); administrator je može isključiti u master panelu,
 // - profil se veže samo za biznis koji je upravo kreiran ovdje (klijent business_id ne šalje),
 // - nalog koji već postoji nikad ne dobija novi profil/biznis.
 export async function POST(request: NextRequest) {
@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
           city: input.city,
           phone: input.phone,
           owner_email: input.email,
-          status: 'pending',
+          status: 'active',
+          plan: 'pro',
           referred_by: referredBy,
         })
         .select('id')
@@ -74,6 +75,18 @@ export async function POST(request: NextRequest) {
       must_change_password: false,
     });
     if (profileError) throw profileError;
+
+    // Obavijest vlasniku platforme (Telegram), ne blokira registraciju.
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (token && chatId) {
+      const text = `Nova firma na POSLO ONE\n${input.businessName} (${input.city || '-'})\n${input.email}${input.phone ? ` · ${input.phone}` : ''}${referredBy ? `\nPreporuka: ${referredBy}` : ''}`;
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text }),
+      }).catch(() => undefined);
+    }
 
     return NextResponse.json({ success: true, needsEmailConfirmation: !signUp.data.session });
   } catch (error) {

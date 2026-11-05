@@ -218,6 +218,13 @@ export default function DashboardPage() {
   const [reservations, setReservations] = useState<DashboardReservation[]>([]);
   const [serviceCount, setServiceCount] = useState(0);
   const [chartMode, setChartMode] = useState<'bookings' | 'revenue'>('bookings');
+  const [welcome, setWelcome] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('dobrodoslica')) {
+      setWelcome(true);
+      window.history.replaceState(null, '', '/dashboard');
+    }
+  }, []);
   const [bookingLink, setBookingLink] = useState('');
   const [busyId, setBusyId] = useState('');
 
@@ -404,6 +411,7 @@ export default function DashboardPage() {
   const weekdayMax = Math.max(...data.weekdays.map((d) => d.count), 0);
 
   const checklist = [
+    { label: 'Dodajte logo', hint: 'Prikazuje se na vašoj stranici, u katalogu i na QR posteru.', done: Boolean(business.logo_url), href: '/dashboard/settings' },
     { label: 'Dodajte usluge i cijene', hint: 'Klijenti biraju iz vašeg cjenovnika.', done: serviceCount > 0, href: '/dashboard/services' },
     { label: 'Postavite radno vrijeme', hint: 'Početak, kraj i radni dani.', done: Boolean(business.work_start && business.work_end && business.work_days.length > 0), href: '/dashboard/settings' },
     { label: 'Upišite telefon i adresu', hint: 'Da vas klijenti lako pronađu i nazovu.', done: Boolean(business.phone && business.address), href: '/dashboard/settings' },
@@ -424,6 +432,22 @@ export default function DashboardPage() {
         <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">
           {errorMessage}
         </p>
+      )}
+
+      {welcome && (
+        <section className="rounded-[var(--po-radius)] border border-emerald-500/30 bg-emerald-500/10 p-[var(--po-pad)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-display text-lg font-bold text-white">Dobro došli u POSLO ONE!</p>
+              <p className="mt-1 text-sm leading-relaxed text-emerald-100/90">
+                Vaša stranica je već aktivna, a prvih 30 dana je besplatno. Prođite kroz korake ispod: logo, usluge s cijenama i radno vrijeme. Čim dodate prvu uslugu, pojavite se i u katalogu.
+              </p>
+            </div>
+            <button type="button" onClick={() => setWelcome(false)} aria-label="Zatvori" className="rounded-lg p-1 text-emerald-200 hover:bg-white/10">
+              <Icon name="close" className="h-4 w-4" />
+            </button>
+          </div>
+        </section>
       )}
 
       {/* HERO */}

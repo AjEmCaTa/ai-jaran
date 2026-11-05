@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import { CATALOG_CATEGORIES } from '../../utils/catalog';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+);
 
 export default function RegistracijaPage() {
   const [ownerName, setOwnerName] = useState('');
@@ -32,6 +38,14 @@ export default function RegistracijaPage() {
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Došlo je do greške prilikom registracije.');
 
+      // Odmah prijava i ulazak u panel, gdje firma sama sve podesi.
+      if (!result.needsEmailConfirmation) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError) {
+          router.push('/dashboard?dobrodoslica=1');
+          return;
+        }
+      }
       setSuccess(true);
     } catch (err: any) {
       setErrorMsg(err.message || 'Doslo je do greske prilikom registracije.');
@@ -45,19 +59,18 @@ export default function RegistracijaPage() {
       <main className="relative min-h-screen bg-[#030712] text-white flex items-center justify-center px-4 py-12">
         <div className="relative z-10 w-full max-w-md rounded-[28px] border border-emerald-500/30 bg-[#080d1c]/90 backdrop-blur-xl p-8 sm:p-10 shadow-2xl text-center space-y-5">
           <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto text-2xl">
-            OK
+            ✓
           </div>
           <h1 className="text-2xl font-extrabold text-white">Nalog je kreiran!</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
-            Tvoj nalog trenutno ceka odobrenje. Kontaktiraj nas na Viber/WhatsApp da zavrsimo dogovor oko Pro paketa - cim uplata bude potvrdjena, tvoj dashboard ce biti aktiviran.
+            Potvrdite email adresu preko linka koji smo vam poslali, a zatim se prijavite i podesite svoju stranicu: usluge, cijene, radno vrijeme i logo.
           </p>
-          <a
-            href="https://wa.me/3"
-            target="_blank"
-            className="inline-flex items-center justify-center w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all text-sm"
+          <Link
+            href="/prijava"
+            className="inline-flex items-center justify-center w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all text-sm"
           >
-            Kontaktiraj nas na WhatsApp
-          </a>
+            Prijavi se u panel
+          </Link>
           <Link href="/" className="block text-xs text-slate-500 hover:text-white transition">
             Nazad na pocetnu
           </Link>

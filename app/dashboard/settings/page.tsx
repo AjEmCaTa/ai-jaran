@@ -167,14 +167,16 @@ export default function SettingsPage() {
 
         {errorMessage && <p role="alert" className="mb-4 rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200">{errorMessage}</p>}
 
-        <div className="mb-6 flex flex-wrap items-center gap-4 rounded-[calc(var(--po-radius)*0.7)] bg-white/[0.03] p-4">
-          <PartnerLogo slug={ctxBusiness.slug} name={business.name || 'Firma'} src={ctxBusiness.logo_url} className="h-16 w-16" />
+        <div className="mb-6 flex flex-col gap-4 rounded-[calc(var(--po-radius)*0.7)] bg-white/[0.03] p-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+          <PartnerLogo slug={ctxBusiness.slug} name={business.name || 'Firma'} src={ctxBusiness.logo_url} className="h-16 w-16 shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-white">Logo firme</p>
             <p className="mt-0.5 text-xs text-slate-400">Prikazuje se na vašoj stranici, u katalogu i na QR posteru. PNG, JPG ili WEBP, do 1 MB, najbolje kvadratni.</p>
             {logoMessage && <p role="status" className="mt-1.5 text-xs text-blue-300">{logoMessage}</p>}
           </div>
-          <div className="flex gap-2">
+          </div>
+          <div className="flex shrink-0 gap-2">
             <label className={`inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg bg-blue-500 px-4 text-xs font-semibold text-white transition hover:bg-blue-400 ${logoBusy ? 'pointer-events-none opacity-50' : ''}`}>
               <Icon name="download" className="h-4 w-4 rotate-180" />
               {logoBusy ? 'Čuvanje...' : ctxBusiness.logo_url ? 'Promijeni' : 'Dodaj logo'}

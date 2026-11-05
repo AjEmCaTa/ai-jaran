@@ -41,6 +41,7 @@ type Business = {
   work_start: string;
   work_end: string;
   work_days: string[];
+  logo_url: string;
 };
 
 function parsePrice(value: unknown) {
@@ -211,7 +212,7 @@ function ReservationRow({
 }
 
 export default function DashboardPage() {
-  const [business, setBusiness] = useState<Business>({ id: '', slug: '', name: '', city: '', address: '', phone: '', work_start: '', work_end: '', work_days: [] });
+  const [business, setBusiness] = useState<Business>({ id: '', slug: '', name: '', city: '', address: '', phone: '', work_start: '', work_end: '', work_days: [], logo_url: '' });
   const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -256,6 +257,7 @@ export default function DashboardPage() {
           work_start: b.work_start || '',
           work_end: b.work_end || '',
           work_days: Array.isArray(b.work_days) ? b.work_days : [],
+          logo_url: b.logo_url || '',
         });
         setReservations(dashboard.reservations || []);
         setServiceCount(dashboard.serviceCount || 0);

@@ -195,7 +195,7 @@ export default function Navbar({
             <Link
               href="/"
               onClick={handleLogoOrHomeClick}
-              className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
+              className="flex min-h-[58px] items-center justify-between font-display text-[15px] font-bold uppercase tracking-[0.2em] text-white hover:text-blue-300"
             >
               Početna
               <span aria-hidden="true" className="text-lg text-slate-600">›</span>
@@ -204,7 +204,7 @@ export default function Navbar({
             <Link
               href="/#osnivac"
               onClick={(e) => handleSmoothScroll(e, "#osnivac")}
-              className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
+              className="flex min-h-[58px] items-center justify-between font-display text-[15px] font-bold uppercase tracking-[0.2em] text-white hover:text-blue-300"
             >
               O nama
               <span aria-hidden="true" className="text-lg text-slate-600">›</span>
@@ -213,7 +213,7 @@ export default function Navbar({
             <Link
               href="/#faq"
               onClick={(e) => handleSmoothScroll(e, "#faq")}
-              className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
+              className="flex min-h-[58px] items-center justify-between font-display text-[15px] font-bold uppercase tracking-[0.2em] text-white hover:text-blue-300"
             >
               FAQ
               <span aria-hidden="true" className="text-lg text-slate-600">›</span>
@@ -224,7 +224,7 @@ export default function Navbar({
               <Link
                 href="/cjenovnik"
                 onClick={() => setIsOpen(false)}
-                className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
+                className="flex min-h-[58px] items-center justify-between font-display text-[15px] font-bold uppercase tracking-[0.2em] text-white hover:text-blue-300"
               >
                 Cjenovnik
                 <span aria-hidden="true" className="text-lg text-slate-600">›</span>
@@ -236,7 +236,7 @@ export default function Navbar({
               <Link
                 href="/katalog"
                 onClick={() => setIsOpen(false)}
-                className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-emerald-400 hover:text-emerald-300"
+                className="flex min-h-[58px] items-center justify-between font-display text-[15px] font-bold uppercase tracking-[0.2em] text-emerald-400 hover:text-emerald-300"
               >
                 Biznisi
                 <span aria-hidden="true" className="text-lg text-emerald-700">›</span>

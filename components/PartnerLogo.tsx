@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { PARTNER_LOGOS, partnerInitials } from '../utils/partnerLogos';
 
-// Kružni okvir za logo firme (ne za logo platforme POSLO ONE). Slika se prilagođava
-// okviru bez razvlačenja i odsijecanja (object-contain); bez slike prikazuju se inicijali.
+// Logo firme prikazan onakav kakav je (bez okvira i pozadine, bez odsijecanja).
+// Bez slike prikazuju se inicijali.
 export default function PartnerLogo({
   slug,
   name,
@@ -21,14 +21,12 @@ export default function PartnerLogo({
   const showImage = Boolean(src) && !failed;
 
   return (
-    <div
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-amber-500/40 bg-[#d1cdcf] ${className}`}
-    >
+    <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl ${showImage ? '' : 'bg-white/[0.06]'} ${className}`}>
       {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={`${name} logo`} className="h-full w-full object-contain" onError={() => setFailed(true)} />
       ) : (
-        <span aria-hidden="true" className="select-none bg-[#030712] text-sm font-bold text-amber-400 flex h-full w-full items-center justify-center">
+        <span aria-hidden="true" className="flex h-full w-full select-none items-center justify-center text-sm font-bold text-slate-200">
           {partnerInitials(name)}
         </span>
       )}

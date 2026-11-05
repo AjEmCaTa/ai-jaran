@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOwnerContext } from '../../../../utils/ownerAuth';
 
-// Logo firme: upload (PNG/JPG/WEBP do 1 MB) u javni bucket 'logos' i brisanje.
+// Logo firme: upload u javni bucket 'logos' i brisanje. Panel sliku prije slanja smanji
+// i pretvori u WEBP/PNG; server prima PNG, JPG i WEBP do 4 MB (granica Vercela je 4,5 MB).
 // Putanja je uvijek pod id-jem firme iz tokena, nikad iz zahtjeva.
-const MAX_BYTES = 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024;
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
 
 // Provjera "magičnih" bajtova, da se ne može poslati drugi sadržaj s lažnim tipom.
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     const form = await request.formData().catch(() => null);
     const file = form?.get('logo');
     if (!file || typeof file === 'string') return NextResponse.json({ error: 'Izaberite sliku loga.' }, { status: 400 });
-    if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Slika je veća od 1 MB.' }, { status: 400 });
+    if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Slika je prevelika. Pokušajte s manjom slikom.' }, { status: 400 });
     const bytes = new Uint8Array(await file.arrayBuffer());
     const type = sniff(bytes);
     if (!type || !TYPES[type]) return NextResponse.json({ error: 'Dozvoljeni formati su PNG, JPG i WEBP.' }, { status: 400 });

@@ -60,7 +60,7 @@ export default function InstallButton({ mobileOnly = true }: { mobileOnly?: bool
       <div className={mobileOnly ? "md:hidden w-full" : "w-full"}>
         <button
           onClick={handleClick}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-transparent px-4 text-sm font-semibold text-blue-300 transition-all hover:bg-blue-500/10 active:scale-95"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-transparent px-4 text-sm font-semibold text-blue-300 transition-all hover:bg-blue-500/10 active:scale-95"
         >
           <Icon name="download" className="h-4 w-4" /> Instaliraj aplikaciju
         </button>

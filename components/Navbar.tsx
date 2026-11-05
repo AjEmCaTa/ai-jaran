@@ -195,25 +195,28 @@ export default function Navbar({
             <Link
               href="/"
               onClick={handleLogoOrHomeClick}
-              className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
+              className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
             >
               Početna
+              <span aria-hidden="true" className="text-lg text-slate-600">›</span>
             </Link>
 
             <Link
               href="/#osnivac"
               onClick={(e) => handleSmoothScroll(e, "#osnivac")}
-              className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
+              className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
             >
               O nama
+              <span aria-hidden="true" className="text-lg text-slate-600">›</span>
             </Link>
 
             <Link
               href="/#faq"
               onClick={(e) => handleSmoothScroll(e, "#faq")}
-              className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
+              className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
             >
               FAQ
+              <span aria-hidden="true" className="text-lg text-slate-600">›</span>
             </Link>
 
             {/* CJENOVNIK - ne prikazuj na stranici cjenovnika */}
@@ -221,9 +224,10 @@ export default function Navbar({
               <Link
                 href="/cjenovnik"
                 onClick={() => setIsOpen(false)}
-                className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
+                className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-white hover:text-blue-300"
               >
                 Cjenovnik
+                <span aria-hidden="true" className="text-lg text-slate-600">›</span>
               </Link>
             )}
 
@@ -232,15 +236,16 @@ export default function Navbar({
               <Link
                 href="/katalog"
                 onClick={() => setIsOpen(false)}
-                className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-emerald-400 hover:text-emerald-300"
+                className="flex min-h-[56px] items-center justify-between font-display text-[20px] font-semibold text-emerald-400 hover:text-emerald-300"
               >
                 Biznisi
+                <span aria-hidden="true" className="text-lg text-emerald-700">›</span>
               </Link>
             )}
           </div>
 
           {/* RAČUN I AKCIJE */}
-          <div className="mt-auto flex flex-col gap-2.5 pt-8">
+          <div className="mt-6 flex flex-col gap-2.5">
             <div className="grid grid-cols-2 gap-2">
               <Link
                 href="/dashboard"
@@ -269,6 +274,12 @@ export default function Navbar({
             >
               Kontakt
             </button>
+          </div>
+
+          <div className="mt-auto pt-10 text-center text-xs text-slate-500">
+            <a href="mailto:info@poslo.one" className="hover:text-slate-300">info@poslo.one</a>
+            <span className="mx-2">·</span>
+            <a href="tel:0603050153" className="hover:text-slate-300">060 30 50 153</a>
           </div>
         </div>
       )}

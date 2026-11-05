@@ -64,6 +64,9 @@ export default function Hero({ onStartFree, onHowItWorks, animationKey }: HeroPr
                 Pogledaj kako radi
               </button>
             </div>
+            <a href="/demo" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-300 underline-offset-4 transition hover:text-blue-200 hover:underline">
+              Isprobaj demo stranicu kao klijent →
+            </a>
 
             <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-t border-white/[0.07] pt-4 sm:mt-11 sm:gap-x-7 sm:gap-y-4 sm:pt-7">
               {benefits.map((b) => (

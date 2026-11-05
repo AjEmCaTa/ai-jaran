@@ -21,6 +21,13 @@ const getToken = async () => (await supabase.auth.getSession()).data.session?.ac
 
 type NavItem = { href: string; label: string; icon: IconName; exact?: boolean };
 
+const BOTTOM_NAV: NavItem[] = [
+  { href: "/dashboard", label: "Danas", icon: "home", exact: true },
+  { href: "/dashboard/reservations", label: "Termini", icon: "calendar" },
+  { href: "/dashboard/inquiries", label: "Upiti", icon: "message" },
+  { href: "/dashboard/customers", label: "Klijenti", icon: "users" },
+];
+
 const SECTIONS: { title: string; items: NavItem[] }[] = [
   {
     title: "Osnovno",
@@ -33,8 +40,13 @@ const SECTIONS: { title: string; items: NavItem[] }[] = [
     ],
   },
   {
-    title: "Prilagodba",
-    items: [{ href: "/dashboard/settings", label: "Postavke i izgled", icon: "settings" }],
+    title: "Firma",
+    items: [
+      { href: "/dashboard/settings", label: "Podaci o firmi", icon: "building" },
+      { href: "/dashboard/qr-poster", label: "QR poster za print", icon: "qr" },
+      { href: "/dashboard/preporuke", label: "Preporuči i zaradi", icon: "handshake" },
+      { href: "/dashboard/izgled", label: "Izgled panela", icon: "palette" },
+    ],
   },
 ];
 
@@ -324,7 +336,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-2">
             <NotificationBell getToken={getToken} businessId={business.id} />
             <Link
-              href="/dashboard/settings"
+              href="/dashboard/izgled"
               className="hidden items-center gap-2 rounded-full border border-white/[0.08] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:border-blue-500/40 hover:text-white sm:flex"
             >
               <Icon name="palette" className="h-4 w-4 text-blue-400" />
@@ -339,6 +351,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-8">
           <BusinessContext.Provider value={ctx}>{children}</BusinessContext.Provider>
         </main>
+
+        {/* DONJI MENI (mobitel) */}
+        <nav
+          aria-label="Brza navigacija"
+          className="relative z-10 grid shrink-0 grid-cols-5 border-t border-white/[0.07] bg-gray-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        >
+          {BOTTOM_NAV.map((item) => {
+            const active = isActive(item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
+                  active ? "text-blue-300" : "text-gray-500 hover:text-gray-200"
+                }`}
+              >
+                <Icon name={item.icon} className="h-[22px] w-[22px]" />
+                {item.label}
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-200"
+          >
+            <Icon name="menu" className="h-[22px] w-[22px]" />
+            Više
+          </button>
+        </nav>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import {
 } from '../../../../utils/reservationFlow';
 import { reservationStartMs } from '../../../../utils/reservationRules';
 import { notifyClientStatus, type ClientNotifyKind } from '../../../../utils/clientNotify';
+import { sendReviewRequest } from '../../../../utils/growthEmails';
 
 const reservationFields = 'id, business_id, user_id, customer_name, customer_phone, customer_email, service_name, reservation_date, status, created_at, price, duration_minutes';
 
@@ -117,7 +118,9 @@ export async function PATCH(request: NextRequest) {
       : action === 'cancel' ? (statusKind(current.status) === 'pending' ? 'declined' : 'cancelled')
       : null;
     if (notifyKind) notified = await notifyClientStatus(admin, notifyKind, updated);
-    return NextResponse.json({ success: true, reservation: updated, clientNotified: notified });
+    // Završen termin: klijent dobije molbu za Google recenziju (ako firma ima link).
+    const reviewRequested = action === 'complete' ? await sendReviewRequest(admin, updated) : false;
+    return NextResponse.json({ success: true, reservation: updated, clientNotified: notified, reviewRequested });
   } catch (error) {
     console.error('Status rezervacije nije promijenjen:', error);
     return NextResponse.json({ error: 'Status rezervacije nije moguće promijeniti.' }, { status: 500 });

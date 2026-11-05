@@ -47,6 +47,7 @@ interface BusinessProfile {
   work_start: string;
   work_end: string;
   work_days: string[];
+  closed_dates: string[];
 }
 
 const BUSINESS_SLUG = 'dubinsko-catic';
@@ -110,7 +111,7 @@ const LEGACY_PACKAGES: ServicePackage[] = [
 
 const EMPTY_PROFILE: BusinessProfile = {
   name: '', category: '', city: '', address: '', phone: '',
-  work_start: '', work_end: '', work_days: [],
+  work_start: '', work_end: '', work_days: [], closed_dates: [],
 };
 
 export default function DubinskoCaticPage() {
@@ -192,6 +193,7 @@ export default function DubinskoCaticPage() {
           work_start: String(profile.work_start || '').slice(0, 5),
           work_end: String(profile.work_end || '').slice(0, 5),
           work_days: Array.isArray(profile.work_days) ? profile.work_days : [],
+          closed_dates: Array.isArray(profile.closed_dates) ? profile.closed_dates : [],
         });
 
         const services: {
@@ -611,7 +613,8 @@ export default function DubinskoCaticPage() {
                     }).length;
 
                     const isFullyBooked = timeSlots.length > 0 && freeSlotsCount === 0;
-                    const isDisabled = isPast || isSunday || isFullyBooked;
+                    const isClosed = businessProfile.closed_dates.includes(fullDateStr);
+                    const isDisabled = isPast || isSunday || isFullyBooked || isClosed;
                     const isSelected = resDate === fullDateStr;
 
                     return (

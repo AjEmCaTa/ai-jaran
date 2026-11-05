@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
         const businessResult = await supabase
             .from('businesses')
-            .select('id, name, owner_email, telegram_chat_id, status')
+            .select('id, name, owner_email, telegram_chat_id, status, closed_dates')
             .eq('slug', businessSlug)
             .maybeSingle();
 
@@ -132,6 +132,11 @@ export async function POST(request: NextRequest) {
         }
         if (!reservationDate) {
             return NextResponse.json({ success: false, error: "Datum i vrijeme termina su obavezni!" }, { status: 400 });
+        }
+
+        // Zaključani dani (pauza, godišnji odmor) se ne mogu zakazati.
+        if (Array.isArray(business.closed_dates) && business.closed_dates.includes(datePart)) {
+            return NextResponse.json({ success: false, error: 'Firma taj dan ne radi. Odaberite drugi datum.' }, { status: 409 });
         }
 
         const displayDate = formatToBalkanDate(datePart) || datePart;

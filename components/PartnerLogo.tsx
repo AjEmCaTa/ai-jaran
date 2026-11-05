@@ -9,12 +9,14 @@ export default function PartnerLogo({
   slug,
   name,
   className = 'h-16 w-16',
+  src: customSrc,
 }: {
   slug: string;
   name: string;
   className?: string;
+  src?: string;
 }) {
-  const src = PARTNER_LOGOS[slug];
+  const src = customSrc || PARTNER_LOGOS[slug];
   const [failed, setFailed] = useState(false);
   const showImage = Boolean(src) && !failed;
 

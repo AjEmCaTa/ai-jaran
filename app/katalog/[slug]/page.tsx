@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
@@ -9,114 +9,37 @@ import Background from "../../../components/Background";
 import PartnerLogo from "../../../components/PartnerLogo";
 import Icon from "../../../components/Icon";
 import BusinessBookingPage from "../../../components/BusinessBookingPage";
+import { CATALOG_CATEGORIES, categoryBySlug, categoryOf } from "../../../utils/catalog";
 
-const EMPTY_PROFILE = {
-  name: "",
-  category: "",
-  city: "",
-  address: "",
-  phone: "",
-  work_start: "",
-  work_end: "",
-  work_days: [] as string[],
-};
+type CatalogBusiness = { slug: string; name: string; city: string; category: string; logo_url: string };
 
-const SUN_SOLUTION_SLUG = "sun-solution-mostar";
-const SUN_SOLUTION_NAME = "Sun Solution d.o.o. Mostar";
+// Stari linkovi kategorija koji i dalje rade.
+const CATEGORY_ALIASES: Record<string, string> = { dubinsko: "dubinsko-ciscenje", "sun-solution": "solarni-sistemi" };
 
-function CategoryPartnersPage() {
-  const params = useParams();
-  const slug = params?.slug as string;
-
-  // Dok se podaci ne ucitaju iz baze, prikazuje se skeleton (nema "stare verzije")
-  const [dataLoaded, setDataLoaded] = useState(false);
-  const [businessProfile, setBusinessProfile] = useState(EMPTY_PROFILE);
-
-  // Provjeravamo da li je izabrana kategorija za dubinsko čišćenje
-  const isDubinskoCategory =
-    slug === "dubinsko-ciscenje" ||
-    slug === "dubinsko-catic" ||
-    slug === "dubinsko";
-
-  const isSolarCategory =
-    slug === "solarni-sistemi" || slug === "sun-solution";
-  const [solarLoaded, setSolarLoaded] = useState(false);
-  const [solarProfile, setSolarProfile] = useState(EMPTY_PROFILE);
+function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
+  const category = categoryBySlug(categorySlug);
+  const [businesses, setBusinesses] = useState<CatalogBusiness[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [city, setCity] = useState("");
 
   useEffect(() => {
-    if (!isSolarCategory) return;
-    fetch(`/api/business-profile?slug=${SUN_SOLUTION_SLUG}`, { cache: "no-store" })
-      .then(async (response) => (response.ok ? response.json() : null))
-      .then((result) => {
-        const business = result?.business;
-        setSolarProfile({
-          name: business?.name || SUN_SOLUTION_NAME,
-          category: business?.category || "Solarni sistemi i elektroinstalacije",
-          city: business?.city || "Mostar",
-          address: business?.address || "",
-          phone: business?.phone || "",
-          work_start: String(business?.work_start || "").slice(0, 5),
-          work_end: String(business?.work_end || "").slice(0, 5),
-          work_days: Array.isArray(business?.work_days) ? business.work_days : [],
-        });
-      })
-      .catch(() => setSolarProfile({ ...EMPTY_PROFILE, name: SUN_SOLUTION_NAME }))
-      .finally(() => setSolarLoaded(true));
-  }, [isSolarCategory]);
+    setCity(new URLSearchParams(window.location.search).get("grad") || "");
+    fetch("/api/catalog")
+      .then((r) => (r.ok ? r.json() : { businesses: [] }))
+      .then((json) => setBusinesses(Array.isArray(json.businesses) ? json.businesses : []))
+      .catch(() => setBusinesses([]))
+      .finally(() => setLoaded(true));
+  }, []);
 
-  useEffect(() => {
-    if (!isDubinskoCategory) return;
-    fetch("/api/business-profile?slug=dubinsko-catic", { cache: "no-store" })
-      .then(async (response) => (response.ok ? response.json() : null))
-      .then((result) => {
-        if (!result?.business) {
-          setBusinessProfile({ ...EMPTY_PROFILE, name: "Dubinsko Ćatić" });
-          return;
-        }
-        const business = result.business;
-        setBusinessProfile({
-          name: business.name || "Dubinsko Ćatić",
-          category: business.category || "",
-          city: business.city || "",
-          address: business.address || "",
-          phone: business.phone || "",
-          work_start: String(business.work_start || "").slice(0, 5),
-          work_end: String(business.work_end || "").slice(0, 5),
-          work_days: Array.isArray(business.work_days) ? business.work_days : [],
-        });
-      })
-      .catch((error) => {
-        console.error("Profil biznisa nije učitan:", error);
-        setBusinessProfile({ ...EMPTY_PROFILE, name: "Dubinsko Ćatić" });
-      })
-      .finally(() => setDataLoaded(true));
-  }, [isDubinskoCategory]);
-
-  if ((isDubinskoCategory && !dataLoaded) || (isSolarCategory && !solarLoaded)) {
-    return (
-      <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
-        <Background />
-        <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
-        <div className="mx-auto max-w-7xl px-4 pb-20 pt-32">
-          <div className="mb-8 h-10 w-72 animate-pulse rounded-xl bg-[#0b0f19]" />
-          <div className="mb-3 h-10 w-96 max-w-full animate-pulse rounded-xl bg-[#0b0f19]" />
-          <div className="grid grid-cols-1 gap-6 pt-8 md:grid-cols-2 lg:grid-cols-3">
-            <div className="h-96 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
-          </div>
-        </div>
-      </main>
-    );
-  }
+  const list = useMemo(
+    () => businesses.filter((b) => categoryOf(b.category) === categorySlug && (!city || b.city.trim() === city)),
+    [businesses, categorySlug, city]
+  );
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
       <Background />
-
-      <Navbar
-        onOpenContact={() => {}}
-        onResetHero={() => {}}
-        onOpenCatalog={() => {}}
-      />
+      <Navbar onOpenContact={() => (window.location.href = "/cjenovnik")} onResetHero={() => {}} onOpenCatalog={() => {}} />
 
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-32">
         <Link
@@ -126,200 +49,105 @@ function CategoryPartnersPage() {
           ← Nazad na sve kategorije kataloga
         </Link>
 
-        {isDubinskoCategory ? (
-          <div className="space-y-8">
-            {/* Naslov kategorije */}
-            <div>
-              <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-blue-400">
-                Kategorija Partnera
-              </span>
-
-              <h1 className="mt-3 mb-2 text-3xl font-black tracking-tight text-white md:text-5xl">
-                Dubinsko čišćenje & Detailing
-              </h1>
-
-              <p className="max-w-xl text-sm text-gray-400">
-                Izaberite pouzdanog partnera za pranje i održavanje vašeg
-                vozila ili namještaja.
-              </p>
-            </div>
-
-            {/* LISTA BIZNISA (Kartice) */}
-            <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-2 lg:grid-cols-3">
-              {/* Kartica: Dubinsko Ćatić sa Okruglim Profilnim Logom */}
-              <div className="group flex flex-col justify-between rounded-3xl border border-white/10 bg-[#0b0f19] p-6 shadow-2xl transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/80">
-                <div>
-                  {/* BADGEVI NA VRHU */}
-                  <div className="mb-6 flex items-center justify-between gap-2">
-                    <span className="rounded-full border border-blue-500/30 bg-blue-600/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-400">
-                      Preporučeni partner
-                    </span>
-
-                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
-                      <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />Otvoreno
-                    </span>
-                  </div>
-
-                  {/* ZAGLAVLJE KARTICE: OKRUGLI LOGO + NASLOV */}
-                  <div className="mb-5 flex items-center gap-4">
-                    {/* Okrugli okvir logotipa */}
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-blue-500/40 bg-white p-0.5 shadow-lg shadow-blue-500/10 transition-colors group-hover:border-blue-400">
-                      <img
-                        src="/partners/dubinsko-catic.jpg"
-                        alt="Dubinsko Ćatić Logo"
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    </div>
-
-                    <div>
-                      <h3 className="text-2xl font-extrabold leading-tight text-white transition-colors group-hover:text-blue-400">
-                        {businessProfile.name}
-                      </h3>
-
-                      <span className="text-[11px] font-medium text-blue-400/90">
-                        {businessProfile.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* OPIS BIZNISA */}
-                  <p className="mb-6 text-xs leading-relaxed text-gray-400">
-                    Profesionalno dubinsko pranje sjedišta, tepiha, krovnih
-                    tapacirunga, te kompletno unutarnje i vanjsko pranje
-                    vozila.
-                  </p>
-
-                  {/* INFORMACIJE O BIZNISU */}
-                  <div className="mb-6 space-y-2 border-t border-white/5 pt-4 text-xs text-gray-300">
-                    <p className="flex items-center gap-2">
-                      <Icon name="mapPin" className="h-4 w-4 flex-none text-blue-400" />
-                      {[businessProfile.address, businessProfile.city].filter(Boolean).join(", ")}
-                    </p>
-
-                    <p className="flex items-center gap-2">
-                      <Icon name="phone" className="h-4 w-4 flex-none text-blue-400" />
-                      {businessProfile.phone}
-                    </p>
-
-                    <p className="flex items-center gap-2 text-gray-400">
-                      <Icon name="clock" className="h-4 w-4 flex-none text-blue-400" />
-                      {businessProfile.work_days.join(" – ")}: {businessProfile.work_start} – {businessProfile.work_end}
-                    </p>
-                  </div>
-                </div>
-
-                {/* DUGME NA DNU KARTICE */}
-                <Link
-                  href="/katalog/dubinsko-catic"
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-center text-xs font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500"
-                >
-                  Pogledaj ponudu i zakaži termin →
-                </Link>
-              </div>
-            </div>
-          </div>
-        ) : isSolarCategory ? (
+        {category ? (
           <div className="space-y-8">
             <div>
-              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-amber-400">
-                Kategorija Partnera
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-blue-400">
+                <Icon name={category.icon} className="h-3.5 w-3.5" />
+                Kategorija
               </span>
-              <h1 className="mt-3 mb-2 text-3xl font-black tracking-tight text-white md:text-5xl">
-                Solarni sistemi i elektroinstalacije
-              </h1>
-              <p className="max-w-xl text-sm text-gray-400">
-                Izaberite partnera za solarne sisteme i elektroinstalacije i pošaljite upit.
-              </p>
+              <h1 className="mb-2 mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">{category.title}</h1>
+              <p className="max-w-xl text-sm text-gray-400">{category.description}</p>
+              {city && (
+                <p className="mt-3 text-xs text-slate-400">
+                  Grad: <span className="font-semibold text-white">{city}</span>{" "}
+                  <button type="button" onClick={() => setCity("")} className="ml-2 text-blue-400 hover:text-blue-300">
+                    Prikaži sve gradove
+                  </button>
+                </p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="group flex flex-col justify-between rounded-3xl border border-white/10 bg-[#0b0f19] p-6 shadow-2xl transition-all duration-300 hover:border-amber-500/40">
-                <div>
-                  <div className="mb-5 flex items-center gap-4">
-                    <PartnerLogo slug={SUN_SOLUTION_SLUG} name={solarProfile.name} />
-                    <div>
-                      <h3 className="text-2xl font-extrabold leading-tight text-white transition-colors group-hover:text-amber-400">
-                        {solarProfile.name}
-                      </h3>
-                      <span className="text-[11px] font-medium text-amber-400/90">
-                        {solarProfile.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="mb-6 text-xs leading-relaxed text-gray-400">
-                    Solarni sistemi i elektroinstalacije. Pogledajte usluge i pošaljite upit
-                    za procjenu.
-                  </p>
-
-                  <div className="mb-6 space-y-2 border-t border-white/5 pt-4 text-xs text-gray-300">
-                    {(solarProfile.address || solarProfile.city) && (
-                      <p className="flex items-center gap-2">
-                        <Icon name="mapPin" className="h-4 w-4 flex-none text-amber-400" />
-                        {[solarProfile.address, solarProfile.city].filter(Boolean).join(", ")}
-                      </p>
-                    )}
-                    {solarProfile.phone && (
-                      <p className="flex items-center gap-2">
-                        <Icon name="phone" className="h-4 w-4 flex-none text-amber-400" />
-                        {solarProfile.phone}
-                      </p>
-                    )}
-                    {solarProfile.work_days.length > 0 && solarProfile.work_start && (
-                      <p className="flex items-center gap-2 text-gray-400">
-                        <Icon name="clock" className="h-4 w-4 flex-none text-amber-400" />
-                        {solarProfile.work_days.join(" – ")}: {solarProfile.work_start} – {solarProfile.work_end}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <Link
-                  href={`/katalog/${SUN_SOLUTION_SLUG}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-600 py-3.5 text-center text-xs font-bold text-white shadow-lg transition-all hover:bg-amber-500"
-                >
-                  Pogledaj usluge i pošalji upit →
-                </Link>
+            {!loaded ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-56 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+                ))}
               </div>
-            </div>
+            ) : list.length === 0 ? (
+              <EmptyCategory />
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {list.map((b) => (
+                  <Link
+                    key={b.slug}
+                    href={`/katalog/${b.slug}`}
+                    className="group flex flex-col justify-between rounded-3xl border border-white/10 bg-[#0b0f19] p-6 shadow-2xl transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/80"
+                  >
+                    <div>
+                      <div className="mb-5 flex items-center justify-between gap-2">
+                        <span className="rounded-full border border-blue-500/30 bg-blue-600/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                          Partner
+                        </span>
+                        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
+                          <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />
+                          Online
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <PartnerLogo slug={b.slug} name={b.name} src={b.logo_url} className="h-16 w-16" />
+                        <div className="min-w-0">
+                          <h3 className="text-xl font-extrabold leading-tight text-white transition-colors group-hover:text-blue-400">{b.name}</h3>
+                          {b.city && (
+                            <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-400">
+                              <Icon name="mapPin" className="h-3.5 w-3.5 text-blue-400" />
+                              {b.city}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="mt-6 block w-full rounded-xl bg-blue-600 py-3 text-center text-sm font-bold text-white transition group-hover:bg-blue-500">
+                      Pogledaj ponudu
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0b0f19] p-8 py-24 text-center shadow-2xl">
-            <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-500/25 bg-blue-500/10 text-blue-300"><Icon name="sparkles" className="h-7 w-7" /></span>
-
-            <h2 className="mb-3 text-3xl font-extrabold text-white">
-              Uskoro stižu partneri!
-            </h2>
-
-            <p className="mx-auto mb-6 max-w-md text-sm text-gray-400">
-              Sveobuhvatna automatizacija i mreža partnera za ovu djelatnost
-              su u fazi pripreme.
-            </p>
-
-            <Link
-              href="/katalog"
-              className="inline-block rounded-xl bg-blue-600 px-6 py-3 text-xs font-bold text-white shadow-lg transition-all hover:bg-blue-500"
-            >
-              Vrati se nazad na katalog
-            </Link>
-          </div>
+          <EmptyCategory />
         )}
       </div>
 
-      <Footer onOpenPrivacy={() => {}} />
+      <Footer />
     </main>
   );
 }
-// Kategorije kataloga; svaki drugi slug je stranica firme (npr. /katalog/studio-lana).
-const CATEGORY_SLUGS = new Set([
-  "dubinsko-ciscenje",
-  "dubinsko",
-  "solarni-sistemi",
-  "sun-solution",
-  "vile-apartmani",
-  "agencije-za-ciscenje",
-  "beauty-saloni",
-]);
+
+function EmptyCategory() {
+  return (
+    <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0b0f19] p-8 py-20 text-center shadow-2xl">
+      <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-500/25 bg-blue-500/10 text-blue-300">
+        <Icon name="sparkles" className="h-7 w-7" />
+      </span>
+      <h2 className="mb-3 text-3xl font-extrabold text-white">Uskoro stižu partneri!</h2>
+      <p className="mx-auto mb-8 max-w-md text-sm text-gray-400">
+        U ovoj kategoriji još nema firmi. Imate firmu ovdje? Klijenti bi vas mogli zakazivati online već danas.
+      </p>
+      <div className="flex flex-col justify-center gap-2 sm:flex-row">
+        <Link href="/registracija" className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-500">
+          Dodaj svoju firmu
+        </Link>
+        <Link href="/katalog" className="rounded-xl border border-white/10 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5">
+          Vrati se na katalog
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+const CATEGORY_SLUGS = new Set([...CATALOG_CATEGORIES.map((c) => c.slug), ...Object.keys(CATEGORY_ALIASES)]);
 
 export default function KatalogSlugPage() {
   const params = useParams();
@@ -343,7 +171,7 @@ export default function KatalogSlugPage() {
   }, [slug, isCategory]);
 
   if (mode === "business") return <BusinessBookingPage slug={slug} />;
-  if (mode === "category") return <CategoryPartnersPage />;
+  if (mode === "category") return <CategoryPartnersPage categorySlug={CATEGORY_ALIASES[slug] || slug} />;
   return (
     <main className="relative min-h-screen bg-[#030712] text-white">
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-24 pt-32">

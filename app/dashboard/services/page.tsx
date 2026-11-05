@@ -27,6 +27,7 @@ async function authHeaders() {
 
 export default function ServicesPage() {
   const { business } = useBusiness();
+  const locked = business.plan === 'starter';
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -112,7 +113,7 @@ export default function ServicesPage() {
             Usluge se prikazuju na javnom profilu{business.slug ? ` /katalog/${business.slug}` : ''}.
           </p>
         </div>
-        {!draft && (
+        {!draft && !locked && (
           <button
             type="button"
             onClick={() => {
@@ -127,6 +128,12 @@ export default function ServicesPage() {
           </button>
         )}
       </div>
+
+      {locked && (
+        <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
+          Vaš paket je Starter: usluge i cijene za vas uređuje POSLO ONE. Javite nam izmjenu ili pređite na Pro paket da ih mijenjate sami.
+        </p>
+      )}
 
       {error && <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-3 text-sm text-red-200">{error}</p>}
       {message && <p role="status" className="rounded-lg border border-emerald-800 bg-emerald-950/40 p-3 text-sm text-emerald-200">{message}</p>}
@@ -190,7 +197,7 @@ export default function ServicesPage() {
                     {service.duration || ''}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                {!locked && <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -212,7 +219,7 @@ export default function ServicesPage() {
                   <button type="button" onClick={() => remove(service)} className="min-h-10 rounded-lg border border-red-500/30 px-3 text-xs font-semibold text-red-300 hover:bg-red-500/10">
                     Obriši
                   </button>
-                </div>
+                </div>}
               </li>
             ))}
           </ul>

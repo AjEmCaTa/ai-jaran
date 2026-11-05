@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CATALOG_CATEGORIES } from '../../utils/catalog';
 
 export default function RegistracijaPage() {
   const [ownerName, setOwnerName] = useState('');
@@ -143,13 +144,17 @@ export default function RegistracijaPage() {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Djelatnost</label>
-            <input
-              type="text"
+            <select
+              required
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              placeholder="npr. frizer, cistac, apartmani..."
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
-            />
+              className="w-full rounded-xl border border-white/10 bg-[#0b0f19] px-4 py-3.5 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+            >
+              <option value="" disabled>Izaberite djelatnost</option>
+              {CATALOG_CATEGORIES.map((c) => (
+                <option key={c.slug} value={c.slug}>{c.short}</option>
+              ))}
+            </select>
           </div>
 
           <div>

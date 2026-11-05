@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data: business, error } = await admin
     .from('businesses')
-    .select('id, name, category, city, address, phone, work_start, work_end, work_days, closed_dates, status, is_active')
+    .select('id, name, category, city, address, phone, work_start, work_end, work_days, closed_dates, logo_url, status, is_active')
     .eq('slug', slug)
     .maybeSingle();
   if (error) return NextResponse.json({ error: 'Profil biznisa nije moguće učitati.' }, { status: 500 });

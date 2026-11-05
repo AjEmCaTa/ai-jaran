@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getOwnerContext } from '../../../utils/ownerAuth';
 import { safeHttpUrl } from '../../../utils/growthEmails';
+import { canEditCatalogData, PLAN_LOCK_MESSAGE, PRO_ONLY_BUSINESS_FIELDS } from '../../../utils/plan';
 
 const RESERVATION_FIELDS = 'id, business_id, user_id, customer_name, customer_phone, customer_email, service_name, reservation_date, status, created_at, price, duration_minutes';
 
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     const lightweight = request.nextUrl.searchParams.get('scope') === 'business';
     const [businessResult, reservations, servicesResult, profileResult] = await Promise.all([
       admin.from('businesses')
-        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates')
+        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates, logo_url, plan, plan_until')
         .eq('id', businessId)
         .single(),
       lightweight ? Promise.resolve([] as Record<string, unknown>[]) : loadReservations(admin, businessId),
@@ -65,6 +66,15 @@ export async function PATCH(request: NextRequest) {
     const changes = Object.fromEntries(
       Object.entries(body).filter(([key]) => allowedFields.includes(key)),
     );
+
+    // Starter: radno vrijeme i zaključane dane mijenja samo POSLO ONE.
+    if (PRO_ONLY_BUSINESS_FIELDS.some((field) => field in changes)) {
+      const { data: planRow } = await result.context.admin.from('businesses').select('plan').eq('id', result.context.businessId).maybeSingle();
+      if (!canEditCatalogData(planRow?.plan)) {
+        for (const field of PRO_ONLY_BUSINESS_FIELDS) delete changes[field];
+        if (body.require_pro_fields) return NextResponse.json({ error: PLAN_LOCK_MESSAGE, planLocked: true }, { status: 403 });
+      }
+    }
 
     const ownerName = typeof body.owner_name === 'string' ? body.owner_name.trim().slice(0, 100) : null;
     if (typeof body.owner_name !== 'undefined' && ownerName === null) {

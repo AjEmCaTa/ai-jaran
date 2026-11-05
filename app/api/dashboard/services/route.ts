@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOwnerContext } from '../../../../utils/ownerAuth';
 import { parseServicePrice } from '../../../../utils/servicePrice';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { canEditCatalogData, PLAN_LOCK_MESSAGE } from '../../../../utils/plan';
+
+// Starter paket ne mijenja usluge i cijene (to radi POSLO ONE za njih).
+async function planLocked(admin: SupabaseClient, businessId: string) {
+  const { data } = await admin.from('businesses').select('plan').eq('id', businessId).maybeSingle();
+  return !canEditCatalogData(data?.plan);
+}
 
 function serviceFields(body: Record<string, unknown>) {
   if (typeof body.name !== 'string' || !body.name.trim()) return null;
@@ -31,6 +39,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const result = await getOwnerContext(request);
   if (result.response) return result.response;
+  if (await planLocked(result.context.admin, result.context.businessId)) {
+    return NextResponse.json({ error: PLAN_LOCK_MESSAGE, planLocked: true }, { status: 403 });
+  }
   try {
     const body = await request.json();
     const fields = serviceFields(body);
@@ -51,6 +62,9 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const result = await getOwnerContext(request);
   if (result.response) return result.response;
+  if (await planLocked(result.context.admin, result.context.businessId)) {
+    return NextResponse.json({ error: PLAN_LOCK_MESSAGE, planLocked: true }, { status: 403 });
+  }
   try {
     const body = await request.json();
     const fields = serviceFields(body);
@@ -75,6 +89,9 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const result = await getOwnerContext(request);
   if (result.response) return result.response;
+  if (await planLocked(result.context.admin, result.context.businessId)) {
+    return NextResponse.json({ error: PLAN_LOCK_MESSAGE, planLocked: true }, { status: 403 });
+  }
   try {
     const body = await request.json();
     if (typeof body.id !== 'string') return NextResponse.json({ error: 'ID usluge nije važeći.' }, { status: 400 });

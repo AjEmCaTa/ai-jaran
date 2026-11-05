@@ -11,9 +11,8 @@ interface FooterProps {
   onOpenPrivacy?: () => void;
 }
 
-export default function Footer({
-  onOpenPrivacy,
-}: FooterProps) {
+// onOpenPrivacy ostaje u tipu radi starih poziva; politika je sada stranica /privatnost.
+export default function Footer(_props: FooterProps) {
   const pathname = usePathname();
 
   const isCatalog = pathname.startsWith("/katalog");
@@ -74,13 +73,16 @@ export default function Footer({
             </Link>
           )}
 
-          {/* POLITIKA PRIVATNOSTI */}
-          <button
-            onClick={onOpenPrivacy}
-            className="cursor-pointer border-none bg-transparent p-0 text-sm text-gray-400 transition-colors hover:text-white"
-          >
+          {/* PRAVNE STRANICE */}
+          <Link href="/uslovi" className="py-2 transition-colors hover:text-white">
+            Uslovi korištenja
+          </Link>
+          <Link href="/privatnost" className="py-2 transition-colors hover:text-white">
             Politika privatnosti
-          </button>
+          </Link>
+          <Link href="/povrat-novca" className="py-2 transition-colors hover:text-white">
+            Povrat novca
+          </Link>
 
           {/* INSTAGRAM */}
           <a

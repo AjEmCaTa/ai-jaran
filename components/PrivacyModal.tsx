@@ -20,11 +20,11 @@ export default function PrivacyModal({
 
     sec2Title: "2. Funkcionalnost platforme",
     sec2Desc:
-      "POSLO ONE pruža rješenja za automatizaciju komunikacije, izradu prilagođenih AI agenata, integraciju kalendara i katalog poslovnih subjekata. Svako rješenje se prilagođava potrebama biznisa kroz direktne konsultacije i dogovore.",
+      "POSLO ONE je softver za online zakazivanje termina: firma dobija svoju stranicu za zakazivanje i panel za upravljanje terminima, upitima i klijentima.",
 
     sec3Title: "3. Plaćanje i saradnja",
     sec3Desc:
-      "Plaćanje usluga i paketa vrši se jednostavno i transparentno — dogovorom i direktnim transferom (žiralno / uplatom), bez komplikovanih unosa kartica ili skrivenih troškova. Sve detalje i način saradnje definišemo u direktnom kontaktu prije početka rada.",
+      "Nova firma dobija 30 dana besplatnog korištenja, a zatim se paket plaća mjesečno. Online plaćanje karticom obrađuje Lemon Squeezy; podatke o kartici ne vidimo i ne čuvamo. Detalji su na stranicama Uslovi korištenja i Povrat novca.",
 
     sec4Title: "4. Vaša prava i transparentnost",
     sec4Desc:

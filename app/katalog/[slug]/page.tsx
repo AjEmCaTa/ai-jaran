@@ -8,6 +8,7 @@ import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import PartnerLogo from "../../../components/PartnerLogo";
 import Icon from "../../../components/Icon";
+import BusinessBookingPage from "../../../components/BusinessBookingPage";
 
 const EMPTY_PROFILE = {
   name: "",
@@ -23,7 +24,7 @@ const EMPTY_PROFILE = {
 const SUN_SOLUTION_SLUG = "sun-solution-mostar";
 const SUN_SOLUTION_NAME = "Sun Solution d.o.o. Mostar";
 
-export default function CategoryPartnersPage() {
+function CategoryPartnersPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
@@ -306,6 +307,49 @@ export default function CategoryPartnersPage() {
       </div>
 
       <Footer onOpenPrivacy={() => {}} />
+    </main>
+  );
+}
+// Kategorije kataloga; svaki drugi slug je stranica firme (npr. /katalog/studio-lana).
+const CATEGORY_SLUGS = new Set([
+  "dubinsko-ciscenje",
+  "dubinsko",
+  "solarni-sistemi",
+  "sun-solution",
+  "vile-apartmani",
+  "agencije-za-ciscenje",
+  "beauty-saloni",
+]);
+
+export default function KatalogSlugPage() {
+  const params = useParams();
+  const slug = (params?.slug as string) || "";
+  const isCategory = CATEGORY_SLUGS.has(slug);
+  const [mode, setMode] = useState<"checking" | "business" | "category">(isCategory ? "category" : "checking");
+
+  useEffect(() => {
+    if (isCategory) return;
+    let cancelled = false;
+    fetch(`/api/business-profile?slug=${encodeURIComponent(slug)}`, { cache: "no-store" })
+      .then((response) => {
+        if (!cancelled) setMode(response.ok ? "business" : "category");
+      })
+      .catch(() => {
+        if (!cancelled) setMode("category");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, isCategory]);
+
+  if (mode === "business") return <BusinessBookingPage slug={slug} />;
+  if (mode === "category") return <CategoryPartnersPage />;
+  return (
+    <main className="relative min-h-screen bg-[#030712] text-white">
+      <div className="mx-auto max-w-6xl space-y-10 px-4 pb-24 pt-32">
+        <div className="h-56 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+        <div className="h-80 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+      </div>
     </main>
   );
 }

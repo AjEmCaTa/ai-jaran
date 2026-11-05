@@ -1,0 +1,928 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
+import Navbar from './Navbar';
+import Footer from './Footer';
+import Background from './Background';
+import InquiryForm from './InquiryForm';
+import Icon from './Icon';
+
+interface ServicePackage {
+  id: string;
+  serviceId?: string;
+  name: string;
+  price: string;
+  duration: string;
+  durationMinutes: number;
+  badge?: string;
+  desc: string;
+  features: string[];
+}
+
+interface Reservation {
+  id?: number | string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string;
+  service_name: string;
+  price: number;
+  reservation_date: string;
+  status: string;
+}
+
+interface BusyRange {
+  start: number;
+  end: number;
+}
+
+interface BusinessProfile {
+  name: string;
+  category: string;
+  city: string;
+  address: string;
+  phone: string;
+  work_start: string;
+  work_end: string;
+  work_days: string[];
+  closed_dates: string[];
+}
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
+);
+
+const monthNames = [
+  "Januar", "Februar", "Mart", "April", "Maj", "Juni",
+  "Juli", "August", "Septembar", "Oktobar", "Novembar", "Decembar"
+];
+const dayNamesShort = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
+
+// Termini svakih 30 min unutar radnog vremena firme (zadnji počinje 30 min prije kraja).
+const generateTimeSlots = (start: string, end: string) => {
+  const toMin = (v: string) => {
+    const m = /^(\d{1,2}):(\d{2})/.exec(v || '');
+    return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+  };
+  const from = toMin(start) ?? 8 * 60;
+  let to = toMin(end) ?? 17 * 60;
+  if (to <= from) to = from + 9 * 60;
+  const slots: string[] = [];
+  for (let t = from; t + 30 <= to; t += 30) {
+    slots.push(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
+  }
+  return slots;
+};
+
+// Oznake radnih dana iz baze ('Pon'...'Ned', i 'Cet' bez kvačice) prema Date.getDay().
+const DAY_CODES = ['Ned', 'Pon', 'Uto', 'Sri', 'Cet', 'Pet', 'Sub'];
+const normalizeDay = (d: string) => d.normalize('NFD').replace(/[\u0300-\u036f]/g, '').slice(0, 3).toLowerCase();
+
+const formatToBalkanDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  return `${day}.${month}.${year}.`;
+};
+
+const rangesOverlap = (startA: number, endA: number, ranges: BusyRange[]) => {
+  return ranges.some((r) => startA < r.end && endA > r.start);
+};
+
+// Ovi podaci se koriste SAMO kao izvor opisa/oznaka za pakete (features, badge),
+// nikad se ne prikazuju prije nego sto stignu stvarni podaci iz baze.
+const LEGACY_PACKAGES: ServicePackage[] = [
+  {
+    id: 'basic',
+    name: 'Basic Paket',
+    price: '25 KM',
+    duration: '2h',
+    durationMinutes: 120,
+    badge: 'Brzo & Efikasno',
+    desc: 'Idealan za parcijalno čišćenje i osvježenje enterijera.',
+    features: ['Dubinsko pranje 2 prednja sjedišta', 'Osvježavanje mirisa', 'Osnovno usisavanje']
+  },
+  {
+    id: 'premium',
+    name: 'Premium Paket',
+    price: '130 KM',
+    duration: '5h',
+    durationMinutes: 300,
+    badge: 'Najpopularnije',
+    desc: 'Kompletno detaljno dubinsko pranje cijelog vozila.',
+    features: ['Vađenje i pranje svih sjedišta', 'Tepisi i krovni tapacirung', 'Zaštita i sjaj svih plastika', 'Kompletno vanjsko pranje']
+  }
+];
+
+const EMPTY_PROFILE: BusinessProfile = {
+  name: '', category: '', city: '', address: '', phone: '',
+  work_start: '', work_end: '', work_days: [], closed_dates: [],
+};
+
+export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { slug: string; backHref?: string }) {
+  const BUSINESS_SLUG = slug;
+  const storageKey = slug === 'dubinsko-catic' ? 'poslo_one_catic_reservations' : `poslo_one_reservations_${slug}`;
+  const router = useRouter();
+  const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
+  const [resDate, setResDate] = useState('');
+  const [resTime, setResTime] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Dok se podaci ne ucitaju iz baze, stranica prikazuje skeleton (nema "stare verzije")
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(EMPTY_PROFILE);
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
+
+  const timeSlots = useMemo(
+    () => generateTimeSlots(businessProfile.work_start, businessProfile.work_end),
+    [businessProfile.work_start, businessProfile.work_end]
+  );
+  const workDaySet = useMemo(() => new Set(businessProfile.work_days.map(normalizeDay)), [businessProfile.work_days]);
+  // Bez upisanih radnih dana: radi se od ponedjeljka do subote.
+  const isWorkDay = (d: Date) => (workDaySet.size === 0 ? d.getDay() !== 0 : workDaySet.has(normalizeDay(DAY_CODES[d.getDay()])));
+
+  const [successModalData, setSuccessModalData] = useState<Reservation | null>(null);
+
+  const todayObj = new Date();
+  todayObj.setHours(0, 0, 0, 0);
+
+  const [calYear, setCalYear] = useState(todayObj.getFullYear());
+  const [calMonth, setCalMonth] = useState(todayObj.getMonth());
+
+  const [myReservations, setMyReservations] = useState<Reservation[]>([]);
+  const [busyRanges, setBusyRanges] = useState<BusyRange[]>([]);
+  const [showMyTerminiModal, setShowMyTerminiModal] = useState(false);
+
+  const [reservationToCancel, setReservationToCancel] = useState<Reservation | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        setMyReservations(JSON.parse(saved));
+      } catch (e) {
+        console.error('Greška pri čitanju rezervacija:', e);
+      }
+    }
+    fetchTakenSlots();
+
+    // Vraca paket/datum/vrijeme koje je klijent izabrao prije prijave (poslije ucitanih paketa)
+    const restorePending = (available: ServicePackage[]) => {
+      const pending = sessionStorage.getItem('poslo_one_pending_booking');
+      if (!pending) return;
+      try {
+        const booking = JSON.parse(pending);
+        const packageChoice = available.find((item) => item.id === booking.packageId);
+        if (packageChoice) setSelectedPackage(packageChoice);
+        if (typeof booking.date === 'string') setResDate(booking.date);
+        if (typeof booking.time === 'string') setResTime(booking.time);
+        if (typeof booking.name === 'string') setClientName(booking.name);
+        if (typeof booking.phone === 'string') setClientPhone(booking.phone);
+      } catch {
+        // ignorisi neispravan zapis
+      }
+      sessionStorage.removeItem('poslo_one_pending_booking');
+    };
+
+    fetch(`/api/business-profile?slug=${BUSINESS_SLUG}`, { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then((result) => {
+        if (!result?.business) {
+          setBusinessProfile({ ...EMPTY_PROFILE, name: '' });
+          return;
+        }
+        const profile = result.business;
+        setBusinessProfile({
+          name: profile.name || '',
+          category: profile.category || '',
+          city: profile.city || '',
+          address: profile.address || '',
+          phone: profile.phone || '',
+          work_start: String(profile.work_start || '').slice(0, 5),
+          work_end: String(profile.work_end || '').slice(0, 5),
+          work_days: Array.isArray(profile.work_days) ? profile.work_days : [],
+          closed_dates: Array.isArray(profile.closed_dates) ? profile.closed_dates : [],
+        });
+
+        const services: {
+          id: string;
+          name: string;
+          description: string | null;
+          duration: string | null;
+          price: number | null;
+          price_on_request?: boolean | null;
+        }[] = Array.isArray(result.services) ? result.services : [];
+
+        const mapped: ServicePackage[] = services.map((service, index) => {
+          const legacy = slug === 'dubinsko-catic' ? LEGACY_PACKAGES.find((item) => item.name === service.name) || LEGACY_PACKAGES[index] : undefined;
+          const duration = String(service.duration || legacy?.duration || '');
+          const hours = duration.match(/(\d+(?:[.,]\d+)?)\s*h/i);
+          const minutes = duration.match(/(\d+(?:[.,]\d+)?)\s*(?:min|m)\b/i);
+          const numericDuration = hours
+            ? Number(hours[1].replace(',', '.')) * 60
+            : minutes ? Number(minutes[1].replace(',', '.')) : Number(duration);
+          const price = Number(service.price);
+          return {
+            id: service.id,
+            serviceId: service.id,
+            name: service.name,
+            price: service.price_on_request ? 'Na upit' : `${Number.isFinite(price) ? price.toLocaleString('bs-BA') : '0'} KM`,
+            duration: duration || '2h',
+            durationMinutes: Number.isFinite(numericDuration) && numericDuration >= 30 && numericDuration <= 720
+              ? numericDuration
+              : legacy?.durationMinutes || 120,
+            desc: service.description || legacy?.desc || '',
+            features: legacy?.features || [],
+            badge: legacy?.badge,
+          };
+        });
+        setPackages(mapped);
+        restorePending(mapped);
+      })
+      .catch((err) => {
+        console.error('Profil biznisa nije učitan:', err);
+        setBusinessProfile({ ...EMPTY_PROFILE, name: '' });
+      })
+      .finally(() => setDataLoaded(true));
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      setClientEmail(session.user.email || '');
+      setClientName((current) => session.user.user_metadata?.full_name || current);
+      const response = await fetch('/api/customer/reservations', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!response.ok) return;
+      const result = await response.json();
+      setMyReservations(result.reservations || []);
+    });
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setClientName((current) => user.user_metadata?.full_name || current);
+        setClientEmail(user.email || '');
+      }
+    });
+  }, []);
+
+  const fetchTakenSlots = async () => {
+    try {
+      const res = await fetch(`/api/narudzbe?business=${BUSINESS_SLUG}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (res.ok && json.data) {
+        const ranges: BusyRange[] = json.data
+          .filter((item: any) => !['otkazano', 'cancelled', 'canceled', 'isteklo', 'expired'].includes(String(item.status || '').toLocaleLowerCase('bs')))
+          .map((item: any) => {
+            const start = new Date(item.reservation_date).getTime();
+            const durationMin = item.duration_minutes || 120;
+            const end = start + durationMin * 60000;
+            return { start, end };
+          });
+        setBusyRanges(ranges);
+      }
+    } catch (err) {
+      console.error('Greška pri dohvatanju zauzetih termina:', err);
+    }
+  };
+
+  const handleBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPackage || !resDate || !resTime || !clientPhone) {
+      alert('Molimo izaberite paket, datum, vrijeme i unesite broj telefona.');
+      return;
+    }
+
+    setLoading(true);
+
+    const formattedDateTime = `${resDate}T${resTime}:00`;
+    const priceNum = Number(selectedPackage.price.replace(/[^0-9]/g, '')) || 0;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        sessionStorage.setItem('poslo_one_pending_booking', JSON.stringify({
+          packageId: selectedPackage.id,
+          date: resDate,
+          time: resTime,
+          name: clientName,
+          phone: clientPhone,
+        }));
+        router.push(`/nalog?next=${encodeURIComponent(`/katalog/${slug}`)}`);
+        return;
+      }
+      const customerName = session.user.user_metadata?.full_name || clientName.trim();
+      if (!customerName || !session.user.email) {
+        alert('Dodajte ime i prezime na svoj račun i provjerite email adresu.');
+        return;
+      }
+      const response = await fetch('/api/narudzbe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          business_slug: BUSINESS_SLUG,
+          customer_name: customerName,
+          customer_phone: clientPhone,
+          customer_email: session.user.email,
+          service_name: selectedPackage.name,
+          service_id: selectedPackage.serviceId,
+          price: priceNum,
+          reservation_date: formattedDateTime,
+          duration_minutes: selectedPackage.durationMinutes,
+          status: 'Na čekanju',
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Došlo je do greške na serveru.');
+
+      const newReservation: Reservation = {
+        id: result.data && result.data[0] ? result.data[0].id : Date.now(),
+        customer_name: customerName,
+        customer_phone: clientPhone,
+        customer_email: session.user.email,
+        service_name: selectedPackage.name,
+        price: priceNum,
+        reservation_date: formattedDateTime,
+        status: 'Na čekanju',
+      };
+
+      const updated = [newReservation, ...myReservations];
+      setMyReservations(updated);
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+
+      await fetchTakenSlots();
+      setSuccessModalData(newReservation);
+
+      setSelectedPackage(null);
+      setResDate('');
+      setResTime('');
+      setClientName('');
+      setClientPhone('');
+      setClientEmail('');
+    } catch (err: any) {
+      alert('Greška prilikom rezervacije: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmCancelReservation = async () => {
+    if (!reservationToCancel) return;
+
+    setIsDeleting(true);
+    const id = reservationToCancel.id;
+
+    try {
+      if (typeof id === 'number' || typeof id === 'string') {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Prijavite se ponovo za otkazivanje termina.');
+        const cancelResponse = await fetch('/api/cancel-appointment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+          body: JSON.stringify({ id }),
+        });
+        if (!cancelResponse.ok && cancelResponse.status !== 404) {
+          const cancelResult = await cancelResponse.json().catch(() => null);
+          throw new Error(cancelResult?.error || 'Termin nije otkazan.');
+        }
+      }
+
+      const updated = myReservations.filter((r) => r.id !== id);
+      setMyReservations(updated);
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+
+      await fetchTakenSlots();
+      setReservationToCancel(null);
+    } catch (err: any) {
+      alert('Greška pri otkazivanju: ' + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const activeDurationMinutes = selectedPackage ? selectedPackage.durationMinutes : 30;
+
+  // Dok podaci iz baze ne stignu, prikazi skeleton umjesto stare/ugradjene verzije
+  if (!dataLoaded) {
+    return (
+      <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
+        <Background />
+        <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
+        <div className="pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
+          <div className="h-56 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="h-80 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+            <div className="h-80 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
+      <Background />
+      <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
+
+      <div className="pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-blue-400 bg-[#0b0f19] px-4 py-2.5 rounded-xl border border-white/10 transition-all hover:border-blue-500/40"
+          >
+            ← Nazad na partnere
+          </Link>
+
+          <div className="flex items-center gap-3">
+            {myReservations.length > 0 && (
+              <button
+                onClick={() => setShowMyTerminiModal(true)}
+                className="text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2.5 rounded-xl border border-blue-500/30 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Icon name="calendar" className="h-4 w-4 flex-none" /> Moji zakazani termini ({myReservations.length})
+              </button>
+            )}
+
+            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-full border border-emerald-500/20 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Slobodni termini dostupni
+            </span>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0e172a] to-[#0b0f19] border border-white/10 p-6 md:p-10 shadow-2xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
+                Certificirani partner
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                {businessProfile.name}
+              </h1>
+              <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-gray-300 pt-1">
+                {(businessProfile.address || businessProfile.city) && (
+                  <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                    <Icon name="mapPin" className="h-3.5 w-3.5 flex-none text-blue-400" />{[businessProfile.address, businessProfile.city].filter(Boolean).join(', ')}
+                  </span>
+                )}
+                {businessProfile.phone && (
+                  <a href={`tel:${businessProfile.phone.replace(/\s/g, '')}`} className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-blue-500/40">
+                    <Icon name="phone" className="h-3.5 w-3.5 flex-none text-blue-400" />{businessProfile.phone}
+                  </a>
+                )}
+                {businessProfile.work_start && businessProfile.work_end && (
+                  <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-blue-400">
+                    <Icon name="clock" className="h-3.5 w-3.5 flex-none" />{businessProfile.work_days.length > 0 ? `${businessProfile.work_days.join(' – ')}: ` : ''}{businessProfile.work_start} – {businessProfile.work_end}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">1</span>
+            <h2 className="text-xl font-bold text-white">Izaberite paket usluge</h2>
+          </div>
+
+          {packages.length === 0 && (
+            <div className="p-4 bg-[#0b0f19] border border-white/10 rounded-2xl text-center text-sm text-gray-400">
+              Trenutno nema dostupnih usluga za rezervaciju.
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {packages.map((pkg) => {
+              const isSelected = selectedPackage?.id === pkg.id;
+              return (
+                <div
+                  key={pkg.id}
+                  onClick={() => {
+                    setSelectedPackage(pkg);
+                    setResTime('');
+                  }}
+                  className={`relative p-6 rounded-3xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-gradient-to-b from-blue-900/20 to-[#0b0f19] border-blue-500 shadow-xl shadow-blue-500/10 scale-[1.01]'
+                      : 'bg-[#0b0f19] border-white/10 hover:border-white/25 hover:bg-[#0e1424]'
+                  }`}
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2.5 py-1 rounded-md border border-blue-500/20">
+                          {pkg.badge}
+                        </span>
+                        <h3 className="text-2xl font-extrabold text-white mt-2">{pkg.name}</h3>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 mt-1">
+                          <Icon name="clock" className="h-3.5 w-3.5 flex-none" /> Trajanje: <span className="text-blue-400">{pkg.duration}</span>
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-black text-blue-400 block">{pkg.price}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-gray-400 mb-6 leading-relaxed">{pkg.desc}</p>
+
+                    <div className="space-y-2 border-t border-white/5 pt-4">
+                      {pkg.features.map((feat, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-xs text-gray-300">
+                          <span className="text-blue-400 font-bold">✓</span> {feat}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-400">
+                      {isSelected ? 'Odabrano' : 'Klikni za odabir'}
+                    </span>
+                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
+                      isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-white/20'
+                    }`}>
+                      {isSelected && <span className="text-xs font-bold">✓</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <form onSubmit={handleBooking} className="space-y-10">
+
+          <div className="space-y-4 pt-4">
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">2</span>
+              <h2 className="text-xl font-bold text-white">Odaberite datum i vrijeme dolaska</h2>
+            </div>
+
+            {!selectedPackage && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center text-xs text-amber-400 font-semibold">
+                Prvo izaberite paket usluge iznad, kako bismo znali koliko traje termin.
+              </div>
+            )}
+
+            <div className="bg-[#0b0f19] border border-white/10 p-6 rounded-3xl space-y-6">
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-gray-400 font-medium block">Odabrani datum:</span>
+                  <span className="text-sm font-bold text-blue-400">
+                    {resDate ? formatToBalkanDate(resDate) : "Nije izabran datum"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 bg-[#030712] p-1.5 rounded-xl border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setCalMonth((prev) => (prev === 0 ? 11 : prev - 1))}
+                    className="px-2.5 py-1 text-xs bg-[#0b0f19] hover:bg-blue-600 rounded-lg text-white font-bold transition-all"
+                  >
+                    ◀
+                  </button>
+                  <span className="text-xs font-bold px-2 text-white">
+                    {monthNames[calMonth]} {calYear}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCalMonth((prev) => (prev === 11 ? 0 : prev + 1))}
+                    className="px-2.5 py-1 text-xs bg-[#0b0f19] hover:bg-blue-600 rounded-lg text-white font-bold transition-all"
+                  >
+                    ▶
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-7 gap-1 text-center">
+                  {dayNamesShort.map((d) => (
+                    <span key={d} className="text-[11px] font-bold text-gray-500 uppercase">{d}</span>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1.5">
+                  {Array.from({ length: new Date(calYear, calMonth, 1).getDay() === 0 ? 6 : new Date(calYear, calMonth, 1).getDay() - 1 }).map((_, i) => (
+                    <div key={`empty-${i}`} />
+                  ))}
+
+                  {Array.from({ length: new Date(calYear, calMonth + 1, 0).getDate() }).map((_, index) => {
+                    const dayNum = index + 1;
+                    const currentDateObj = new Date(calYear, calMonth, dayNum);
+                    currentDateObj.setHours(0, 0, 0, 0);
+
+                    const isPast = currentDateObj < todayObj;
+                    const isSunday = !isWorkDay(currentDateObj);
+
+                    const mStr = (calMonth + 1) < 10 ? `0${calMonth + 1}` : `${calMonth + 1}`;
+                    const dStr = dayNum < 10 ? `0${dayNum}` : `${dayNum}`;
+                    const fullDateStr = `${calYear}-${mStr}-${dStr}`;
+
+                    const freeSlotsCount = timeSlots.filter((t) => {
+                      const slotStart = new Date(`${fullDateStr}T${t}:00`).getTime();
+                      const slotEnd = slotStart + activeDurationMinutes * 60000;
+                      return !rangesOverlap(slotStart, slotEnd, busyRanges);
+                    }).length;
+
+                    const isFullyBooked = timeSlots.length > 0 && freeSlotsCount === 0;
+                    const isClosed = businessProfile.closed_dates.includes(fullDateStr);
+                    const isDisabled = isPast || isSunday || isFullyBooked || isClosed;
+                    const isSelected = resDate === fullDateStr;
+
+                    return (
+                      <button
+                        key={fullDateStr}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            setResDate(fullDateStr);
+                            setResTime("");
+                          }
+                        }}
+                        className={`py-2.5 rounded-xl text-xs font-bold transition-all border relative ${
+                          isDisabled
+                            ? "opacity-30 cursor-not-allowed bg-gray-900 border-transparent text-gray-600"
+                            : isSelected
+                            ? "bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-600/30 scale-105"
+                            : "bg-[#030712] border-white/10 text-gray-300 hover:border-blue-500/50 hover:bg-[#080d1a]"
+                        }`}
+                      >
+                        {dayNum}
+                        {isFullyBooked && !isPast && !isSunday && (
+                          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-red-500 rounded-full"></span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {resDate ? (
+                <div className="pt-4 border-t border-white/10">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+                    Slobodni termini za <span className="text-blue-400">{formatToBalkanDate(resDate)}</span>
+                    {selectedPackage && <span className="text-gray-500"> (trajanje: {selectedPackage.duration})</span>}:
+                  </label>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {timeSlots.map((time) => {
+                      const slotStart = new Date(`${resDate}T${time}:00`).getTime();
+                      const slotEnd = slotStart + activeDurationMinutes * 60000;
+                      const isTaken = rangesOverlap(slotStart, slotEnd, busyRanges);
+
+                      return (
+                        <button
+                          key={time}
+                          type="button"
+                          disabled={isTaken}
+                          onClick={() => !isTaken && setResTime(time)}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                            isTaken
+                              ? "bg-gray-900/50 border-white/5 text-gray-600 line-through opacity-40 cursor-not-allowed"
+                              : resTime === time
+                              ? "bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-600/30 scale-105"
+                              : "bg-[#030712] text-gray-300 border-white/10 hover:border-blue-500/40"
+                          }`}
+                        >
+                          {time} {isTaken && '(Zauzeto)'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-[#030712] rounded-xl border border-white/5 text-center text-xs text-gray-500 italic">
+                  Izaberite dan na kalendaru iznad da vam se prikažu slobodni termini.
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">3</span>
+              <h2 className="text-xl font-bold text-white">Vaši kontakt podaci</h2>
+            </div>
+
+            <div className="bg-[#0b0f19] border border-white/10 p-6 rounded-3xl space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Ime i prezime *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Unesite vaše ime i prezime"
+                    value={clientName}
+                    onChange={e => setClientName(e.target.value)}
+                    className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Broj telefona *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="061 123 456"
+                    value={clientPhone}
+                    onChange={e => setClientPhone(e.target.value)}
+                    className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">E-mail adresa *</label>
+                  <input
+                  type="email"
+                  required
+                  placeholder="vasa.adresa@email.com"
+                  value={clientEmail}
+                  onChange={e => setClientEmail(e.target.value)}
+                  className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-900/30 via-[#0b0f19] to-blue-900/30 border border-blue-500/30 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+            <div>
+              <span className="text-xs font-bold text-blue-400 uppercase tracking-widest block mb-1">
+                Pregled rezervacije
+              </span>
+              <p className="text-base font-extrabold text-white">
+                {selectedPackage
+                  ? `${selectedPackage.name} — ${selectedPackage.price} (${selectedPackage.duration})`
+                  : 'Niste još izabrali paket'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {resDate && resTime ? `Termin: ${formatToBalkanDate(resDate)} u ${resTime}h` : 'Odaberite datum i satnicu iznad.'}
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !selectedPackage || !resDate || !resTime}
+              className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600 text-white font-extrabold text-sm rounded-2xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap uppercase tracking-wider"
+            >
+              {loading ? 'Spremanje...' : 'Potvrdi i rezerviši termin'}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+      {successModalData && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0b0f19] border border-emerald-500/40 rounded-3xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto text-2xl ">
+              <Icon name="check" className="h-7 w-7" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-white">Uspješno ste rezervisali termin!</h3>
+              <p className="text-xs text-gray-300">
+                Vaš zahtjev je poslat. Očekujte brzu potvrdu od tima <span className="text-blue-400 font-bold">{businessProfile.name}</span>.
+              </p>
+            </div>
+
+            <div className="bg-[#030712] p-4 rounded-2xl border border-white/10 text-left space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Usluga:</span>
+                <span className="font-bold text-white">{successModalData.service_name} ({successModalData.price} KM)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Termin:</span>
+                <span className="font-bold text-blue-400">
+                  {formatToBalkanDate(successModalData.reservation_date.split('T')[0])} u {successModalData.reservation_date.split('T')[1]?.slice(0, 5)}h
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Status:</span>
+                <span className="font-bold text-amber-400">{successModalData.status}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSuccessModalData(null)}
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all uppercase tracking-wider"
+            >
+              Razumijem, hvala
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showMyTerminiModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0b0f19] border border-white/10 rounded-3xl max-w-md w-full p-6 relative shadow-2xl space-y-4">
+            <button
+              onClick={() => setShowMyTerminiModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white font-bold text-lg"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-xl font-black text-white">Moji zakazani termini</h3>
+            <p className="text-xs text-gray-400">Ovdje možete pregledati i otkazati svoje nadolazeće termine.</p>
+
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {myReservations.length === 0 ? (
+                <div className="p-4 text-center text-xs text-gray-500">Nemate aktivnih rezervacija.</div>
+              ) : (
+                myReservations.map((res) => {
+                  const dateObj = new Date(res.reservation_date);
+                  const rawDateStr = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split('T')[0] : res.reservation_date;
+                  const dateStr = formatToBalkanDate(rawDateStr);
+                  const timeStr = !isNaN(dateObj.getTime()) ? dateObj.toTimeString().slice(0, 5) : '';
+
+                  return (
+                    <div key={res.id} className="bg-[#030712] p-4 rounded-2xl border border-white/10 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-xs font-bold text-white block">{res.service_name}</span>
+                          <span className="text-[10px] text-blue-400 font-bold">{res.price} KM</span>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
+                          {res.status}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-gray-300">
+                        {dateStr} {timeStr ? `u ${timeStr}h` : ''}
+                      </div>
+
+                      <div className="pt-2 border-t border-white/5 flex justify-end">
+                        <button
+                          onClick={() => setReservationToCancel(res)}
+                          className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-lg transition-all"
+                        >
+                          Otkaži termin
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reservationToCancel && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0b0f19] border border-white/10 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center mx-auto text-xl">
+              <Icon name="alert" className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-white">Otkaži termin?</h3>
+              <p className="text-xs text-gray-400">
+                Jeste li sigurni da želite otkazati termin za <span className="text-white font-semibold">{reservationToCancel.service_name}</span>?
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setReservationToCancel(null)}
+                className="flex-1 py-3 bg-[#030712] hover:bg-white/5 text-gray-300 text-xs font-bold rounded-xl border border-white/10 transition-all"
+              >
+                Odustani
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmCancelReservation}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all disabled:opacity-50"
+              >
+                {isDeleting ? 'Brisanje...' : 'Da, otkaži'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <section className="mx-auto max-w-2xl px-4 pb-16">
+        <div className="rounded-3xl border border-white/10 bg-[#0b0f19] p-6">
+          <h2 className="mb-1 text-xl font-bold text-white">Imate pitanje?</h2>
+          <p className="mb-4 text-sm text-gray-400">Pošaljite upit, javit ćemo vam se (ovo nije rezervacija termina).</p>
+          <InquiryForm businessSlug={BUSINESS_SLUG} />
+        </div>
+      </section>
+
+      <Footer onOpenPrivacy={() => {}} />
+    </main>
+  );
+}

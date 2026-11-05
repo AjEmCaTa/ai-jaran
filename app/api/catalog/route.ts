@@ -13,7 +13,7 @@ export async function GET() {
   const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data, error } = await admin
     .from('businesses')
-    .select('slug, name, category, city, logo_url, created_at')
+    .select('id, slug, name, category, city, logo_url, created_at')
     .eq('status', 'active')
     .neq('is_active', false)
     .order('created_at', { ascending: true });
@@ -21,8 +21,11 @@ export async function GET() {
     console.error('Katalog nije učitan:', error);
     return NextResponse.json({ error: 'Katalog nije moguće učitati.' }, { status: 500 });
   }
+  // U katalogu su samo firme koje su dodale bar jednu uslugu (prazna stranica ne koristi nikome).
+  const { data: services } = await admin.from('services').select('business_id');
+  const withServices = new Set((services || []).map((s) => s.business_id));
   const businesses = (data || [])
-    .filter((b) => b.slug && b.name)
+    .filter((b) => b.slug && b.name && withServices.has(b.id))
     .map((b) => ({
       slug: b.slug,
       name: b.name,

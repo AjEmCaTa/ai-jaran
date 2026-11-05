@@ -20,8 +20,9 @@ export function paypalMode(): PaypalMode {
 }
 
 function credentials(mode: PaypalMode) {
-  const id = mode === 'live' ? process.env.PAYPAL_CLIENT_ID : process.env.PAYPAL_SANDBOX_CLIENT_ID;
-  const secret = mode === 'live' ? process.env.PAYPAL_CLIENT_SECRET : process.env.PAYPAL_SANDBOX_CLIENT_SECRET;
+  // trim: kod lijepljenja u Vercel zna se uhvatiti razmak ili novi red.
+  const id = (mode === 'live' ? process.env.PAYPAL_CLIENT_ID : process.env.PAYPAL_SANDBOX_CLIENT_ID)?.trim();
+  const secret = (mode === 'live' ? process.env.PAYPAL_CLIENT_SECRET : process.env.PAYPAL_SANDBOX_CLIENT_SECRET)?.trim();
   return id && secret ? { id, secret } : null;
 }
 
@@ -45,7 +46,10 @@ async function accessToken(mode: PaypalMode): Promise<string> {
     cache: 'no-store',
   });
   const json = await response.json().catch(() => ({}));
-  if (!response.ok || !json.access_token) throw new Error(`PayPal prijava nije uspjela (${response.status}).`);
+  if (!response.ok || !json.access_token) {
+    // Bez ključeva u logu: samo dužine, da se vidi je li nešto odsječeno ili zamijenjeno.
+    throw new Error(`PayPal prijava nije uspjela (${response.status}, ${mode}, id ${creds.id.length} znakova, secret ${creds.secret.length} znakova, ${json.error || ''}).`);
+  }
   cachedToken = { mode, token: json.access_token, expires: Date.now() + Number(json.expires_in || 300) * 1000 };
   return json.access_token;
 }

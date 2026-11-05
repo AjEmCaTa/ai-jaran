@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import InstallButton from "./InstallButton";
 import AuthNavButton from "./AuthNavButton";
@@ -20,6 +20,16 @@ export default function Navbar({
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Dok je meni otvoren, stranica ispod se ne pomjera.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
 
   const isHome = pathname === "/";
   const isPricing = pathname === "/cjenovnik";
@@ -62,7 +72,7 @@ export default function Navbar({
   };
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/[0.06] bg-[#030712]/75 backdrop-blur-2xl transition-all">
+    <nav className={`fixed left-0 right-0 top-0 z-50 border-b border-white/[0.06] transition-colors ${isOpen ? "bg-[#030712]" : "bg-[#030712]/75 backdrop-blur-2xl"}`}>
       <div className="mx-auto flex h-[82px] w-full max-w-[1500px] items-center justify-between px-6 sm:px-8 lg:px-12 xl:px-16">
 
         {/* LOGO */}
@@ -178,14 +188,14 @@ export default function Navbar({
 
       {/* MOBILE MENU DROPDOWN */}
       {isOpen && (
-        <div className="max-h-[calc(100dvh-82px)] overflow-y-auto overscroll-contain border-t border-white/[0.05] bg-[#030712]/98 px-5 pb-4 pt-2 shadow-2xl backdrop-blur-2xl md:hidden">
+        <div className="fixed inset-x-0 bottom-0 top-[82px] flex flex-col overflow-y-auto overscroll-contain bg-[#030712] px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 md:hidden">
 
           {/* GLAVNI LINKOVI */}
           <div className="flex flex-col divide-y divide-white/[0.05]">
             <Link
               href="/"
               onClick={handleLogoOrHomeClick}
-              className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
+              className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
             >
               Početna
             </Link>
@@ -193,7 +203,7 @@ export default function Navbar({
             <Link
               href="/#osnivac"
               onClick={(e) => handleSmoothScroll(e, "#osnivac")}
-              className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
+              className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
             >
               O nama
             </Link>
@@ -201,7 +211,7 @@ export default function Navbar({
             <Link
               href="/#faq"
               onClick={(e) => handleSmoothScroll(e, "#faq")}
-              className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
+              className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
             >
               FAQ
             </Link>
@@ -211,7 +221,7 @@ export default function Navbar({
               <Link
                 href="/cjenovnik"
                 onClick={() => setIsOpen(false)}
-                className="flex min-h-[42px] items-center text-[15px] font-medium text-slate-300 hover:text-white"
+                className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-white hover:text-blue-300"
               >
                 Cjenovnik
               </Link>
@@ -222,7 +232,7 @@ export default function Navbar({
               <Link
                 href="/katalog"
                 onClick={() => setIsOpen(false)}
-                className="flex min-h-[42px] items-center text-[15px] font-medium text-emerald-400 hover:text-emerald-300"
+                className="flex min-h-[56px] items-center font-display text-[20px] font-semibold text-emerald-400 hover:text-emerald-300"
               >
                 Biznisi
               </Link>
@@ -230,12 +240,12 @@ export default function Navbar({
           </div>
 
           {/* RAČUN I AKCIJE */}
-          <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.08] pt-3">
+          <div className="mt-auto flex flex-col gap-2.5 pt-8">
             <div className="grid grid-cols-2 gap-2">
               <Link
                 href="/dashboard"
                 onClick={() => setIsOpen(false)}
-                className="flex h-10 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10 text-sm font-semibold text-blue-400 hover:bg-blue-500/20"
+                className="flex h-12 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10 text-sm font-semibold text-blue-300 hover:bg-blue-500/20"
               >
                 Moj Panel
               </Link>
@@ -255,7 +265,7 @@ export default function Navbar({
                 setIsOpen(false);
                 onOpenContact();
               }}
-              className="flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-lg"
+              className="flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white"
             >
               Kontakt
             </button>

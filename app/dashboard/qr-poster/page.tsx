@@ -66,7 +66,7 @@ export default function QrPosterPage() {
             <div className="w-full">
               {business.logo_url && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={business.logo_url} alt="" className="mx-auto mb-[5%] h-[clamp(44px,12vw,72px)] w-[clamp(44px,12vw,72px)] rounded-full object-contain" style={{ background: '#fff' }} />
+                <img src={business.logo_url} alt="" className="mx-auto mb-[5%] h-[clamp(48px,13vw,84px)] w-auto max-w-[70%] object-contain" />
               )}
               <p className="text-[clamp(9px,2.2vw,12px)] font-bold uppercase tracking-[0.3em]" style={{ color: dark ? '#a9bcff' : '#2563eb' }}>
                 {categoryLabel(business.category) || 'Online rezervacije'}

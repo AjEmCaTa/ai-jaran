@@ -32,6 +32,36 @@ function SectionTitle({ icon, title, text }: { icon: 'palette' | 'building' | 's
   );
 }
 
+// Bilo koja slika se u pregledniku smanji (najviše 1200 px) i pretvori u WEBP/PNG,
+// pa veličina originala nije bitna. Prozirnost se zadržava.
+async function prepareLogo(file: File): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('decode'));
+      el.src = url;
+    });
+    const w = img.naturalWidth || 1200;
+    const h = img.naturalHeight || 1200;
+    const scale = Math.min(1, 1200 / Math.max(w, h));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(w * scale));
+    canvas.height = Math.max(1, Math.round(h * scale));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('canvas');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.92));
+    if (blob) return blob;
+    const png = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (png) return png;
+    throw new Error('encode');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 // Raspon datuma (uključivo) kao lista 'YYYY-MM-DD'.
 function dateRange(from: string, to: string) {
   const out: string[] = [];
@@ -64,16 +94,19 @@ export default function SettingsPage() {
       setLogoMessage('Prijavite se ponovo.');
       return;
     }
-    if (file && file.size > 1024 * 1024) {
-      setLogoMessage('Slika je veća od 1 MB.');
-      return;
-    }
     setLogoBusy(true);
     try {
       let response: Response;
       if (file) {
+        let upload: Blob;
+        try {
+          upload = await prepareLogo(file);
+        } catch {
+          setLogoMessage('Ovu sliku nije moguće otvoriti. Pokušajte s drugom slikom (npr. PNG ili JPG).');
+          return;
+        }
         const form = new FormData();
-        form.append('logo', file);
+        form.append('logo', upload, 'logo');
         response = await fetch('/api/dashboard/logo', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` }, body: form });
       } else {
         response = await fetch('/api/dashboard/logo', { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
@@ -172,7 +205,6 @@ export default function SettingsPage() {
           <PartnerLogo slug={ctxBusiness.slug} name={business.name || 'Firma'} src={ctxBusiness.logo_url} className="h-16 w-16 shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-white">Logo firme</p>
-            <p className="mt-0.5 text-xs text-slate-400">Prikazuje se na vašoj stranici, u katalogu i na QR posteru. PNG, JPG ili WEBP, do 1 MB, najbolje kvadratni.</p>
             {logoMessage && <p role="status" className="mt-1.5 text-xs text-blue-300">{logoMessage}</p>}
           </div>
           </div>
@@ -182,7 +214,7 @@ export default function SettingsPage() {
               {logoBusy ? 'Čuvanje...' : ctxBusiness.logo_url ? 'Promijeni' : 'Dodaj logo'}
               <input
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept="image/*"
                 className="sr-only"
                 onChange={(e) => {
                   const f = e.target.files?.[0] || null;

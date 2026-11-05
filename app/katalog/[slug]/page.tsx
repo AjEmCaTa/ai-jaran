@@ -7,6 +7,7 @@ import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import Background from "../../../components/Background";
 import PartnerLogo from "../../../components/PartnerLogo";
+import Icon from "../../../components/Icon";
 
 const EMPTY_PROFILE = {
   name: "",
@@ -150,11 +151,11 @@ export default function CategoryPartnersPage() {
                   {/* BADGEVI NA VRHU */}
                   <div className="mb-6 flex items-center justify-between gap-2">
                     <span className="rounded-full border border-blue-500/30 bg-blue-600/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-400">
-                      Preporučeni Partner 🌟
+                      Preporučeni partner
                     </span>
 
                     <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
-                      🟢 Otvoreno
+                      <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />Otvoreno
                     </span>
                   </div>
 
@@ -190,17 +191,17 @@ export default function CategoryPartnersPage() {
                   {/* INFORMACIJE O BIZNISU */}
                   <div className="mb-6 space-y-2 border-t border-white/5 pt-4 text-xs text-gray-300">
                     <p className="flex items-center gap-2">
-                      <span className="text-blue-400">📍</span>
+                      <Icon name="mapPin" className="h-4 w-4 flex-none text-blue-400" />
                       {[businessProfile.address, businessProfile.city].filter(Boolean).join(", ")}
                     </p>
 
                     <p className="flex items-center gap-2">
-                      <span className="text-blue-400">📞</span>
+                      <Icon name="phone" className="h-4 w-4 flex-none text-blue-400" />
                       {businessProfile.phone}
                     </p>
 
                     <p className="flex items-center gap-2 text-gray-400">
-                      <span className="text-blue-400">🕒</span>
+                      <Icon name="clock" className="h-4 w-4 flex-none text-blue-400" />
                       {businessProfile.work_days.join(" – ")}: {businessProfile.work_start} – {businessProfile.work_end}
                     </p>
                   </div>
@@ -253,19 +254,19 @@ export default function CategoryPartnersPage() {
                   <div className="mb-6 space-y-2 border-t border-white/5 pt-4 text-xs text-gray-300">
                     {(solarProfile.address || solarProfile.city) && (
                       <p className="flex items-center gap-2">
-                        <span className="text-amber-400">📍</span>
+                        <Icon name="mapPin" className="h-4 w-4 flex-none text-amber-400" />
                         {[solarProfile.address, solarProfile.city].filter(Boolean).join(", ")}
                       </p>
                     )}
                     {solarProfile.phone && (
                       <p className="flex items-center gap-2">
-                        <span className="text-amber-400">📞</span>
+                        <Icon name="phone" className="h-4 w-4 flex-none text-amber-400" />
                         {solarProfile.phone}
                       </p>
                     )}
                     {solarProfile.work_days.length > 0 && solarProfile.work_start && (
                       <p className="flex items-center gap-2 text-gray-400">
-                        <span className="text-amber-400">🕒</span>
+                        <Icon name="clock" className="h-4 w-4 flex-none text-amber-400" />
                         {solarProfile.work_days.join(" – ")}: {solarProfile.work_start} – {solarProfile.work_end}
                       </p>
                     )}
@@ -283,7 +284,7 @@ export default function CategoryPartnersPage() {
           </div>
         ) : (
           <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0b0f19] p-8 py-24 text-center shadow-2xl">
-            <span className="mb-4 block text-5xl">🚀</span>
+            <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-500/25 bg-blue-500/10 text-blue-300"><Icon name="sparkles" className="h-7 w-7" /></span>
 
             <h2 className="mb-3 text-3xl font-extrabold text-white">
               Uskoro stižu partneri!

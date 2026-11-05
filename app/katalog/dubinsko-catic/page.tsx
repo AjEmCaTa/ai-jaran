@@ -8,6 +8,7 @@ import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import Background from '../../../components/Background';
 import InquiryForm from '../../../components/InquiryForm';
+import Icon from '../../../components/Icon';
 
 interface ServicePackage {
   id: string;
@@ -101,7 +102,7 @@ const LEGACY_PACKAGES: ServicePackage[] = [
     price: '130 KM',
     duration: '5h',
     durationMinutes: 300,
-    badge: 'Najpopularnije 🔥',
+    badge: 'Najpopularnije',
     desc: 'Kompletno detaljno dubinsko pranje cijelog vozila.',
     features: ['Vađenje i pranje svih sjedišta', 'Tepisi i krovni tapacirung', 'Zaštita i sjaj svih plastika', 'Kompletno vanjsko pranje']
   }
@@ -428,7 +429,7 @@ export default function DubinskoCaticPage() {
                 onClick={() => setShowMyTerminiModal(true)}
                 className="text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2.5 rounded-xl border border-blue-500/30 transition-all flex items-center gap-2 cursor-pointer"
               >
-                📅 Moji zakazani termini ({myReservations.length})
+                <Icon name="calendar" className="h-4 w-4 flex-none" /> Moji zakazani termini ({myReservations.length})
               </button>
             )}
 
@@ -444,20 +445,20 @@ export default function DubinskoCaticPage() {
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
-                🌟 Certificirani Partner
+                Certificirani partner
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                 {businessProfile.name}
               </h1>
               <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-gray-300 pt-1">
                 <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                  📍 {[businessProfile.address, businessProfile.city].filter(Boolean).join(', ')}
+                  <Icon name="mapPin" className="h-3.5 w-3.5 flex-none text-blue-400" />{[businessProfile.address, businessProfile.city].filter(Boolean).join(', ')}
                 </span>
                 <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                  📞 {businessProfile.phone}
+                  <Icon name="phone" className="h-3.5 w-3.5 flex-none text-blue-400" />{businessProfile.phone}
                 </span>
                 <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-blue-400">
-                  🕒 {businessProfile.work_days.join(' – ')}: {businessProfile.work_start} – {businessProfile.work_end}
+                  <Icon name="clock" className="h-3.5 w-3.5 flex-none" />{businessProfile.work_days.join(' – ')}: {businessProfile.work_start} – {businessProfile.work_end}
                 </span>
               </div>
             </div>
@@ -500,7 +501,7 @@ export default function DubinskoCaticPage() {
                         </span>
                         <h3 className="text-2xl font-extrabold text-white mt-2">{pkg.name}</h3>
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 mt-1">
-                          ⏱️ Trajanje: <span className="text-blue-400">{pkg.duration}</span>
+                          <Icon name="clock" className="h-3.5 w-3.5 flex-none" /> Trajanje: <span className="text-blue-400">{pkg.duration}</span>
                         </span>
                       </div>
                       <div className="text-right">
@@ -545,7 +546,7 @@ export default function DubinskoCaticPage() {
 
             {!selectedPackage && (
               <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center text-xs text-amber-400 font-semibold">
-                ⚠️ Prvo izaberite paket usluge iznad, kako bismo znali koliko traje termin.
+                Prvo izaberite paket usluge iznad, kako bismo znali koliko traje termin.
               </div>
             )}
 
@@ -676,7 +677,7 @@ export default function DubinskoCaticPage() {
                 </div>
               ) : (
                 <div className="p-3 bg-[#030712] rounded-xl border border-white/5 text-center text-xs text-gray-500 italic">
-                  👆 Izaberite dan na kalendaru iznad da vam se prikažu slobodni termini.
+                  Izaberite dan na kalendaru iznad da vam se prikažu slobodni termini.
                 </div>
               )}
 
@@ -737,10 +738,10 @@ export default function DubinskoCaticPage() {
               <p className="text-base font-extrabold text-white">
                 {selectedPackage
                   ? `${selectedPackage.name} — ${selectedPackage.price} (${selectedPackage.duration})`
-                  : '⚠️ Niste još izabrali paket'}
+                  : 'Niste još izabrali paket'}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                {resDate && resTime ? `📅 Termin: ${formatToBalkanDate(resDate)} u ${resTime}h` : 'Odaberite datum i satnicu iznad.'}
+                {resDate && resTime ? `Termin: ${formatToBalkanDate(resDate)} u ${resTime}h` : 'Odaberite datum i satnicu iznad.'}
               </p>
             </div>
 
@@ -749,7 +750,7 @@ export default function DubinskoCaticPage() {
               disabled={loading || !selectedPackage || !resDate || !resTime}
               className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600 text-white font-extrabold text-sm rounded-2xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap uppercase tracking-wider"
             >
-              {loading ? 'Spremanje...' : 'Potvrdi i rezerviši termin 🚀'}
+              {loading ? 'Spremanje...' : 'Potvrdi i rezerviši termin'}
             </button>
           </div>
 
@@ -760,8 +761,8 @@ export default function DubinskoCaticPage() {
       {successModalData && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0b0f19] border border-emerald-500/40 rounded-3xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto text-2xl animate-bounce">
-              🎉
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto text-2xl ">
+              <Icon name="check" className="h-7 w-7" />
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-black text-white">Uspješno ste rezervisali termin!</h3>
@@ -792,7 +793,7 @@ export default function DubinskoCaticPage() {
               onClick={() => setSuccessModalData(null)}
               className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all uppercase tracking-wider"
             >
-              Razumijem, hvala! 👍
+              Razumijem, hvala
             </button>
           </div>
         </div>
@@ -834,7 +835,7 @@ export default function DubinskoCaticPage() {
                       </div>
 
                       <div className="text-xs text-gray-300">
-                        📅 {dateStr} {timeStr ? `u 🕒 ${timeStr}h` : ''}
+                        {dateStr} {timeStr ? `u ${timeStr}h` : ''}
                       </div>
 
                       <div className="pt-2 border-t border-white/5 flex justify-end">
@@ -842,7 +843,7 @@ export default function DubinskoCaticPage() {
                           onClick={() => setReservationToCancel(res)}
                           className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-lg transition-all"
                         >
-                          ❌ Otkaži termin
+                          Otkaži termin
                         </button>
                       </div>
                     </div>
@@ -858,7 +859,7 @@ export default function DubinskoCaticPage() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0b0f19] border border-white/10 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl">
             <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center mx-auto text-xl">
-              ⚠️
+              <Icon name="alert" className="h-6 w-6" />
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-white">Otkaži termin?</h3>

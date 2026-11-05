@@ -6,13 +6,14 @@ import Footer from '../../components/Footer';
 import Background from '../../components/Background';
 import ContactModal from '../../components/ContactModal';
 import PrivacyModal from '../../components/PrivacyModal';
+import Icon, { type IconName } from '../../components/Icon';
 
 const businessCategories = [
   {
     id: "dubinsko",
     title: "Dubinsko čišćenje i Autopraonice",
     description: "Sve za vozila i namještaj – dubinsko pranje, autopraonice, detailing i keramička zaštita uz automatsko vođenje termina.",
-    icon: "🚗",
+    icon: "car" as IconName,
     count: "Mreža partnera",
     image: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=800&q=80",
     slug: "dubinsko-ciscenje",
@@ -22,7 +23,7 @@ const businessCategories = [
     id: "solarni",
     title: "Solarni sistemi i elektroinstalacije",
     description: "Solarne elektrane, elektroinstalacije i energetska rješenja – pregled usluga i slanje upita za procjenu na terenu.",
-    icon: "☀️",
+    icon: "sun" as IconName,
     count: "Energetika i instalacije",
     image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80",
     slug: "solarni-sistemi",
@@ -32,7 +33,7 @@ const businessCategories = [
     id: "apartmani",
     title: "Vile i Apartmani",
     description: "Automatsko preuzimanje rezervacija noćenja, komunikacija sa gostima i upiti preko AI asistenta.",
-    icon: "🏡",
+    icon: "home" as IconName,
     count: "Turistički smještaj",
     image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
     slug: "vile-apartmani",
@@ -42,7 +43,7 @@ const businessCategories = [
     id: "stanovi",
     title: "Agencije za čišćenje stanova",
     description: "Organizacija i raspored čišćenja stambenih i poslovnih objekata, redovno ili generalno čišćenje.",
-    icon: "🧹",
+    icon: "sparkles" as IconName,
     count: "Usluge čišćenja",
     image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
     slug: "agencije-za-ciscenje",
@@ -52,7 +53,7 @@ const businessCategories = [
     id: "beauty",
     title: "Frizeri i Beauty Saloni",
     description: "Zakazivanje termina za šišanje, njegu lica, tretmane i kozmetičke usluge bez gužve na telefonu.",
-    icon: "💇‍♂️",
+    icon: "scissors" as IconName,
     count: "Beauty sektor",
     image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
     slug: "beauty-saloni",
@@ -95,7 +96,7 @@ export default function KatalogPage() {
           {/* Filter gradova */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
             <span className="text-xs text-slate-400 font-medium mr-2">
-              📍 Filtriraj lokaciju:
+              <Icon name="mapPin" className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />Filtriraj lokaciju:
             </span>
 
             {cities.map(city => (
@@ -133,7 +134,7 @@ export default function KatalogPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/50 to-transparent"></div>
 
                   <div className="absolute top-3 left-3 bg-[#030712]/90 px-3 py-1 rounded-full text-xs font-medium text-slate-300 border border-slate-800/80 flex items-center gap-1.5 shadow-md">
-                    <span>{cat.icon}</span>
+                    <Icon name={cat.icon} className="h-4 w-4" />
                     <span>{cat.count}</span>
                   </div>
                 </div>
@@ -184,7 +185,7 @@ export default function KatalogPage() {
                 onClick={() => setIsContactOpen(true)}
                 className="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs md:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all duration-200 cursor-pointer inline-flex items-center gap-2"
               >
-                <span>📩</span> Želim svoj biznis u katalogu
+                <Icon name="mail" className="h-4 w-4" /> Želim svoj biznis u katalogu
               </button>
             </div>
           </div>

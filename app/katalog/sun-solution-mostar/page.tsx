@@ -6,6 +6,7 @@ import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import Background from '../../../components/Background';
 import PartnerLogo from '../../../components/PartnerLogo';
+import Icon from '../../../components/Icon';
 import { formatServicePrice } from '../../../utils/servicePrice';
 
 const BUSINESS_SLUG = 'sun-solution-mostar';
@@ -147,12 +148,12 @@ export default function SunSolutionPage() {
 
           <div className="mt-6 space-y-2 border-t border-white/5 pt-4 text-sm text-gray-300">
             {(profile.address || profile.city) && (
-              <p>📍 {[profile.address, profile.city].filter(Boolean).join(', ')}</p>
+              <p className="flex items-center gap-2"><Icon name="mapPin" className="h-4 w-4 flex-none text-amber-400" />{[profile.address, profile.city].filter(Boolean).join(', ')}</p>
             )}
-            {profile.phone && <p>📞 {profile.phone}</p>}
+            {profile.phone && <p className="flex items-center gap-2"><Icon name="phone" className="h-4 w-4 flex-none text-amber-400" />{profile.phone}</p>}
             {profile.work_days.length > 0 && profile.work_start && (
-              <p className="text-gray-400">
-                🕒 {profile.work_days.join(' – ')}: {profile.work_start} – {profile.work_end}
+              <p className="flex items-center gap-2 text-gray-400">
+                <Icon name="clock" className="h-4 w-4 flex-none text-amber-400" />{profile.work_days.join(' – ')}: {profile.work_start} – {profile.work_end}
               </p>
             )}
           </div>

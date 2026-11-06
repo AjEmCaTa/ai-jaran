@@ -98,7 +98,7 @@ export default function RegistracijaPage() {
             Registruj svoj biznis
           </h1>
           <p className="text-slate-400 text-sm">
-            Kreiraj nalog za POSLO ONE Pro paket. Dashboard se aktivira nakon potvrde uplate.
+            Panel ti se otvara odmah nakon registracije, a prvih 30 dana je besplatno. Paket biraš i plaćaš kasnije, kad se odlučiš.
           </p>
         </div>
 

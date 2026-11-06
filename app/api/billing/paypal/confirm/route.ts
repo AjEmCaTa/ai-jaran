@@ -8,7 +8,12 @@ export async function POST(request: NextRequest) {
   if (result.response) return result.response;
   const { admin, businessId } = result.context;
   const body = await request.json().catch(() => ({}));
-  const subscriptionId = typeof body?.subscriptionId === 'string' ? body.subscriptionId.trim() : '';
+  let subscriptionId = typeof body?.subscriptionId === 'string' ? body.subscriptionId.trim() : '';
+  if (!subscriptionId) {
+    // "Provjeri uplatu": zadnja pretplata ove firme.
+    const { data } = await admin.from('businesses').select('paypal_subscription_id').eq('id', businessId).maybeSingle();
+    subscriptionId = data?.paypal_subscription_id || '';
+  }
   try {
     const synced = await syncPaypalSubscription(admin, subscriptionId, businessId);
     return NextResponse.json({ success: true, plan: synced.plan, status: synced.status });

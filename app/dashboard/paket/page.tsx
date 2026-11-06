@@ -165,6 +165,31 @@ export default function BillingPage() {
                       : 'Nemate aktivnu pretplatu.'}
               </p>
             </div>
+            {status.billingStatus === 'pending' && (
+              <button
+                type="button"
+                disabled={busy !== ''}
+                onClick={async () => {
+                  setBusy('confirm');
+                  const headers = await authHeaders();
+                  if (headers) {
+                    const res = await fetch('/api/billing/paypal/confirm', { method: 'POST', headers, body: '{}' });
+                    const json = await res.json().catch(() => ({}));
+                    if (res.ok && json.status === 'active') {
+                      setMessage({ tone: 'ok', text: `Hvala! Paket ${json.plan === 'pro' ? 'Pro' : 'Starter'} je aktivan.` });
+                      await refresh();
+                    } else if (res.ok) {
+                      setMessage({ tone: 'err', text: 'PayPal još nije potvrdio uplatu. Ako ste je završili, pokušajte za minut.' });
+                    } else setMessage({ tone: 'err', text: json.error || 'Uplatu nije moguće provjeriti.' });
+                    await load();
+                  }
+                  setBusy('');
+                }}
+                className="min-h-10 rounded-lg bg-blue-500 px-4 text-xs font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50"
+              >
+                {busy === 'confirm' ? 'Provjeravam...' : 'Provjeri uplatu'}
+              </button>
+            )}
             {status.hasSubscription && active && (
               <button type="button" onClick={cancel} disabled={busy !== ''} className="min-h-10 rounded-lg border border-white/10 px-4 text-xs font-semibold text-slate-300 transition hover:border-red-500/40 hover:text-red-300 disabled:opacity-50">
                 {busy === 'cancel' ? 'Otkazujem...' : 'Otkaži pretplatu'}

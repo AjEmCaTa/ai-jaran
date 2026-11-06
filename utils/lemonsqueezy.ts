@@ -79,7 +79,7 @@ export async function ensureLemonSetup(admin: SupabaseClient) {
   }
 
   if (!(await getConfig(admin, 'ls:webhook_secret'))) {
-    const secret = crypto.randomBytes(24).toString('hex');
+    const secret = crypto.randomBytes(16).toString('hex');
     await ls('/webhooks', {
       method: 'POST',
       body: {

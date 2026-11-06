@@ -43,7 +43,7 @@ const SECTIONS: { title: string; items: NavItem[] }[] = [
     title: "Firma",
     items: [
       { href: "/dashboard/settings", label: "Podaci o firmi", icon: "building" },
-      // Paket i plaćanje (/dashboard/paket) se dodaje u meni kad PayPal pređe na live.
+      { href: "/dashboard/paket", label: "Paket i plaćanje", icon: "wallet" },
       { href: "/dashboard/qr-poster", label: "QR poster za print", icon: "qr" },
       { href: "/dashboard/preporuke", label: "Preporuči i zaradi", icon: "handshake" },
       { href: "/dashboard/izgled", label: "Izgled panela", icon: "palette" },

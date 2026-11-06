@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   }
   try {
     const synced = await syncPaypalSubscription(admin, subscriptionId, businessId);
-    return NextResponse.json({ success: true, plan: synced.plan, status: synced.status });
+    return NextResponse.json({ success: true, plan: synced.plan, status: synced.status, paypalStatus: synced.paypalStatus });
   } catch (error) {
     console.error('PayPal potvrda nije uspjela:', error);
     return NextResponse.json({ error: 'Uplatu nije moguće potvrditi. Ako ste platili, javite nam se.' }, { status: 400 });

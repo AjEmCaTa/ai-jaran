@@ -38,7 +38,13 @@ const PLANS = [
   },
 ];
 
-const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('bs-BA', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+const MONTHS = ['januara', 'februara', 'marta', 'aprila', 'maja', 'juna', 'jula', 'augusta', 'septembra', 'oktobra', 'novembra', 'decembra'];
+// Ručno, jer neki preglednici nemaju bosanski format datuma.
+const fmt = (iso: string | null) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getDate()}. ${MONTHS[d.getMonth()]} ${d.getFullYear()}.`;
+};
 const STATUS_TEXT: Record<string, string> = {
   active: 'Aktivna',
   pending: 'Čeka potvrdu',

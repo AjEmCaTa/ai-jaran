@@ -193,7 +193,7 @@ export default function BillingPage() {
                   : status.billingStatus === 'cancelled' && status.planUntil
                     ? `Paket vrijedi do ${fmt(status.planUntil)}.`
                     : inTrial
-                      ? `Besplatni period do ${fmt(status.trialEnds)}. Ako se pretplatite sada, prva naplata je tek tada.`
+                      ? lemon ? `Besplatni period do ${fmt(status.trialEnds)}. Paket plaćate kad odlučite, naplata je odmah i zatim svaki mjesec.` : `Besplatni period do ${fmt(status.trialEnds)}. Ako se pretplatite sada, prva naplata je tek tada.`
                       : 'Nemate aktivnu pretplatu.'}
               </p>
             </div>

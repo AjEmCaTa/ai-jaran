@@ -17,6 +17,8 @@ type Status = {
   hasSubscription: boolean;
   trialEnds: string | null;
   paypal: { enabled: boolean; sandbox: boolean };
+  portalUrl: string | null;
+  provider: 'lemonsqueezy' | 'paypal' | null;
 };
 
 const PLANS = [
@@ -70,7 +72,29 @@ export default function BillingPage() {
     const params = new URLSearchParams(window.location.search);
     const subId = params.get('subscription_id');
     const back = params.get('paypal');
+    const lemonBack = params.get('placanje') === 'povratak';
     (async () => {
+      if (lemonBack) {
+        // Povratak sa Lemon Squeezyja: potvrda stiže webhookom za par sekundi.
+        window.history.replaceState(null, '', '/dashboard/paket');
+        setMessage({ tone: 'ok', text: 'Hvala! Uplata se obrađuje...' });
+        const headers = await authHeaders();
+        for (let i = 0; i < 8 && headers; i += 1) {
+          const res = await fetch('/api/billing/status', { headers, cache: 'no-store' });
+          if (res.ok) {
+            const json = await res.json();
+            setStatus(json);
+            if (json.billingStatus === 'active') {
+              setMessage({ tone: 'ok', text: `Hvala! Paket ${json.plan === 'pro' ? 'Pro' : 'Starter'} je aktivan.` });
+              await refresh();
+              return;
+            }
+          }
+          await new Promise((r) => setTimeout(r, 2500));
+        }
+        setMessage({ tone: 'ok', text: 'Uplata je primljena. Ako paket još ne piše kao aktivan, kliknite „Provjeri uplatu” za minut.' });
+        return;
+      }
       if (back === 'odustao') setMessage({ tone: 'err', text: 'Plaćanje je prekinuto. Ništa nije naplaćeno.' });
       if (subId) {
         setBusy('confirm');
@@ -99,7 +123,8 @@ export default function BillingPage() {
     setBusy(plan);
     const headers = await authHeaders();
     if (!headers) return setBusy('');
-    const res = await fetch('/api/billing/paypal/subscribe', { method: 'POST', headers, body: JSON.stringify({ plan }) });
+    const endpoint = status?.provider === 'lemonsqueezy' ? '/api/billing/lemonsqueezy/checkout' : '/api/billing/paypal/subscribe';
+    const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify({ plan }) });
     const json = await res.json().catch(() => ({}));
     if (res.ok && json.url) {
       window.location.href = json.url;
@@ -110,6 +135,10 @@ export default function BillingPage() {
   };
 
   const cancel = async () => {
+    if (status?.provider === 'lemonsqueezy') {
+      if (status.portalUrl) window.open(status.portalUrl, '_blank', 'noopener');
+      return;
+    }
     if (!window.confirm('Otkazati pretplatu? Paket vrijedi do kraja plaćenog perioda.')) return;
     setBusy('cancel');
     const headers = await authHeaders();
@@ -125,14 +154,17 @@ export default function BillingPage() {
   const active = status?.billingStatus === 'active';
   const inTrial = status?.trialEnds ? Date.parse(status.trialEnds) > Date.now() : false;
 
+  const lemon = status?.provider === 'lemonsqueezy';
+  const payEnabled = lemon || !!status?.paypal.enabled;
+
   return (
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-12">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-white">Paket i plaćanje</h2>
-        <p className="mt-1 text-sm text-slate-400">Izaberite paket i plaćajte mjesečno preko PayPala. Otkazivanje u bilo kojem trenutku.</p>
+        <p className="mt-1 text-sm text-slate-400">Izaberite paket i plaćajte mjesečno karticom ili PayPalom. Otkazivanje u bilo kojem trenutku.</p>
       </div>
 
-      {status?.paypal.sandbox && status.paypal.enabled && (
+      {status?.provider === 'paypal' && status?.paypal.sandbox && status.paypal.enabled && (
         <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 p-3 text-xs text-violet-200">
           Probni način (PayPal Sandbox): plaćanja nisu stvarna i ne naplaćuje se pravi novac.
         </p>
@@ -165,7 +197,7 @@ export default function BillingPage() {
                       : 'Nemate aktivnu pretplatu.'}
               </p>
             </div>
-            {status.billingStatus === 'pending' && (
+            {(status.billingStatus === 'pending' || (status.provider === 'lemonsqueezy' && status.hasSubscription && !active)) && (
               <button
                 type="button"
                 disabled={busy !== ''}
@@ -173,13 +205,13 @@ export default function BillingPage() {
                   setBusy('confirm');
                   const headers = await authHeaders();
                   if (headers) {
-                    const res = await fetch('/api/billing/paypal/confirm', { method: 'POST', headers, body: '{}' });
+                    const res = await fetch(status?.provider === 'lemonsqueezy' ? '/api/billing/lemonsqueezy/refresh' : '/api/billing/paypal/confirm', { method: 'POST', headers, body: '{}' });
                     const json = await res.json().catch(() => ({}));
                     if (res.ok && json.status === 'active') {
                       setMessage({ tone: 'ok', text: `Hvala! Paket ${json.plan === 'pro' ? 'Pro' : 'Starter'} je aktivan.` });
                       await refresh();
                     } else if (res.ok) {
-                      setMessage({ tone: 'err', text: 'PayPal još nije potvrdio uplatu. Ako ste je završili, pokušajte za minut.' });
+                      setMessage({ tone: 'err', text: 'Uplata još nije potvrđena. Ako ste je završili, pokušajte za minut.' });
                     } else setMessage({ tone: 'err', text: json.error || 'Uplatu nije moguće provjeriti.' });
                     await load();
                   }
@@ -192,7 +224,7 @@ export default function BillingPage() {
             )}
             {status.hasSubscription && active && (
               <button type="button" onClick={cancel} disabled={busy !== ''} className="min-h-10 rounded-lg border border-white/10 px-4 text-xs font-semibold text-slate-300 transition hover:border-red-500/40 hover:text-red-300 disabled:opacity-50">
-                {busy === 'cancel' ? 'Otkazujem...' : 'Otkaži pretplatu'}
+                {busy === 'cancel' ? 'Otkazujem...' : status.provider === 'lemonsqueezy' ? 'Upravljaj pretplatom / otkaži' : 'Otkaži pretplatu'}
               </button>
             )}
           </div>
@@ -211,7 +243,7 @@ export default function BillingPage() {
               <p className="mt-3 font-display text-4xl font-bold tabular-nums text-white">
                 {p.km} KM<span className="ml-1 font-sans text-sm font-medium text-slate-400">/mjesečno</span>
               </p>
-              <p className="mt-1 text-xs text-slate-500">Naplaćuje se {p.eur} mjesečno preko PayPala.</p>
+              <p className="mt-1 text-xs text-slate-500">{lemon ? 'Plaćanje karticom (Visa, Mastercard) ili PayPalom.' : `Naplaćuje se ${p.eur} mjesečno preko PayPala.`}</p>
               <ul className="mt-5 flex-1 space-y-2.5">
                 {p.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm text-slate-300">
@@ -222,18 +254,18 @@ export default function BillingPage() {
               </ul>
               <button
                 type="button"
-                disabled={!status?.paypal.enabled || busy !== '' || current}
+                disabled={!payEnabled || busy !== '' || current}
                 onClick={() => subscribe(p.id)}
-                className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-[calc(var(--po-radius)*0.7)] bg-[#ffc439] px-4 text-sm font-bold text-[#111] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`mt-6 flex min-h-12 items-center justify-center gap-2 rounded-[calc(var(--po-radius)*0.7)] px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${lemon ? 'bg-blue-500 text-white hover:bg-blue-400' : 'bg-[#ffc439] text-[#111] hover:brightness-95'}`}
               >
-                {busy === p.id ? 'Otvaram PayPal...' : current ? 'Aktivan' : `Plati PayPalom`}
+                {busy === p.id ? 'Otvaram plaćanje...' : current ? 'Aktivan' : lemon ? 'Plati karticom' : 'Plati PayPalom'}
               </button>
             </section>
           );
         })}
       </div>
 
-      {status && !status.paypal.enabled && (
+      {status && !payEnabled && (
         <p className="text-xs text-slate-500">Online plaćanje još nije uključeno. Za aktivaciju paketa nas kontaktirajte.</p>
       )}
       <p className="text-[11px] leading-relaxed text-slate-500">

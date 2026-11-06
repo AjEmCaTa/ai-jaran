@@ -218,13 +218,17 @@ export async function syncPaypalSubscription(admin: SupabaseClient, subscription
   if (!plan) throw new Error('Nepoznat plan.');
   const status = STATUS_MAP[sub.status] || sub.status.toLowerCase();
 
-  const { data: current } = await admin.from('businesses').select('paypal_subscription_id').eq('id', businessId).maybeSingle();
-  // Stara pretplata ne smije pregaziti noviju.
+  const { data: current } = await admin.from('businesses').select('paypal_subscription_id, billing_status').eq('id', businessId).maybeSingle();
+  // Stara ili napuštena pretplata ne smije pregaziti onu koja važi.
   if (current?.paypal_subscription_id && current.paypal_subscription_id !== sub.id && status !== 'active') {
     return { businessId, plan, status, ignored: true };
   }
 
   const next = sub.billing_info?.next_billing_time || sub.start_time;
+  // Nova uplata ne smije ugasiti već aktivnu drugu pretplatu (npr. napušteno plaćanje).
+  if (current?.billing_status === 'active' && current.paypal_subscription_id !== sub.id && status !== 'active') {
+    return { businessId, plan, status, ignored: true };
+  }
   const update: Record<string, unknown> = { paypal_subscription_id: sub.id, billing_status: status };
   if (status === 'active') {
     update.plan = plan;

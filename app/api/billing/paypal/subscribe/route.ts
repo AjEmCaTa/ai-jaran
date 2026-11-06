@@ -12,8 +12,12 @@ export async function POST(request: NextRequest) {
   const plan = body?.plan === 'starter' || body?.plan === 'pro' ? (body.plan as PaidPlan) : null;
   if (!plan) return NextResponse.json({ error: 'Izaberite paket.' }, { status: 400 });
   try {
-    const { data: business } = await admin.from('businesses').select('created_at').eq('id', businessId).maybeSingle();
-    const { approveUrl } = await createPaypalSubscription(admin, businessId, plan, business?.created_at ?? null);
+    const { data: business } = await admin.from('businesses').select('created_at, billing_status').eq('id', businessId).maybeSingle();
+    const { subscriptionId, approveUrl } = await createPaypalSubscription(admin, businessId, plan, business?.created_at ?? null);
+    // Broj pretplate se pamti odmah, da se uplata može potvrditi i ako PayPal ne vrati korisnika nazad.
+    if (business?.billing_status !== 'active') {
+      await admin.from('businesses').update({ paypal_subscription_id: subscriptionId, billing_status: 'pending' }).eq('id', businessId);
+    }
     return NextResponse.json({ url: approveUrl });
   } catch (error) {
     console.error('PayPal pretplata nije napravljena:', error);

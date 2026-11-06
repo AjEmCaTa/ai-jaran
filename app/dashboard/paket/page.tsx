@@ -43,7 +43,7 @@ const MONTHS = ['januara', 'februara', 'marta', 'aprila', 'maja', 'juna', 'jula'
 const fmt = (iso: string | null) => {
   if (!iso) return '';
   const d = new Date(iso);
-  return `${d.getDate()}. ${MONTHS[d.getMonth()]} ${d.getFullYear()}.`;
+  return `${d.getDate()}. ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 };
 const STATUS_TEXT: Record<string, string> = {
   active: 'Aktivna',

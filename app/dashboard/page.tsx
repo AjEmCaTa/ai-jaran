@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { Fragment, useState, useEffect, useMemo, type ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import Icon, { type IconName } from './_components/icons';
 import BookingLinkCard from './_components/BookingLinkCard';
 import SetupChecklist from './_components/SetupChecklist';
 import MonthlyGoal from './_components/MonthlyGoal';
+import CountUp from './_components/CountUp';
 import { fullDate, longToday, monthShort, shortDateTime, timeOf, weekdayShort } from './_lib/dates';
 
 const supabase = createClient(
@@ -83,7 +84,7 @@ const money = (amount: number) => `${amount.toLocaleString('bs-BA', { maximumFra
 const trendOf = (current: number, previous: number) => (previous > 0 ? Math.round(((current - previous) / previous) * 100) : null);
 
 const panel =
-  'min-w-0 rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)] backdrop-blur';
+  'min-w-0 rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)] backdrop-blur transition-colors duration-300 hover:border-white/[0.12]';
 
 function Skeleton() {
   return <span className="inline-block h-7 w-20 animate-pulse rounded-md bg-white/10 align-middle" />;
@@ -219,6 +220,8 @@ export default function DashboardPage() {
   const [reservations, setReservations] = useState<DashboardReservation[]>([]);
   const [serviceCount, setServiceCount] = useState(0);
   const [chartMode, setChartMode] = useState<'bookings' | 'revenue'>('bookings');
+  // Stubići grafikona rastu od nule kad se podaci učitaju.
+  const [grown, setGrown] = useState(false);
   const [welcome, setWelcome] = useState(false);
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('dobrodoslica')) {
@@ -226,6 +229,12 @@ export default function DashboardPage() {
       window.history.replaceState(null, '', '/dashboard');
     }
   }, []);
+  useEffect(() => {
+    if (loading) return;
+    setGrown(false);
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setGrown(true)));
+    return () => cancelAnimationFrame(id);
+  }, [loading, chartMode]);
   const [bookingLink, setBookingLink] = useState('');
   const [busyId, setBusyId] = useState('');
 
@@ -429,7 +438,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto min-w-0 max-w-7xl space-y-5 pb-12">
+    <div className="dash-stagger mx-auto min-w-0 max-w-7xl space-y-5 pb-12">
       {errorMessage && (
         <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">
           {errorMessage}
@@ -457,7 +466,7 @@ export default function DashboardPage() {
         className="relative overflow-hidden rounded-[var(--po-radius)] border border-blue-500/20 p-[var(--po-pad)] sm:p-8"
         style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-blue-500) 24%, var(--color-gray-900)), var(--color-gray-900) 62%)' }}
       >
-        <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
           <div className="min-w-0">
             <p className="text-sm capitalize text-blue-300/80">{todayLabel}</p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -471,7 +480,7 @@ export default function DashboardPage() {
             <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-4">
               <div>
                 <p className="text-xs text-slate-400">Rezervacija danas</p>
-                <p className="mt-1 font-display text-5xl font-bold tabular-nums text-white">{loading ? <Skeleton /> : data.today}</p>
+                <p className="mt-1 font-display text-5xl font-bold tabular-nums text-white">{loading ? <Skeleton /> : <CountUp value={data.today} />}</p>
               </div>
               <div className="min-w-0 max-w-sm border-l border-white/10 pl-6">
                 <p className="text-xs text-slate-400">Sljedeći termin</p>
@@ -535,16 +544,32 @@ export default function DashboardPage() {
               const d = new Date(res.reservation_date as string);
               const past = d.getTime() < Date.now();
               const last = index === data.todayList.length - 1;
+              // Oznaka "sada" ide ispred prvog termina koji još nije počeo; taj termin je "sljedeći".
+              const nextIndex = data.todayList.findIndex((r) => new Date(r.reservation_date as string).getTime() >= Date.now());
+              const isNext = index === nextIndex;
               return (
-                <li key={res.id} className="relative flex gap-4 pb-4 last:pb-0">
+                <Fragment key={res.id}>
+                {isNext && index > 0 && (
+                  <li aria-label="Sada" className="relative -mt-1 mb-3 flex items-center gap-4">
+                    <div className="w-12 shrink-0 text-right text-[10px] font-bold uppercase tracking-wider text-blue-400">Sada</div>
+                    <div className="relative h-px flex-1 bg-gradient-to-r from-blue-400 via-blue-400/40 to-transparent">
+                      <span className="absolute -left-1 -top-1 h-2 w-2 animate-ping rounded-full bg-blue-400" />
+                      <span className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-blue-400" />
+                    </div>
+                  </li>
+                )}
+                <li className="relative flex gap-4 pb-4 last:pb-0">
                   <div className="w-12 shrink-0 pt-0.5 text-right font-display text-sm font-semibold tabular-nums text-white">{timeOf(d)}</div>
                   <div className="relative flex flex-col items-center">
                     <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${past ? 'bg-slate-600' : 'bg-blue-400 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]'}`} />
                     {!last && <span className="mt-1 w-px flex-1 bg-white/10" />}
                   </div>
-                  <div className={`min-w-0 flex-1 rounded-[calc(var(--po-radius)*0.7)] bg-white/[0.03] px-3 py-2.5 ${past ? 'opacity-60' : ''}`}>
+                  <div className={`min-w-0 flex-1 rounded-[calc(var(--po-radius)*0.7)] px-3 py-2.5 transition ${isNext ? 'border border-blue-500/40 bg-blue-500/10 shadow-[0_0_30px_-12px_var(--color-blue-500)]' : 'bg-white/[0.03]'} ${past ? 'opacity-60' : ''}`}>
                     <div className="flex items-center justify-between gap-3">
-                      <p className="truncate text-sm font-semibold text-white">{res.customer_name || 'Klijent'}</p>
+                      <p className="truncate text-sm font-semibold text-white">
+                        {res.customer_name || 'Klijent'}
+                        {isNext && <span className="ml-2 rounded-full bg-blue-500/20 px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-blue-300">Sljedeći</span>}
+                      </p>
                       <StatusBadge status={res.status || 'Na čekanju'} />
                     </div>
                     <p className="mt-0.5 truncate text-xs text-slate-400">
@@ -558,6 +583,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 </li>
+                </Fragment>
               );
             })}
           </ol>
@@ -565,7 +591,7 @@ export default function DashboardPage() {
       </section>
 
       {/* LISTA ZA POČETAK + LINK */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {checklistVisible && <SetupChecklist items={checklist} />}
         <div id="link-rezervacije" className={checklistVisible ? '' : 'lg:col-span-2'}>
           <BookingLinkCard link={effectiveLink} defaultLink={defaultLink} onSave={saveLink} className="h-full" />
@@ -580,7 +606,7 @@ export default function DashboardPage() {
             title={`Treba zatvoriti (${data.pending.length})`}
             hint={<span className="hidden text-xs text-slate-400 sm:block">Prošli termini bez statusa. Završeni ulaze u prihod.</span>}
           />
-          <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3">
             {data.pending.slice(0, 6).map((res) => (
               <ReservationRow key={res.id} res={res} mode="pending" busy={busyId === res.id} onStatus={updateStatus} />
             ))}
@@ -594,7 +620,7 @@ export default function DashboardPage() {
       )}
 
       {/* GRAFIKON + NADOLAZEĆI */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <section className={`${panel} lg:col-span-2`} aria-label="Aktivnost u zadnjih 7 dana">
           <PanelTitle
             icon="trending"
@@ -637,8 +663,8 @@ export default function DashboardPage() {
                       <div className="flex w-full flex-1 items-end justify-center rounded-lg bg-white/[0.025]">
                         <div
                           title={chartMode === 'bookings' ? `${value} rezervacija` : money(value)}
-                          className={`w-full max-w-12 rounded-t-md transition-[height] duration-500 ${day.isToday ? 'bg-gradient-to-t from-blue-600 to-blue-400' : 'bg-blue-500/30'}`}
-                          style={{ height: value > 0 ? `${Math.max(pct, 8)}%` : '2px' }}
+                          className={`w-full max-w-12 rounded-t-md transition-[height] duration-700 ease-out ${day.isToday ? 'bg-gradient-to-t from-blue-600 to-blue-400 shadow-[0_0_24px_-4px_var(--color-blue-500)]' : 'bg-blue-500/30 hover:bg-blue-500/45'}`}
+                          style={{ height: grown && value > 0 ? `${Math.max(pct, 8)}%` : '2px', transitionDelay: `${index * 60}ms` }}
                         />
                       </div>
                       <span className={`text-xs ${day.isToday ? 'font-semibold text-white' : 'text-slate-500'}`}>{day.label}</span>
@@ -677,14 +703,14 @@ export default function DashboardPage() {
       </div>
 
       {/* GRUPISANA STATISTIKA */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <section className={panel} aria-label="Prihod">
           <PanelTitle icon="wallet" title="Prihod" />
           <div className="space-y-5">
-            <Stat label="Ovaj mjesec" value={money(data.revenueMonth)} loading={loading} tone="text-emerald-400" trend={data.revenueTrend} />
+            <Stat label="Ovaj mjesec" value={<CountUp value={data.revenueMonth} format={money} />} loading={loading} tone="text-emerald-400" trend={data.revenueTrend} />
             <div className="grid grid-cols-2 gap-4 border-t border-white/[0.06] pt-4">
-              <Stat label="Danas" value={money(data.revenueToday)} loading={loading} tone="text-emerald-300" />
-              <Stat label="Ukupno" value={money(data.revenueTotal)} loading={loading} tone="text-emerald-300" />
+              <Stat label="Danas" value={<CountUp value={data.revenueToday} format={money} />} loading={loading} tone="text-emerald-300" />
+              <Stat label="Ukupno" value={<CountUp value={data.revenueTotal} format={money} />} loading={loading} tone="text-emerald-300" />
             </div>
           </div>
         </section>
@@ -692,18 +718,18 @@ export default function DashboardPage() {
         <section className={panel} aria-label="Rezervacije">
           <PanelTitle icon="calendar" title="Rezervacije" />
           <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-            <Stat label="Ovaj mjesec" value={data.month} loading={loading} trend={data.monthTrend} />
-            <Stat label="Predstojeće" value={data.upcoming.length} loading={loading} tone="text-amber-400" />
-            <Stat label="Završene" value={data.completed} loading={loading} tone="text-blue-400" />
-            <Stat label="Otkazane" value={data.cancelled} loading={loading} tone="text-red-400" />
+            <Stat label="Ovaj mjesec" value={<CountUp value={data.month} />} loading={loading} trend={data.monthTrend} />
+            <Stat label="Predstojeće" value={<CountUp value={data.upcoming.length} />} loading={loading} tone="text-amber-400" />
+            <Stat label="Završene" value={<CountUp value={data.completed} />} loading={loading} tone="text-blue-400" />
+            <Stat label="Otkazane" value={<CountUp value={data.cancelled} />} loading={loading} tone="text-red-400" />
           </div>
         </section>
 
         <section className={panel} aria-label="Poslovanje">
           <PanelTitle icon="building" title="Poslovanje" />
           <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-            <Stat label="Klijenata" value={data.customers} loading={loading} />
-            <Stat label="Usluga u cjenovniku" value={serviceCount} loading={loading} tone="text-blue-400" />
+            <Stat label="Klijenata" value={<CountUp value={data.customers} />} loading={loading} />
+            <Stat label="Usluga u cjenovniku" value={<CountUp value={serviceCount} />} loading={loading} tone="text-blue-400" />
             <div className="col-span-2 border-t border-white/[0.06] pt-4">
               <Stat label="Stopa otkazivanja" value={`${data.cancelRate}%`} loading={loading} tone={data.cancelRate > 25 ? 'text-red-400' : 'text-white'} />
             </div>
@@ -712,7 +738,7 @@ export default function DashboardPage() {
       </div>
 
       {/* UVIDI + CILJ */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <section className={panel} aria-label="Najtraženije usluge">
           <PanelTitle icon="tag" title="Najtraženije usluge" />
           {loading ? (

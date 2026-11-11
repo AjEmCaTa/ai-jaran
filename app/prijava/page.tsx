@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import PasswordInput from '../../components/PasswordInput';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -161,9 +162,8 @@ export default function AuthPage() {
               Lozinka
             </label>
 
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               required
               autoComplete="current-password"
               value={password}

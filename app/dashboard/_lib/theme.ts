@@ -89,8 +89,9 @@ export function themeVars(theme: ThemeSettings): Record<string, string> {
     "--color-blue-900": hsl(h, s * 0.8, clamp(l - 30, 4, 100)),
     "--color-blue-950": hsl(h, s * 0.6, 12),
     ...SURFACES[theme.surface],
-    "--po-radius": RADII[theme.radius],
-    "--po-pad": PADS[theme.density],
+    // Razmak i zaobljenost su fiksni (jedan provjeren izgled za sve); stare sačuvane vrijednosti se ignorišu.
+    "--po-radius": RADII.soft,
+    "--po-pad": PADS.comfortable,
   };
 }
 

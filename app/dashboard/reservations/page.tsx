@@ -4,7 +4,11 @@ import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { fullDate } from '../_lib/dates';
 import PushToggle from '../_components/PushToggle';
-import { allowedActions, statusKind, type ReservationAction } from '../../../utils/reservationFlow';
+import { allowedActions, statusKind, TARGET_STATUS, type ReservationAction } from '../../../utils/reservationFlow';
+import Board from './Board';
+import { useBusiness } from '../_lib/business-context';
+
+const VIEW_KEY = 'poslo-reservations-view';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -54,6 +58,7 @@ const btnFinish = `${btn} border-blue-500/30 bg-blue-600/15 text-blue-300 hover:
 const btnCancel = `${btn} border-red-500/30 bg-red-600/15 text-red-300 hover:bg-red-600/25`;
 
 export default function AdminReservationsPage() {
+  const { business } = useBusiness();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -62,6 +67,20 @@ export default function AdminReservationsPage() {
   const [highlightId, setHighlightId] = useState('');
   const [rescheduleId, setRescheduleId] = useState('');
   const [rescheduleValue, setRescheduleValue] = useState('');
+  const [view, setView] = useState<'board' | 'list'>('board');
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(VIEW_KEY);
+      if (saved === 'list' || saved === 'board') setView(saved);
+    } catch {
+      /* privatni mod */
+    }
+  }, []);
+  const pickView = (v: 'board' | 'list') => {
+    setView(v);
+    try { window.localStorage.setItem(VIEW_KEY, v); } catch { /* privatni mod */ }
+  };
 
   const fetchReservations = useCallback(async (silent = false) => {
     if (!supabase) {
@@ -113,6 +132,10 @@ export default function AdminReservationsPage() {
     if (action === 'cancel' && !window.confirm('Sigurno želite otkazati ovu rezervaciju?')) return;
 
     setBusyId(id);
+    // Odmah pomjeri karticu (tabla); ako server odbije, osvježavanje vraća pravo stanje.
+    if (action !== 'reschedule') {
+      setReservations((list) => list.map((r) => (r.id === id ? { ...r, status: TARGET_STATUS[action] } : r)));
+    }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Prijavite se ponovo za izmjenu rezervacije.');
@@ -134,6 +157,7 @@ export default function AdminReservationsPage() {
       await fetchReservations(true);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Pokušajte ponovo.');
+      await fetchReservations(true);
     } finally {
       setBusyId('');
     }
@@ -193,6 +217,46 @@ export default function AdminReservationsPage() {
 
       <PushToggle />
 
+      {/* Prikaz: tabla ili lista */}
+      <div className="flex items-center justify-between gap-3">
+        <div role="tablist" aria-label="Prikaz rezervacija" className="flex rounded-full border border-white/10 bg-gray-900 p-1 text-xs font-semibold">
+          {([['board', 'Tabla'], ['list', 'Lista']] as const).map(([id, label]) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={view === id}
+              onClick={() => pickView(id)}
+              className={`min-h-9 rounded-full px-4 transition ${view === id ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' : 'text-slate-400 hover:text-white'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-slate-500">{reservations.length} ukupno</span>
+      </div>
+
+      {errorMsg && view === 'board' && (
+        <div role="alert" className="rounded-xl border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">
+          {errorMsg}
+        </div>
+      )}
+
+      {view === 'board' && (
+        loading ? (
+          <p className="py-10 text-center text-sm text-slate-500">Učitavanje prijava iz baze...</p>
+        ) : (
+          <Board
+            reservations={reservations}
+            busyId={busyId}
+            highlightId={highlightId}
+            onAction={(id, action) => updateStatus(id, action)}
+            renderActions={(r) => actions(r as Reservation)}
+            autoConfirm={business.auto_confirm}
+          />
+        )
+      )}
+
+      {view === 'list' && (<>
       {/* Filteri */}
       <div className="grid grid-cols-2 gap-2 border-b border-white/[0.06] pb-3 sm:flex sm:flex-wrap">
         {['Sve', 'Aktivno', 'Završeno', 'Otkazano'].map((tab) => (
@@ -292,6 +356,7 @@ export default function AdminReservationsPage() {
           })
         )}
       </div>
+      </>)}
     </div>
   );
 }

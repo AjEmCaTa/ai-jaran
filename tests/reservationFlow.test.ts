@@ -81,3 +81,40 @@ test('uvjetno ažuriranje (status mora biti nepromijenjen) puštaju samo jednu p
   assert.equal(confirm(), true);
   assert.equal(confirm(), false);
 });
+
+test('tabla: kolone po statusu i datumu', async () => {
+  const { columnOf } = await import('../utils/reservationFlow.ts');
+  const today = '2026-11-11';
+  assert.equal(columnOf(null, '2026-11-12T10:00', today), 'pending');
+  assert.equal(columnOf('Na cekanju', '2026-11-11T10:00', today), 'pending');
+  assert.equal(columnOf('Potvrđeno', '2026-11-11T18:00', today), 'today');
+  assert.equal(columnOf('Potvrđeno', '2026-11-10T18:00', today), 'today'); // prošao, a nije završen
+  assert.equal(columnOf('Potvrđeno', '2026-11-12T09:00', today), 'upcoming');
+  assert.equal(columnOf('Dogovor termina', '2026-11-20T09:00', today), 'upcoming');
+  assert.equal(columnOf('Završeno', '2026-11-12T09:00', today), 'completed');
+  assert.equal(columnOf('Otkazano', null, today), 'cancelled');
+  assert.equal(columnOf('Isteklo', null, today), 'cancelled');
+});
+
+test('tabla: prevlačenje radi samo dozvoljene prelaze', async () => {
+  const { dropAction } = await import('../utils/reservationFlow.ts');
+  const t = '2026-11-11';
+  assert.equal(dropAction(null, '2026-11-11T10:00', 'today', t), 'confirm');
+  assert.equal(dropAction(null, '2026-11-14T10:00', 'upcoming', t), 'confirm');
+  assert.equal(dropAction(null, '2026-11-14T10:00', 'today', t), null); // datum određuje kolonu
+  assert.equal(dropAction('Potvrđeno', '2026-11-14T10:00', 'today', t), null);
+  assert.equal(dropAction('Potvrđeno', '2026-11-11T10:00', 'completed', t), 'complete');
+  assert.equal(dropAction('Potvrđeno', '2026-11-11T10:00', 'cancelled', t), 'cancel');
+  assert.equal(dropAction('Potvrđeno', '2026-11-11T10:00', 'pending', t), null);
+  assert.equal(dropAction('Završeno', '2026-11-11T10:00', 'today', t), null);
+  assert.equal(dropAction('Otkazano', '2026-11-11T10:00', 'completed', t), null);
+  assert.equal(dropAction('Isteklo', '2026-11-11T10:00', 'completed', t), null);
+});
+
+test('tabla: redoslijed u kolonama i lokalni datum', async () => {
+  const { sortForColumn, localToday } = await import('../utils/reservationFlow.ts');
+  const rows = [{ reservation_date: '2026-11-12T10:00' }, { reservation_date: '2026-11-11T10:00' }, { reservation_date: null }];
+  assert.deepEqual(sortForColumn(rows, 'today').map((r) => r.reservation_date), [null, '2026-11-11T10:00', '2026-11-12T10:00']);
+  assert.deepEqual(sortForColumn(rows, 'completed').map((r) => r.reservation_date), ['2026-11-12T10:00', '2026-11-11T10:00', null]);
+  assert.equal(localToday(new Date(2026, 0, 5, 23, 30)), '2026-01-05');
+});

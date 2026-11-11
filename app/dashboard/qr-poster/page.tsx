@@ -50,7 +50,7 @@ export default function QrPosterPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         {/* POSTER (A4) */}
         <div className="flex justify-center rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-4 sm:p-8">
           <div

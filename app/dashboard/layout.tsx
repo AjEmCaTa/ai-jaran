@@ -320,6 +320,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               "radial-gradient(60% 100% at 70% 0%, color-mix(in srgb, var(--color-blue-500) 14%, transparent), transparent)",
           }}
         />
+        {/* Dva mutna "svjetla" u boji firme koja polako plutaju iza sadržaja */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="dash-orb absolute -right-24 top-24 h-[28rem] w-[28rem] rounded-full blur-3xl"
+            style={{ background: "color-mix(in srgb, var(--color-blue-500) 10%, transparent)" }}
+          />
+          <div
+            className="dash-orb-2 absolute -left-32 bottom-0 h-[24rem] w-[24rem] rounded-full blur-3xl"
+            style={{ background: "color-mix(in srgb, var(--color-blue-700) 12%, transparent)" }}
+          />
+        </div>
 
         <header className="relative z-10 flex h-16 shrink-0 items-center justify-between border-b border-white/[0.06] bg-gray-900/60 px-3 backdrop-blur-md sm:px-4 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
@@ -350,7 +361,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-8">
-          <BusinessContext.Provider value={ctx}>{children}</BusinessContext.Provider>
+          <BusinessContext.Provider value={ctx}>
+            <div key={pathname} className="page-in">{children}</div>
+          </BusinessContext.Provider>
         </main>
 
         {/* DONJI MENI (mobitel) */}

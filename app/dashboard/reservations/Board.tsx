@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { BOARD_COLUMNS, columnOf, dropAction, sortForColumn, statusKind, type BoardColumn, type ReservationAction } from '../../../utils/reservationFlow';
+import { BOARD_COLUMNS, columnOf, dropAction, localToday, sortForColumn, statusKind, type BoardColumn, type ReservationAction } from '../../../utils/reservationFlow';
 import { dayMonthTime } from '../_lib/dates';
 
 export type BoardReservation = {
@@ -16,7 +16,8 @@ export type BoardReservation = {
 
 const COLUMN_STYLE: Record<BoardColumn, { dot: string; ring: string; head: string }> = {
   pending: { dot: 'bg-amber-400', ring: 'ring-amber-400/40', head: 'text-amber-300' },
-  confirmed: { dot: 'bg-emerald-400', ring: 'ring-emerald-400/40', head: 'text-emerald-300' },
+  today: { dot: 'bg-emerald-400', ring: 'ring-emerald-400/40', head: 'text-emerald-300' },
+  upcoming: { dot: 'bg-cyan-400', ring: 'ring-cyan-400/40', head: 'text-cyan-300' },
   completed: { dot: 'bg-blue-400', ring: 'ring-blue-400/40', head: 'text-blue-300' },
   cancelled: { dot: 'bg-red-400', ring: 'ring-red-400/40', head: 'text-red-300' },
 };
@@ -32,7 +33,9 @@ export default function Board({
   highlightId,
   onAction,
   renderActions,
+  autoConfirm,
 }: {
+  autoConfirm: boolean;
   reservations: BoardReservation[];
   busyId: string;
   highlightId: string;
@@ -42,16 +45,20 @@ export default function Board({
   const [dragId, setDragId] = useState('');
   const [over, setOver] = useState<BoardColumn | ''>('');
   const [mobileCol, setMobileCol] = useState<BoardColumn>('pending');
+  const today = localToday();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [hint, setHint] = useState('');
   const scroller = useRef<HTMLDivElement>(null);
 
   const columns = useMemo(() => {
-    const map: Record<BoardColumn, BoardReservation[]> = { pending: [], confirmed: [], completed: [], cancelled: [] };
-    for (const r of reservations) map[columnOf(r.status)].push(r);
+    const map: Record<BoardColumn, BoardReservation[]> = { pending: [], today: [], upcoming: [], completed: [], cancelled: [] };
+    for (const r of reservations) map[columnOf(r.status, r.reservation_date, today)].push(r);
     for (const c of BOARD_COLUMNS) map[c.id] = sortForColumn(map[c.id], c.id);
     return map;
-  }, [reservations]);
+  }, [reservations, today]);
+  // Kolona "Zahtjevi" samo kod ručne potvrde ili kad stvarno ima zahtjeva.
+  const visible = BOARD_COLUMNS.filter((c) => c.id !== 'pending' || !autoConfirm || columns.pending.length > 0);
+  const activeMobile = visible.some((c) => c.id === mobileCol) ? mobileCol : visible[0].id;
 
   const dragged = reservations.find((r) => r.id === dragId);
 
@@ -60,9 +67,11 @@ export default function Board({
     setOver('');
     setDragId('');
     if (!r) return;
-    const action = dropAction(r.status, target);
+    const action = dropAction(r.status, r.reservation_date, target, today);
     if (!action) {
-      if (columnOf(r.status) !== target) setHint('Ovaj termin se ne može prebaciti u tu kolonu.');
+      if (columnOf(r.status, r.reservation_date, today) !== target) {
+        setHint(target === 'today' || target === 'upcoming' ? 'Danas ili Predstojeći određuje datum termina. Za drugi datum koristite „Dogovori termin”.' : 'Ovaj termin se ne može prebaciti u tu kolonu.');
+      }
       return;
     }
     setHint('');
@@ -78,17 +87,17 @@ export default function Board({
   const onScroll = () => {
     const el = scroller.current;
     if (!el) return;
-    const idx = Math.round(el.scrollLeft / (el.scrollWidth / BOARD_COLUMNS.length));
-    const id = BOARD_COLUMNS[Math.max(0, Math.min(BOARD_COLUMNS.length - 1, idx))].id;
-    if (id !== mobileCol) setMobileCol(id);
+    const idx = Math.round(el.scrollLeft / (el.scrollWidth / visible.length));
+    const id = visible[Math.max(0, Math.min(visible.length - 1, idx))].id;
+    if (id !== activeMobile) setMobileCol(id);
   };
 
   const card = (r: BoardReservation, column: BoardColumn) => {
-    const canDrag = BOARD_COLUMNS.some((c) => dropAction(r.status, c.id));
+    const canDrag = visible.some((c) => dropAction(r.status, r.reservation_date, c.id, today));
     const date = r.reservation_date ? new Date(r.reservation_date) : null;
     const resched = statusKind(r.status) === 'rescheduling';
     const expired = statusKind(r.status) === 'expired';
-    const past = date && column !== 'completed' && column !== 'cancelled' && date.getTime() < Date.now();
+    const past = date && (column === 'today' || column === 'pending') && date.getTime() < Date.now();
     return (
       <article
         key={r.id}
@@ -116,7 +125,7 @@ export default function Board({
           {resched && <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 font-semibold text-violet-300">Dogovor termina</span>}
           {expired && <span className="rounded-full border border-white/10 px-2 py-0.5 font-semibold text-slate-400">Isteklo</span>}
         </div>
-        {(column === 'pending' || column === 'confirmed') && (
+        {(column === 'pending' || column === 'today' || column === 'upcoming') && (
           <div className="mt-3 flex flex-wrap gap-2 border-t border-white/[0.06] pt-3 [&>button]:min-h-10 [&>button]:flex-1 lg:[&>button]:min-h-9">
             {renderActions(r)}
           </div>
@@ -128,7 +137,7 @@ export default function Board({
   const column = (c: (typeof BOARD_COLUMNS)[number], mobile: boolean) => {
     const rows = columns[c.id];
     const limited = (c.id === 'completed' || c.id === 'cancelled') && !expanded[c.id] ? rows.slice(0, PREVIEW) : rows;
-    const valid = !!dragged && !!dropAction(dragged.status, c.id);
+    const valid = !!dragged && !!dropAction(dragged.status, dragged.reservation_date, c.id, today);
     const style = COLUMN_STYLE[c.id];
     return (
       <section
@@ -174,27 +183,27 @@ export default function Board({
       {hint && <p role="status" className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">{hint}</p>}
 
       {/* Računar: sve kolone odjednom, s prevlačenjem */}
-      <div className="hidden gap-3 lg:grid lg:grid-cols-4">{BOARD_COLUMNS.map((c) => column(c, false))}</div>
+      <div className={`hidden gap-3 lg:grid ${visible.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>{visible.map((c) => column(c, false))}</div>
 
       {/* Mobitel: tabovi + kolone koje se listaju prstom */}
       <div className="lg:hidden">
         <div className="-mx-3 mb-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none]">
-          {BOARD_COLUMNS.map((c) => (
+          {visible.map((c) => (
             <button
               key={c.id}
               onClick={() => goTo(c.id)}
-              aria-pressed={mobileCol === c.id}
+              aria-pressed={activeMobile === c.id}
               className={`flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-xs font-semibold transition ${
-                mobileCol === c.id ? 'border-blue-500 bg-blue-500 text-white' : 'border-white/10 bg-gray-900 text-slate-400'
+                activeMobile === c.id ? 'border-blue-500 bg-blue-500 text-white' : 'border-white/10 bg-gray-900 text-slate-400'
               }`}
             >
               {c.label}
-              <span className={`rounded-full px-1.5 text-[10px] ${mobileCol === c.id ? 'bg-white/20' : 'bg-white/[0.06]'}`}>{columns[c.id].length}</span>
+              <span className={`rounded-full px-1.5 text-[10px] ${activeMobile === c.id ? 'bg-white/20' : 'bg-white/[0.06]'}`}>{columns[c.id].length}</span>
             </button>
           ))}
         </div>
         <div ref={scroller} onScroll={onScroll} className="-mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-3 pb-2 [scrollbar-width:none]">
-          {BOARD_COLUMNS.map((c) => column(c, true))}
+          {visible.map((c) => column(c, true))}
         </div>
       </div>
     </div>

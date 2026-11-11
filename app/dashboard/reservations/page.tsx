@@ -6,6 +6,7 @@ import { fullDate } from '../_lib/dates';
 import PushToggle from '../_components/PushToggle';
 import { allowedActions, statusKind, TARGET_STATUS, type ReservationAction } from '../../../utils/reservationFlow';
 import Board from './Board';
+import { useBusiness } from '../_lib/business-context';
 
 const VIEW_KEY = 'poslo-reservations-view';
 
@@ -57,6 +58,7 @@ const btnFinish = `${btn} border-blue-500/30 bg-blue-600/15 text-blue-300 hover:
 const btnCancel = `${btn} border-red-500/30 bg-red-600/15 text-red-300 hover:bg-red-600/25`;
 
 export default function AdminReservationsPage() {
+  const { business } = useBusiness();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -249,6 +251,7 @@ export default function AdminReservationsPage() {
             highlightId={highlightId}
             onAction={(id, action) => updateStatus(id, action)}
             renderActions={(r) => actions(r as Reservation)}
+            autoConfirm={business.auto_confirm}
           />
         )
       )}

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
+import { captureLead } from '../../../utils/marketingRunner';
+import { escapeHtml } from '../../../utils/marketingEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -66,8 +69,20 @@ Poruka: ${message || 'Nema poruke'}`;
       );
     }
 
+    // Upit ulazi u marketing kontakte (osnov: sam poslao upit). Greška ovdje ne smije srušiti formu.
+    try {
+      const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (sbUrl && sbKey && email) {
+        const admin = createClient(sbUrl, sbKey, { auth: { autoRefreshToken: false, persistSession: false } });
+        await captureLead(admin, { email, name, phone, message, pkg: selectedPackage });
+      }
+    } catch (e) {
+      console.error('Marketing: upit nije spremljen', e);
+    }
+
     // 2. Slanje emaila potvrde klijentu - SAMO ako je unio email
-    if (email && email.trim() !== '') {
+    if (typeof email === 'string' && email.trim() !== '') {
       try {
         const emailResult = await resend.emails.send({
           from: 'POSLO ONE <info@poslo.one>',
@@ -77,7 +92,7 @@ Poruka: ${message || 'Nema poruke'}`;
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #030712; color: #fff;">
               
               <h2 style="color: #3b82f6; margin-top: 0;">
-                Pozdrav ${name || 'korisniče'},
+                Pozdrav ${escapeHtml(String(name || 'korisniče'))},
               </h2>
 
               <p>
@@ -89,12 +104,12 @@ Poruka: ${message || 'Nema poruke'}`;
                 
                 <p style="margin: 5px 0;">
                   <strong>Izabrani paket:</strong>
-                  ${selectedPackage || 'Nije izabran'}
+                  ${escapeHtml(String(selectedPackage || 'Nije izabran'))}
                 </p>
 
                 <p style="margin: 5px 0;">
                   <strong>Poruka:</strong>
-                  ${message || 'Nema dodatne poruke'}
+                  ${escapeHtml(String(message || 'Nema dodatne poruke'))}
                 </p>
 
               </div>

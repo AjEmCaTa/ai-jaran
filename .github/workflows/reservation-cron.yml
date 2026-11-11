@@ -25,3 +25,19 @@ jobs:
           cat response.txt; echo
           # Uspjeh je samo 200; preusmjerenje, 401 ili 503 znače da cron nije izvršen.
           [ "$status" = "200" ]
+      - name: Pozovi /api/cron/marketing (odvojeno; greška ovdje ne ruši rezervacije)
+        if: always()
+        continue-on-error: true
+        env:
+          CRON_URL: ${{ secrets.CRON_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_URL" ] || [ -z "$CRON_SECRET" ]; then echo "CRON_URL/CRON_SECRET nisu postavljeni; preskačem."; exit 0; fi
+          case "$CRON_URL" in http://*|https://*) ;; *) CRON_URL="https://$CRON_URL" ;; esac
+          CRON_URL="${CRON_URL/#http:\/\//https://}"
+          CRON_URL="${CRON_URL%/}"
+          status=$(curl --silent --show-error --max-time 70 --output marketing.txt --write-out '%{http_code}' \
+            -H "Authorization: Bearer $CRON_SECRET" "$CRON_URL/api/cron/marketing") || { echo "curl nije uspio"; exit 1; }
+          echo "HTTP $status"
+          cat marketing.txt; echo
+          [ "$status" = "200" ]

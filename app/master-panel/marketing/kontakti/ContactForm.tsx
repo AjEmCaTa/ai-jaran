@@ -6,6 +6,7 @@ import { adminFetch } from "../../_lib/admin";
 import { Badge, Notice, btnGhost, btnPrimary, inputCls, labelCls } from "../../_lib/ui";
 import { STATUS_TONE, fmtDate, fmtDateTime, type Contact } from "../../_lib/marketing";
 import { CONTACT_STATUSES } from "../../../../utils/marketingContacts";
+import { personalPitch } from "../../../../utils/marketingEmail";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -92,6 +93,25 @@ export default function ContactForm({ contact, onSaved, onDeleted, onClose }: {
           <span>Dodano {fmtDateTime(contact.created_at)}</span>
         </div>
       )}
+
+      {contact && contact.status === "active" && (() => {
+        const pitch = personalPitch(contact);
+        const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(contact.email)}&su=${encodeURIComponent(pitch.subject)}&body=${encodeURIComponent(pitch.body)}`;
+        const mailto = `mailto:${contact.email}?subject=${encodeURIComponent(pitch.subject)}&body=${encodeURIComponent(pitch.body)}`;
+        return (
+          <div className="rounded-[calc(var(--po-radius)*0.8)] border border-blue-500/25 bg-blue-500/[0.06] p-4">
+            <p className="text-sm font-semibold text-white">Piši lično</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">
+              Otvara gotovu, personalizovanu poruku u vašem mejlu. Šaljete je vi, ručno, jednom kontaktu. Ovo nije automatsko slanje.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a href={gmail} target="_blank" rel="noopener noreferrer" onClick={() => action({ contacted: true }, "contacted")} className={btnPrimary}>Otvori u Gmailu</a>
+              <a href={mailto} onClick={() => action({ contacted: true }, "contacted")} className={btnGhost}>Drugi mejl program</a>
+            </div>
+            {contact.last_contacted_at && <p className="mt-2 text-[11px] text-slate-500">Zadnji kontakt: {fmtDate(contact.last_contacted_at)}</p>}
+          </div>
+        );
+      })()}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={`${labelCls} sm:col-span-2`}>

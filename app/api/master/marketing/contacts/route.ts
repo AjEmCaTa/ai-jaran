@@ -161,6 +161,7 @@ export async function PATCH(request: NextRequest) {
     }
   }
   if ('replied' in body) update.replied_at = body.replied ? new Date().toISOString() : null;
+  if (body.contacted === true) update.last_contacted_at = new Date().toISOString();
 
   // Polja koja se nisu stvarno promijenila se ne šalju (i ne upisuju u evidenciju).
   const same = (x: unknown, y: unknown) => JSON.stringify(x ?? null) === JSON.stringify(y ?? null)

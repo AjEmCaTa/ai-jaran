@@ -44,4 +44,12 @@ export const ACTION_LABELS: Record<string, string> = {
   "contact.delete": "Obrisan kontakt",
   "import.done": "CSV uvoz",
   "import.failed": "CSV uvoz prekinut",
+  "contact.unsubscribe": "Primalac se odjavio",
+  "sequence.approve": "Niz odobren i pokrenut",
+  "sequence.pause": "Niz pauziran",
+  "step.update": "Izmijenjen mejl u nizu",
+  "settings.update": "Promijenjene postavke slanja",
+  "test.send": "Test mejl",
+  "run.manual": "Ručno pokretanje slanja",
+  "run.auto": "Automatsko slanje",
 };

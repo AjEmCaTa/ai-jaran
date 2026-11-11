@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
+import { captureLead } from '../../../utils/marketingRunner';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -64,6 +66,18 @@ Poruka: ${message || 'Nema poruke'}`;
         },
         { status: 500 }
       );
+    }
+
+    // Upit ulazi u marketing kontakte (osnov: sam poslao upit). Greška ovdje ne smije srušiti formu.
+    try {
+      const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (sbUrl && sbKey && email) {
+        const admin = createClient(sbUrl, sbKey, { auth: { autoRefreshToken: false, persistSession: false } });
+        await captureLead(admin, { email, name, phone, message, pkg: selectedPackage });
+      }
+    } catch (e) {
+      console.error('Marketing: upit nije spremljen', e);
     }
 
     // 2. Slanje emaila potvrde klijentu - SAMO ako je unio email

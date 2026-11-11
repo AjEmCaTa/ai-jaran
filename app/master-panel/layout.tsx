@@ -19,7 +19,8 @@ const SECTIONS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/master-panel/marketing", label: "Pregled", icon: "chart", exact: true },
       { href: "/master-panel/marketing/kontakti", label: "Kontakti", icon: "users" },
-      { href: "/master-panel/marketing/kampanje", label: "Kampanje", icon: "mail", soon: true },
+      { href: "/master-panel/marketing/nizovi", label: "Automatski mejlovi", icon: "mail" },
+      { href: "/master-panel/marketing/kampanje", label: "Kampanje", icon: "calendar", soon: true },
       { href: "/master-panel/marketing/analitika", label: "Analitika", icon: "trending", soon: true },
     ],
   },

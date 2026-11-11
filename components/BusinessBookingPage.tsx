@@ -356,7 +356,8 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
         service_name: selectedPackage.name,
         price: priceNum,
         reservation_date: formattedDateTime,
-        status: 'Na čekanju',
+        // Status vraća server: "Potvrđeno" kad firma ima automatsku potvrdu, inače čeka potvrdu.
+        status: (result.data && result.data[0] && result.data[0].status) || 'Na čekanju',
       };
 
       const updated = [newReservation, ...myReservations];
@@ -806,10 +807,21 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               <Icon name="check" className="h-7 w-7" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-white">Uspješno ste rezervisali termin!</h3>
-              <p className="text-xs text-gray-300">
-                Vaš zahtjev je poslat. Očekujte brzu potvrdu od tima <span className="text-blue-400 font-bold">{businessProfile.name}</span>.
-              </p>
+              {/^potvr/i.test(String(successModalData.status || '')) ? (
+                <>
+                  <h3 className="text-xl font-black text-white">Termin je potvrđen!</h3>
+                  <p className="text-xs text-gray-300">
+                    Vidimo se u <span className="text-blue-400 font-bold">{businessProfile.name}</span>. Potvrdu ste dobili na mejl, a dan prije stiže podsjetnik.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-black text-white">Zahtjev za termin je poslan!</h3>
+                  <p className="text-xs text-gray-300">
+                    <span className="text-blue-400 font-bold">{businessProfile.name}</span> će uskoro potvrditi termin. Javit ćemo vam mejlom.
+                  </p>
+                </>
+              )}
             </div>
 
             <div className="bg-[#030712] p-4 rounded-2xl border border-white/10 text-left space-y-2 text-xs">

@@ -406,6 +406,71 @@ export default function SettingsPage() {
           </div>
         </form>
       </section>
+
+      <BookingConfirmCard />
     </div>
+  );
+}
+
+// Potvrda termina: zasebna postavka koja se čuva odmah (važi samo za ovu firmu).
+function BookingConfirmCard() {
+  const { business, refresh } = useBusiness();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const choose = async (auto: boolean) => {
+    if (auto === business.auto_confirm || busy) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Prijavite se ponovo.');
+      const res = await fetch('/api/dashboard', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ auto_confirm: auto }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || 'Postavka nije sačuvana.');
+      await refresh();
+      setMsg(auto ? 'Novi termini se sad potvrđuju automatski.' : 'Novi termini sad čekaju vašu potvrdu.');
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Pokušajte ponovo.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const options = [
+    { auto: true, title: 'Automatski (preporučeno)', text: 'Klijent zakaže slobodan termin i odmah dobije potvrdu. Vi samo otkažete ili pomjerite ako treba.' },
+    { auto: false, title: 'Ručno', text: 'Svaki novi termin čeka vašu potvrdu. Ako ga ne potvrdite u 24 sata, ističe.' },
+  ];
+  return (
+    <section className="rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)]">
+      <h3 className="text-base font-semibold text-white">Potvrda termina</h3>
+      <p className="mt-1 text-sm text-slate-400">Šta se dešava kad klijent zakaže termin preko vašeg linka.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {options.map((o) => {
+          const active = business.auto_confirm === o.auto;
+          return (
+            <button
+              key={o.title}
+              type="button"
+              onClick={() => void choose(o.auto)}
+              disabled={busy}
+              aria-pressed={active}
+              className={`rounded-[calc(var(--po-radius)*0.8)] border p-4 text-left transition disabled:opacity-60 ${active ? 'border-blue-500/70 bg-blue-500/10 ring-1 ring-blue-500/30' : 'border-white/[0.08] hover:border-white/20'}`}
+            >
+              <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                <span className={`flex h-4 w-4 items-center justify-center rounded-full border ${active ? 'border-blue-400' : 'border-slate-500'}`}>
+                  {active && <span className="h-2 w-2 rounded-full bg-blue-400" />}
+                </span>
+                {o.title}
+              </span>
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-400">{o.text}</span>
+            </button>
+          );
+        })}
+      </div>
+      {msg && <p role="status" className="mt-3 text-sm text-emerald-400">{msg}</p>}
+    </section>
   );
 }

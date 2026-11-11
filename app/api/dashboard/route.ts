@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const lightweight = request.nextUrl.searchParams.get('scope') === 'business';
     const [businessResult, reservations, servicesResult, profileResult] = await Promise.all([
       admin.from('businesses')
-        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates, logo_url, plan, plan_until')
+        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates, logo_url, plan, plan_until, auto_confirm')
         .eq('id', businessId)
         .single(),
       lightweight ? Promise.resolve([] as Record<string, unknown>[]) : loadReservations(admin, businessId),
@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const allowedFields = ['name', 'category', 'city', 'address', 'phone', 'owner_email', 'work_start', 'work_end', 'work_days', 'google_review_url', 'rebook_weeks', 'closed_dates'];
+    const allowedFields = ['name', 'category', 'city', 'address', 'phone', 'owner_email', 'work_start', 'work_end', 'work_days', 'google_review_url', 'rebook_weeks', 'closed_dates', 'auto_confirm'];
     const changes = Object.fromEntries(
       Object.entries(body).filter(([key]) => allowedFields.includes(key)),
     );
@@ -106,6 +106,7 @@ export async function PATCH(request: NextRequest) {
       if (!Number.isInteger(weeks) || weeks < 1 || weeks > 52) return NextResponse.json({ error: 'Broj sedmica nije ispravan.' }, { status: 400 });
       changes.rebook_weeks = weeks;
     }
+    if ('auto_confirm' in changes) changes.auto_confirm = changes.auto_confirm !== false;
     if ('closed_dates' in changes) {
       const list = changes.closed_dates;
       if (!Array.isArray(list) || list.length > 366 || list.some((d) => typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d))) {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { createClient } from '@supabase/supabase-js';
-import { buildReservationPayload, durationOf, findConflict, startMs } from '../../../utils/reservationFlow';
+import { buildReservationPayload, durationOf, findConflict, startMs, STATUS_LABEL } from '../../../utils/reservationFlow';
+import { escapeHtml } from '../../../utils/marketingEmail';
 import { notifyBusinessPush } from '../../../utils/pushSender';
 import { reservationStartMs } from '../../../utils/reservationRules';
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
 
         const businessResult = await supabase
             .from('businesses')
-            .select('id, name, owner_email, telegram_chat_id, status, closed_dates')
+            .select('id, name, owner_email, telegram_chat_id, status, closed_dates, auto_confirm')
             .eq('slug', businessSlug)
             .maybeSingle();
 
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
         const time = timePartRaw ? timePartRaw.slice(0, 5) : '';
 
         const partnerName = business.name;
+        const autoConfirm = (business as { auto_confirm?: boolean | null }).auto_confirm !== false;
         const packageName = serviceResult.data.name;
         const price = serviceResult.data.price_on_request ? 'Na upit' : Number(serviceResult.data.price) + ' KM';
         const vehicle = body.vehicle || body.vozilo || body.car || '';
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
         const clientName = body.customer_name || body.clientName || body.name || authData.user.user_metadata?.full_name || '';
         const clientPhone = body.customer_phone || body.clientPhone || body.phone || '';
         const clientEmail = authData.user.email || '';
+        const h = (v: unknown) => escapeHtml(String(v ?? ''));
 
         if (!clientName) {
             return NextResponse.json({ success: false, error: "Ime klijenta je obavezno!" }, { status: 400 });
@@ -141,7 +144,7 @@ export async function POST(request: NextRequest) {
 
         const displayDate = formatToBalkanDate(datePart) || datePart;
         const vehicleSuffix = vehicle ? (' - Vozilo: ' + vehicle) : '';
-        const vehicleInfo = vehicle ? (' | Vozilo: ' + vehicle) : '';
+        const vehicleInfo = vehicle ? (' | Vozilo: ' + h(vehicle)) : '';
 
         // Server provjerava preklapanje (ne samo javna stranica): otkazani termini se ne računaju.
         const startTime = startMs(reservationDate);
@@ -173,7 +176,8 @@ export async function POST(request: NextRequest) {
                 price: price,
                 reservation_date: reservationDate,
                 duration_minutes: durationMinutes,
-                status: 'Na cekanju'
+                // Automatska potvrda (zadano): termin je odmah potvrđen. Ručna potvrda: čeka vlasnika.
+                status: autoConfirm ? STATUS_LABEL.confirmed : 'Na cekanju'
             }
         ]).select();
 
@@ -213,7 +217,7 @@ export async function POST(request: NextRequest) {
             const chatId = business.telegram_chat_id || process.env.TELEGRAM_CHAT_ID;
             if (token && chatId) {
                 const vehicleLine = vehicle ? ('\nVozilo: ' + vehicle) : '';
-                const telegramMessage = "NOVA REZERVACIJA!\n\nBiznis: " + partnerName + "\nPaket: " + packageName + " (" + price + ")\nDatum: " + displayDate + " u " + time + " (traje " + durationMinutes + " min)" + vehicleLine + "\n\nKlijent: " + clientName + "\nTelefon: " + clientPhone + "\nEmail: " + (clientEmail || 'Nije naveden');
+                const telegramMessage = (autoConfirm ? "NOVA REZERVACIJA (potvrđena)" : "NOVI ZAHTJEV (potvrdite u panelu)") + "\n\nBiznis: " + partnerName + "\nPaket: " + packageName + " (" + price + ")\nDatum: " + displayDate + " u " + time + " (traje " + durationMinutes + " min)" + vehicleLine + "\n\nKlijent: " + clientName + "\nTelefon: " + clientPhone + "\nEmail: " + (clientEmail || 'Nije naveden');
 
                 await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
                     method: 'POST',
@@ -241,15 +245,15 @@ export async function POST(request: NextRequest) {
                 const ownerEmailHtml =
                     '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
                     '<tr><td style="padding:20px 0;">' +
-                    '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">Nova rezervacija primljena</h2>' +
-                    '<p style="font-size:14px;margin:0 0 16px 0;">Zaprimljen je novi zahtjev za termin na platformi.</p>' +
-                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + packageName + ' (' + price + ')</p>' +
-                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + displayDate + '</p>' +
-                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + time + vehicleInfo + '</p>' +
-                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Klijent:</b> ' + clientName + '</p>' +
-                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Telefon:</b> ' + clientPhone + '</p>' +
-                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Email:</b> ' + (clientEmail || 'Nije naveden') + '</p>' +
-                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + partnerName + ' & POSLO ONE</p>' +
+                    '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">' + (autoConfirm ? 'Nova rezervacija (potvrđena)' : 'Novi zahtjev za termin') + '</h2>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;">' + (autoConfirm ? 'Termin je automatski potvrđen i klijent je dobio potvrdu.' : 'Potvrdite ga u panelu u roku od 24 sata, inače ističe.') + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + h(packageName) + ' (' + h(price) + ')</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + h(displayDate) + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + h(time) + vehicleInfo + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Klijent:</b> ' + h(clientName) + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Telefon:</b> ' + h(clientPhone) + '</p>' +
+                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Email:</b> ' + h(clientEmail || 'Nije naveden') + '</p>' +
+                    '<p style="font-size:13px;color:#6b7280;margin:0;">' + h(partnerName) + ' & POSLO ONE</p>' +
                     '</td></tr></table>';
 
                 // Obavijest ide samo vlasniku TE firme; bez owner_email se ne šalje nikome drugom.
@@ -277,19 +281,19 @@ export async function POST(request: NextRequest) {
                     const clientEmailHtml =
                         '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
                         '<tr><td style="padding:20px 0;">' +
-                        '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">Pozdrav ' + clientName + '</h2>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;">Hvala ti na povjerenju! Uspjesno si zakazao termin.</p>' +
-                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + partnerName + ' - ' + packageName + ' (' + price + ')</p>' +
-                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + displayDate + '</p>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + time + vehicleInfo + '</p>' +
+                        '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">Pozdrav ' + h(clientName) + '</h2>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;">' + (autoConfirm ? 'Hvala ti na povjerenju! Termin je potvrđen.' : 'Hvala ti! Zahtjev za termin je poslan, a ' + h(partnerName) + ' će ga uskoro potvrditi. Javit ćemo ti mejlom.') + '</p>' +
+                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + h(partnerName) + ' - ' + h(packageName) + ' (' + h(price) + ')</p>' +
+                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + h(displayDate) + '</p>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + h(time) + vehicleInfo + '</p>' +
                         '<p style="font-size:14px;margin:0 0 16px 0;">Vidimo se u dogovoreno vrijeme! Ako budes zelio pomjeriti ili otkazati termin, mozes to uciniti direktno preko nase platforme.</p>' +
-                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + partnerName + ' & POSLO ONE</p>' +
+                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + h(partnerName) + ' & POSLO ONE</p>' +
                         '</td></tr></table>';
 
                     const clientResult = await resend.emails.send({
                         from: fromHeader,
                         to: clientEmail,
-                        subject: 'Uspjesno zakazan termin - ' + partnerName,
+                        subject: (autoConfirm ? 'Termin potvrđen - ' : 'Zahtjev za termin poslan - ') + partnerName,
                         html: clientEmailHtml
                     });
 

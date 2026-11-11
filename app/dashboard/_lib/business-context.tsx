@@ -19,6 +19,7 @@ export type DashboardBusiness = {
   closed_dates: string[];
   logo_url: string;
   plan: "starter" | "pro";
+  auto_confirm: boolean;
 };
 
 export type BusinessContextValue = {
@@ -55,5 +56,6 @@ export function normalizeBusiness(b: Record<string, unknown> | null | undefined)
     closed_dates: Array.isArray(b?.closed_dates) ? (b!.closed_dates as unknown[]).filter((d): d is string => typeof d === "string") : [],
     logo_url: str(b?.logo_url),
     plan: b?.plan === "starter" ? "starter" : "pro",
+    auto_confirm: b?.auto_confirm !== false,
   };
 }

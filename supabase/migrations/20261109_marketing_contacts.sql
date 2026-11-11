@@ -91,3 +91,10 @@ revoke all on public.marketing_contacts from anon, authenticated;
 revoke all on public.marketing_activity_log from anon, authenticated;
 revoke all on function public.marketing_contact_sendable(public.marketing_contacts) from public, anon, authenticated;
 revoke all on function public.marketing_touch_updated_at() from public, anon, authenticated;
+
+-- Novi Supabase projekti više ne daju automatski prava API ulogama na nove tabele:
+-- server (service_role) dobija izričito samo ono što mu treba.
+grant select, insert, update, delete on public.marketing_imports to service_role;
+grant select, insert, update, delete on public.marketing_contacts to service_role;
+grant select, insert on public.marketing_activity_log to service_role;
+grant execute on function public.marketing_contact_sendable(public.marketing_contacts) to service_role;

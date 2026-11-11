@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Icon from "../../../dashboard/_components/icons";
 import {
-  CONTACT_FIELDS, LEGAL_BASES, MAX_IMPORT_ROWS, guessMapping, parseCsv, prepareImport, type ContactField, type LegalBasis,
+  CONTACT_FIELDS, LEGAL_BASES, MAX_IMPORT_ROWS, categoryLabel, guessMapping, parseCsv, prepareImport, type ContactField, type LegalBasis,
 } from "../../../../utils/marketingContacts";
 import { adminFetch } from "../../_lib/admin";
 import { Notice, btnGhost, btnPrimary, inputCls, labelCls } from "../../_lib/ui";
@@ -163,7 +163,7 @@ export default function ImportWizard({ onDone, onClose }: { onDone: () => void; 
                 </thead>
                 <tbody className="divide-y divide-white/[0.05] text-slate-200">
                   {prepared.valid.slice(0, 5).map((c) => (
-                    <tr key={c.email}><td className="px-3 py-2">{c.email}</td><td className="px-3 py-2">{c.company_name}</td><td className="px-3 py-2">{c.owner_name}</td><td className="px-3 py-2">{c.category}</td><td className="px-3 py-2">{c.city}</td></tr>
+                    <tr key={c.email}><td className="px-3 py-2">{c.email}</td><td className="px-3 py-2">{c.company_name}</td><td className="px-3 py-2">{c.owner_name}</td><td className="px-3 py-2">{categoryLabel(c.category)}</td><td className="px-3 py-2">{c.city}</td></tr>
                   ))}
                 </tbody>
               </table>

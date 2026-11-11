@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import PasswordInput from '../../components/PasswordInput';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
@@ -85,8 +86,7 @@ export default function PromijeniLozinkuPage() {
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
               Nova lozinka
             </label>
-            <input
-              type="password"
+            <PasswordInput
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -99,8 +99,7 @@ export default function PromijeniLozinkuPage() {
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
               Potvrdite novu lozinku
             </label>
-            <input
-              type="password"
+            <PasswordInput
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

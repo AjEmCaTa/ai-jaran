@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { createClient, type User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import PasswordInput from '../../components/PasswordInput';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -277,7 +278,7 @@ export default function CustomerAuthPage() {
             <input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
           </label>
           <label className="block text-sm text-slate-300">Lozinka
-            <input required type="password" minLength={6} autoComplete={isRegistering ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+            <PasswordInput required minLength={6} autoComplete={isRegistering ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
           </label>
           <button disabled={loading} className={primaryBtn}>
             {loading ? 'Molimo sačekajte...' : isRegistering ? 'Registruj se' : 'Prijavi se'}

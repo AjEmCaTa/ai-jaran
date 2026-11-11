@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { CATALOG_CATEGORIES } from '../../utils/catalog';
+import PasswordInput from '../../components/PasswordInput';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -183,8 +184,7 @@ export default function RegistracijaPage() {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Lozinka</label>
-            <input
-              type="password"
+            <PasswordInput
               required
               minLength={6}
               value={password}

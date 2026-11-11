@@ -59,16 +59,16 @@ export default function MasterPanelPage() {
 
   if (authorized === null || loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400 text-sm">
-        Ucitavanje...
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-400">
+        Učitavanje...
       </div>
     );
   }
 
   if (!authorized) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400 text-sm">
-        Nemas pristup ovoj stranici.
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-400">
+        Nemaš pristup ovoj stranici.
       </div>
     );
   }
@@ -77,17 +77,20 @@ export default function MasterPanelPage() {
   const active = businesses.filter(b => b.status === 'active');
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-6 space-y-8">
-      <h1 className="text-2xl font-black text-white">Master Panel - Odobravanje biznisa</h1>
+    <div className="mx-auto max-w-5xl space-y-8 pb-12">
+      <div>
+        <h2 className="font-display text-3xl font-bold tracking-tight text-white">Biznisi</h2>
+        <p className="mt-1 text-sm text-slate-400">Sve firme na POSLO ONE platformi, odobravanje i suspenzija.</p>
+      </div>
 
       <div>
-        <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider mb-3">Na cekanju ({pending.length})</h2>
+        <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider mb-3">Na čekanju ({pending.length})</h2>
         <div className="space-y-3">
           {pending.length === 0 && (
-            <p className="text-slate-500 text-sm">Nema zahtjeva na cekanju.</p>
+            <p className="text-slate-500 text-sm">Nema zahtjeva na čekanju.</p>
           )}
           {pending.map((b) => (
-            <div key={b.id} className="flex items-center justify-between p-4 rounded-xl bg-gray-900 border border-amber-500/20">
+            <div key={b.id} className="flex items-center justify-between p-4 rounded-[var(--po-radius)] bg-gray-900/70 border border-amber-500/20">
               <div>
                 <p className="font-bold text-white">{b.name}</p>
                 <p className="text-xs text-slate-400">{b.category} • {b.city} • {b.phone}</p>
@@ -109,7 +112,7 @@ export default function MasterPanelPage() {
         <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-3">Aktivni biznisi ({active.length})</h2>
         <div className="space-y-3">
           {active.map((b) => (
-            <div key={b.id} className="flex items-center justify-between p-4 rounded-xl bg-gray-900 border border-gray-800">
+            <div key={b.id} className="flex items-center justify-between p-4 rounded-[var(--po-radius)] bg-gray-900/70 border border-white/[0.07]">
               <div>
                 <p className="font-bold text-white">{b.name}</p>
                 <p className="text-xs text-slate-400">{b.category} • {b.city} • {b.phone}</p>

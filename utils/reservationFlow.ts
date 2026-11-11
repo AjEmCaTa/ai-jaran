@@ -113,3 +113,37 @@ export function buildReservationPayload(input: { reservationId: string; kind: Pu
     tag: `reservation-${input.reservationId}-${input.kind}`,
   };
 }
+
+
+
+// Tabla rezervacija (kanban): kolone i šta znači prevući karticu u kolonu.
+export type BoardColumn = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+
+export const BOARD_COLUMNS: { id: BoardColumn; label: string; hint: string; action: ReservationAction | null }[] = [
+  { id: 'pending', label: 'Zahtjevi', hint: 'Čekaju vašu potvrdu', action: null },
+  { id: 'confirmed', label: 'Potvrđeno', hint: 'Dogovoreni termini', action: 'confirm' },
+  { id: 'completed', label: 'Završeno', hint: 'Odrađeni termini', action: 'complete' },
+  { id: 'cancelled', label: 'Otkazano', hint: 'Otkazano ili isteklo', action: 'cancel' },
+];
+
+export function columnOf(status: unknown): BoardColumn {
+  const kind = statusKind(status);
+  if (kind === 'confirmed' || kind === 'rescheduling') return 'confirmed';
+  if (kind === 'completed') return 'completed';
+  if (kind === 'cancelled' || kind === 'expired') return 'cancelled';
+  return 'pending';
+}
+
+// Radnja koju treba izvršiti kad se kartica spusti u kolonu (ili null ako prelaz nije dozvoljen).
+export function dropAction(status: unknown, target: BoardColumn): ReservationAction | null {
+  if (columnOf(status) === target) return null;
+  const action = BOARD_COLUMNS.find((c) => c.id === target)?.action ?? null;
+  return action && canApply(status, action) ? action : null;
+}
+
+// Aktivne kolone po vremenu termina (najbliži prvi), završene i otkazane od najnovijeg.
+export function sortForColumn<T extends { reservation_date: string | null }>(rows: T[], column: BoardColumn): T[] {
+  const t = (r: T) => (r.reservation_date ? Date.parse(r.reservation_date) : 0) || 0;
+  const asc = column === 'pending' || column === 'confirmed';
+  return [...rows].sort((a, b) => (asc ? t(a) - t(b) : t(b) - t(a)));
+}

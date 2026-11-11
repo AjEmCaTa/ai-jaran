@@ -81,3 +81,34 @@ test('uvjetno ažuriranje (status mora biti nepromijenjen) puštaju samo jednu p
   assert.equal(confirm(), true);
   assert.equal(confirm(), false);
 });
+
+test('tabla: kolone po statusu', async () => {
+  const { columnOf } = await import('../utils/reservationFlow.ts');
+  assert.equal(columnOf(null), 'pending');
+  assert.equal(columnOf('Aktivno'), 'pending');
+  assert.equal(columnOf('Potvrđeno'), 'confirmed');
+  assert.equal(columnOf('Dogovor termina'), 'confirmed');
+  assert.equal(columnOf('Završeno'), 'completed');
+  assert.equal(columnOf('Otkazano'), 'cancelled');
+  assert.equal(columnOf('Isteklo'), 'cancelled');
+});
+
+test('tabla: prevlačenje radi samo dozvoljene prelaze', async () => {
+  const { dropAction } = await import('../utils/reservationFlow.ts');
+  assert.equal(dropAction(null, 'confirmed'), 'confirm');
+  assert.equal(dropAction(null, 'completed'), 'complete');
+  assert.equal(dropAction(null, 'cancelled'), 'cancel');
+  assert.equal(dropAction('Potvrđeno', 'completed'), 'complete');
+  assert.equal(dropAction('Potvrđeno', 'confirmed'), null); // ista kolona
+  assert.equal(dropAction('Potvrđeno', 'pending'), null); // nazad u zahtjeve ne može
+  assert.equal(dropAction('Završeno', 'confirmed'), null);
+  assert.equal(dropAction('Otkazano', 'confirmed'), null);
+  assert.equal(dropAction('Isteklo', 'completed'), null);
+});
+
+test('tabla: redoslijed u kolonama', async () => {
+  const { sortForColumn } = await import('../utils/reservationFlow.ts');
+  const rows = [{ reservation_date: '2026-11-12T10:00' }, { reservation_date: '2026-11-11T10:00' }, { reservation_date: null }];
+  assert.deepEqual(sortForColumn(rows, 'pending').map((r) => r.reservation_date), [null, '2026-11-11T10:00', '2026-11-12T10:00']);
+  assert.deepEqual(sortForColumn(rows, 'completed').map((r) => r.reservation_date), ['2026-11-12T10:00', '2026-11-11T10:00', null]);
+});

@@ -29,6 +29,12 @@ export async function POST(request: NextRequest) {
     consentAt = new Date(t).toISOString();
   }
 
+  // Redovi koje je preglednik već izbacio (neispravni, ponovljeni) ulaze u izvještaj uvoza.
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.min(Math.floor(v), MAX_IMPORT_ROWS * 2) : 0);
+  const skippedInvalid = n(body.skippedInvalid);
+  const skippedDuplicates = n(body.skippedDuplicates);
+  const fileRows = Math.max(n(body.fileRows), body.contacts.length);
+
   const valid: ContactInput[] = [];
   const seen = new Set<string>();
   let invalid = 0;
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
   const fileName = typeof body.fileName === 'string' ? body.fileName.slice(0, 200) : null;
   const { data: imp, error: impErr } = await admin
     .from('marketing_imports')
-    .insert({ file_name: fileName, legal_basis: body.legalBasis, source, total_rows: body.contacts.length, created_by: actor })
+    .insert({ file_name: fileName, legal_basis: body.legalBasis, source, total_rows: fileRows, created_by: actor })
     .select('id')
     .single();
   if (impErr || !imp) {
@@ -87,16 +93,17 @@ export async function POST(request: NextRequest) {
     const { data, error } = await admin.from('marketing_contacts').upsert(rows, { onConflict: 'email', ignoreDuplicates: true }).select('id');
     if (error) {
       console.error('Marketing uvoz: upis', error.message);
-      await admin.from('marketing_imports').update({ inserted, duplicates: existing.size + duplicatesInFile, invalid }).eq('id', imp.id);
+      await admin.from('marketing_imports').update({ inserted, duplicates: existing.size + duplicatesInFile + skippedDuplicates, invalid: invalid + skippedInvalid }).eq('id', imp.id);
       await logMarketing(admin, actor, 'import.failed', 'import', imp.id, { inserted, error: error.message.slice(0, 200) });
       return NextResponse.json({ error: `Uvoz je prekinut nakon ${inserted} kontakata.`, inserted }, { status: 500 });
     }
     inserted += data?.length || 0;
   }
-  const duplicates = existing.size + duplicatesInFile + (fresh.length - inserted);
+  const duplicates = existing.size + duplicatesInFile + skippedDuplicates + (fresh.length - inserted);
+  invalid += skippedInvalid;
   await admin.from('marketing_imports').update({ inserted, duplicates, invalid }).eq('id', imp.id);
   await logMarketing(admin, actor, 'import.done', 'import', imp.id, {
-    file: fileName, legal_basis: body.legalBasis, source, total: body.contacts.length, inserted, duplicates, invalid,
+    file: fileName, legal_basis: body.legalBasis, source, total: fileRows, inserted, duplicates, invalid,
   });
   return NextResponse.json({ importId: imp.id, inserted, duplicates, invalid });
 }

@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
 
   const { data, count, error } = await query
     .order('created_at', { ascending: false })
+    .order('email', { ascending: true })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   if (error) {
     console.error('Marketing kontakti GET', error.message);
@@ -121,7 +122,7 @@ export async function PATCH(request: NextRequest) {
   if (!body || typeof body.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(body.id)) {
     return NextResponse.json({ error: 'Neispravan zahtjev.' }, { status: 400 });
   }
-  const { data: current } = await admin.from('marketing_contacts').select('id, status, legal_basis, consent_at, consent_source').eq('id', body.id).maybeSingle();
+  const { data: current } = await admin.from('marketing_contacts').select(LIST_FIELDS).eq('id', body.id).maybeSingle();
   if (!current) return NextResponse.json({ error: 'Kontakt nije pronađen.' }, { status: 404 });
 
   const update: Record<string, unknown> = {};
@@ -161,7 +162,15 @@ export async function PATCH(request: NextRequest) {
   }
   if ('replied' in body) update.replied_at = body.replied ? new Date().toISOString() : null;
 
-  if (Object.keys(update).length === 0) return NextResponse.json({ error: 'Nema izmjena.' }, { status: 400 });
+  // Polja koja se nisu stvarno promijenila se ne šalju (i ne upisuju u evidenciju).
+  const same = (x: unknown, y: unknown) => JSON.stringify(x ?? null) === JSON.stringify(y ?? null)
+    || (typeof x === 'string' && typeof y === 'string' && Date.parse(x) === Date.parse(y) && /^\d{4}-/.test(x));
+  const cur = current as Record<string, unknown>;
+  for (const k of Object.keys(update)) if (same(update[k], cur[k])) delete update[k];
+  if (Object.keys(update).length === 0) {
+    const { data: unchanged } = await admin.from('marketing_contacts').select(LIST_FIELDS).eq('id', body.id).single();
+    return NextResponse.json({ contact: unchanged });
+  }
 
   const { data, error } = await admin.from('marketing_contacts').update(update).eq('id', body.id).select(LIST_FIELDS).single();
   if (error) {

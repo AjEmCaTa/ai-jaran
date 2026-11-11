@@ -69,7 +69,10 @@ export default function ImportWizard({ onDone, onClose }: { onDone: () => void; 
     try {
       const res = await adminFetch<Check & Result>("/api/master/marketing/import", {
         method: "POST",
-        body: { dryRun, fileName, legalBasis: basis, source: source.trim(), consentAt: basis === "consent" ? consentAt : null, contacts: prepared.valid },
+        body: {
+          dryRun, fileName, legalBasis: basis, source: source.trim(), consentAt: basis === "consent" ? consentAt : null, contacts: prepared.valid,
+          fileRows: body.length, skippedInvalid: prepared.invalid.length, skippedDuplicates: prepared.duplicates.length,
+        },
       });
       if (dryRun) setCheck(res);
       else {

@@ -79,7 +79,7 @@ export default function AppearancePage() {
 
       <section className="rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)]" aria-labelledby="pozadina">
         <h3 id="pozadina" className="text-base font-semibold text-white">Pozadina</h3>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {SURFACES.map((s) => {
             const selected = theme.surface === s.value;
             return (

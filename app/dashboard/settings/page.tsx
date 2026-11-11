@@ -237,7 +237,7 @@ export default function SettingsPage() {
           </p>
         )}
 
-        <form onSubmit={saveBusiness} className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={saveBusiness} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block text-xs font-medium text-slate-300">
             Djelatnost (kategorija u katalogu)
             <select
@@ -349,14 +349,14 @@ export default function SettingsPage() {
 
           <fieldset disabled={locked} className={`space-y-4 border-t border-white/[0.06] pt-6 sm:col-span-2 ${locked ? 'opacity-60' : ''}`}>
             <SectionTitle icon="calendar" title="Pauza i godišnji odmor" text="Zaključani dani se klijentima ne nude za zakazivanje." />
-            <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
               <label className="block text-xs font-medium text-slate-300">
                 Od
-                <input type="date" value={newClosed} onChange={(e) => setNewClosed(e.target.value)} className={inputClass} />
+                <DateField value={newClosed} onChange={setNewClosed} className={inputClass} />
               </label>
               <label className="block text-xs font-medium text-slate-300">
                 Do (nije obavezno)
-                <input type="date" value={closedTo} min={newClosed || undefined} onChange={(e) => setClosedTo(e.target.value)} className={inputClass} />
+                <DateField value={closedTo} min={newClosed || undefined} onChange={setClosedTo} className={inputClass} />
               </label>
               <button
                 type="button"
@@ -447,7 +447,7 @@ function BookingConfirmCard() {
     <section className="rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)]">
       <h3 className="text-base font-semibold text-white">Potvrda termina</h3>
       <p className="mt-1 text-sm text-slate-400">Šta se dešava kad klijent zakaže termin preko vašeg linka.</p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {options.map((o) => {
           const active = business.auto_confirm === o.auto;
           return (
@@ -472,5 +472,25 @@ function BookingConfirmCard() {
       </div>
       {msg && <p role="status" className="mt-3 text-sm text-emerald-400">{msg}</p>}
     </section>
+  );
+}
+// Polje za datum koje i na iPhoneu izgleda kako treba: ne izlazi iz kartice i prazno pokazuje uputu.
+function DateField({ value, onChange, min, className }: { value: string; onChange: (v: string) => void; min?: string; className: string }) {
+  const shown = value ? value.split('-').reverse().join('.') + '.' : '';
+  return (
+    <div className="relative mt-2">
+      <div className={`${className} !mt-0 pointer-events-none flex min-h-11 items-center justify-between`} aria-hidden="true">
+        <span className={value ? 'text-white' : 'text-slate-500'}>{shown || 'Izaberite datum'}</span>
+        <Icon name="calendar" className="h-4 w-4 text-slate-400" />
+      </div>
+      <input
+        type="date"
+        value={value}
+        min={min}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={shown || 'Izaberite datum'}
+        className="absolute inset-0 h-full w-full min-w-0 cursor-pointer appearance-none opacity-0"
+      />
+    </div>
   );
 }

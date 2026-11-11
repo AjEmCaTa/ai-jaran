@@ -466,7 +466,7 @@ export default function DashboardPage() {
         className="relative overflow-hidden rounded-[var(--po-radius)] border border-blue-500/20 p-[var(--po-pad)] sm:p-8"
         style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-blue-500) 24%, var(--color-gray-900)), var(--color-gray-900) 62%)' }}
       >
-        <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
           <div className="min-w-0">
             <p className="text-sm capitalize text-blue-300/80">{todayLabel}</p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -591,7 +591,7 @@ export default function DashboardPage() {
       </section>
 
       {/* LISTA ZA POČETAK + LINK */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {checklistVisible && <SetupChecklist items={checklist} />}
         <div id="link-rezervacije" className={checklistVisible ? '' : 'lg:col-span-2'}>
           <BookingLinkCard link={effectiveLink} defaultLink={defaultLink} onSave={saveLink} className="h-full" />
@@ -606,7 +606,7 @@ export default function DashboardPage() {
             title={`Treba zatvoriti (${data.pending.length})`}
             hint={<span className="hidden text-xs text-slate-400 sm:block">Prošli termini bez statusa. Završeni ulaze u prihod.</span>}
           />
-          <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3">
             {data.pending.slice(0, 6).map((res) => (
               <ReservationRow key={res.id} res={res} mode="pending" busy={busyId === res.id} onStatus={updateStatus} />
             ))}
@@ -620,7 +620,7 @@ export default function DashboardPage() {
       )}
 
       {/* GRAFIKON + NADOLAZEĆI */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <section className={`${panel} lg:col-span-2`} aria-label="Aktivnost u zadnjih 7 dana">
           <PanelTitle
             icon="trending"
@@ -703,7 +703,7 @@ export default function DashboardPage() {
       </div>
 
       {/* GRUPISANA STATISTIKA */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <section className={panel} aria-label="Prihod">
           <PanelTitle icon="wallet" title="Prihod" />
           <div className="space-y-5">
@@ -738,7 +738,7 @@ export default function DashboardPage() {
       </div>
 
       {/* UVIDI + CILJ */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <section className={panel} aria-label="Najtraženije usluge">
           <PanelTitle icon="tag" title="Najtraženije usluge" />
           {loading ? (

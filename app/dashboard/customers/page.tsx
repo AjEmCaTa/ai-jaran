@@ -204,7 +204,7 @@ export default function CustomersPage() {
       {error && <p role="alert" className="rounded-lg border border-red-800 bg-red-950/50 p-4 text-sm text-red-200">{error}</p>}
 
       {/* Sažetak */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           { label: 'Ukupno klijenata', value: loading ? '...' : String(customers.length) },
           { label: 'Vraćaju se (2+ rezervacije)', value: loading ? '...' : `${returning}${customers.length ? ` (${Math.round((returning / customers.length) * 100)}%)` : ''}` },

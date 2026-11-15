@@ -87,8 +87,8 @@ export default function Hero({ onStartFree, onHowItWorks, animationKey }: HeroPr
               <div className="overflow-hidden rounded-[30px] border border-blue-400/25 bg-[#020617] p-1.5 shadow-[0_0_80px_rgba(37,99,235,0.18)] sm:rounded-[36px] sm:p-2">
                 <video
                   className="block aspect-[780/1220] w-full rounded-[24px] object-cover sm:rounded-[28px]"
-                  src="/video/poslo-one-demo-v2.mp4"
-                  poster="/video/poslo-one-demo-v2-poster.jpg"
+                  src="/video/poslo-one-demo-v3.mp4"
+                  poster="/video/poslo-one-demo-v3-poster.jpg"
                   autoPlay
                   muted
                   loop

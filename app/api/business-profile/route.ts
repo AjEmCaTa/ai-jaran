@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { listGallery } from '../../../utils/gallery';
 
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,5 +29,6 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: true });
   if (servicesError) return NextResponse.json({ error: 'Usluge nije moguće učitati.' }, { status: 500 });
 
-  return NextResponse.json({ business, services: services || [] });
+  const gallery = await listGallery(admin, business.id);
+  return NextResponse.json({ business, services: services || [], gallery: gallery.map((p) => p.url) });
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useRef, useState } from 'react';
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
+import { canvasToPdf, drawPoster } from './posterPdf';
 import { useBusiness } from '../_lib/business-context';
 import Icon from '../_components/icons';
 import { categoryLabel } from '../../../utils/catalog';
@@ -25,6 +26,10 @@ export default function QrPosterPage() {
   const [variant, setVariant] = useState<Variant>('light');
   const [headline, setHeadline] = useState('Zakaži termin online');
   const [link, setLink] = useState('');
+  const qrCanvas = useRef<HTMLCanvasElement>(null);
+  const [pdf, setPdf] = useState<Blob | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
 
   useEffect(() => {
     let saved = '';
@@ -38,6 +43,70 @@ export default function QrPosterPage() {
 
   const dark = variant === 'dark';
   const shortLink = link.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const category = categoryLabel(business.category) || 'Online rezervacije';
+
+  // PDF se pripremi unaprijed, da dugme odmah otvori dijeljenje (iPhone traži da se to desi odmah nakon dodira).
+  useEffect(() => {
+    if (!link) return;
+    setPdf(null);
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        if (!qrCanvas.current) return;
+        const canvas = await drawPoster({
+          dark,
+          logoUrl: business.logo_url || '',
+          category,
+          name: business.name || 'Vaša firma',
+          city: business.city || '',
+          headline,
+          shortLink,
+          qr: qrCanvas.current,
+        });
+        const blob = await canvasToPdf(canvas);
+        if (!cancelled) setPdf(blob);
+      } catch (err) {
+        console.error('Poster PDF nije napravljen:', err);
+      }
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [link, dark, headline, shortLink, category, business.logo_url, business.name, business.city]);
+
+  const fileName = `qr-poster-${business.slug || 'poslo-one'}.pdf`;
+
+  const download = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+
+  const savePdf = async () => {
+    if (!pdf) return;
+    setNote('');
+    const file = new File([pdf], fileName, { type: 'application/pdf' });
+    const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
+    if (nav.canShare?.({ files: [file] })) {
+      try {
+        setBusy(true);
+        await navigator.share({ files: [file], title: 'QR poster' });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+      } finally {
+        setBusy(false);
+      }
+    }
+    download(pdf);
+    setNote('PDF je preuzet. Otvorite ga i odštampajte ili pošaljite u štampariju.');
+  };
 
   return (
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-12">
@@ -148,16 +217,31 @@ export default function QrPosterPage() {
 
           <button
             type="button"
-            onClick={() => window.print()}
-            disabled={!link}
+            onClick={savePdf}
+            disabled={!pdf || busy}
             className="flex w-full items-center justify-center gap-2 rounded-[calc(var(--po-radius)*0.7)] bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50"
           >
             <Icon name="download" className="h-4 w-4" />
-            Štampaj ili sačuvaj PDF
+            {pdf ? 'Sačuvaj ili štampaj PDF' : 'Pripremam PDF...'}
           </button>
+          {note && <p role="status" className="text-xs text-emerald-300">{note}</p>}
           <p className="text-[11px] leading-relaxed text-slate-500">
-            U prozoru za štampu izaberite „Sačuvaj kao PDF” ako želite poslati poster u štampariju.
+            Na telefonu se otvori meni za dijeljenje: izaberite Štampaj, Sačuvaj u Fajlove ili pošaljite PDF u štampariju. Poster je A4.
           </p>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            disabled={!link}
+            className="hidden w-full text-center text-xs font-medium text-slate-400 underline-offset-4 hover:text-white hover:underline disabled:opacity-50 lg:block"
+          >
+            Štampaj direktno sa računara
+          </button>
+          {/* Skriveni QR u visokoj rezoluciji za PDF */}
+          {link && (
+            <div aria-hidden="true" className="hidden">
+              <QRCodeCanvas ref={qrCanvas} value={link} size={1024} marginSize={0} bgColor="#ffffff" fgColor="#0b0f1a" level="M" />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { BOOKING_TEXT, type BookingText } from '../utils/bookingText';
 
 // Univerzalni upit firmi (šalje na /api/business-inquiry; server određuje primaoca po slug-u).
-export default function InquiryForm({ businessSlug, accent = 'blue' }: { businessSlug: string; accent?: 'blue' | 'amber' }) {
+export default function InquiryForm({ businessSlug, accent = 'blue', t = BOOKING_TEXT.bs }: { businessSlug: string; accent?: 'blue' | 'amber'; t?: BookingText }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -21,9 +22,9 @@ export default function InquiryForm({ businessSlug, accent = 'blue' }: { busines
     event.preventDefault();
     if (sending || sent) return;
     setError('');
-    if (name.trim().length < 2) return setError('Unesite ime i prezime.');
-    if (!/^[+\d][\d\s()/.-]{5,}$/.test(phone.trim())) return setError('Unesite ispravan broj telefona.');
-    if (message.trim().length < 5) return setError('Opišite kratko šta vam treba.');
+    if (name.trim().length < 2) return setError(t.qErrName);
+    if (!/^[+\d][\d\s()/.-]{5,}$/.test(phone.trim())) return setError(t.qErrPhone);
+    if (message.trim().length < 5) return setError(t.qErrMessage);
     setSending(true);
     try {
       const response = await fetch('/api/business-inquiry', {
@@ -33,24 +34,24 @@ export default function InquiryForm({ businessSlug, accent = 'blue' }: { busines
       });
       const result = await response.json().catch(() => null);
       if (response.ok && result?.success) setSent(true);
-      else setError(result?.error || 'Upit nije poslan. Pokušajte ponovo.');
+      else setError(result?.error || t.qErrSend);
     } catch {
-      setError('Greška u mreži. Pokušajte ponovo.');
+      setError(t.qErrNet);
     } finally {
       setSending(false);
     }
   };
 
   if (sent) {
-    return <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">Hvala! Vaš upit je poslan.</p>;
+    return <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">{t.qThanks}</p>;
   }
 
   return (
     <form onSubmit={submit} className="space-y-3" noValidate>
-      <input className={input} placeholder="Ime i prezime" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
-      <input className={input} placeholder="Telefon" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={40} />
-      <input className={input} placeholder="E-mail (nije obavezno)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} />
-      <textarea className={input} placeholder="Kako vam možemo pomoći?" rows={4} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} />
+      <input className={input} placeholder={t.qName} value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
+      <input className={input} placeholder={t.qPhone} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={40} />
+      <input className={input} placeholder={t.qEmail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} />
+      <textarea className={input} placeholder={t.qMessage} rows={4} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} />
       <input
         type="text"
         name="website"
@@ -67,7 +68,7 @@ export default function InquiryForm({ businessSlug, accent = 'blue' }: { busines
         disabled={sending}
         className="min-h-11 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
       >
-        {sending ? 'Slanje…' : 'Pošalji upit'}
+        {sending ? t.qSending : t.qSend}
       </button>
     </form>
   );

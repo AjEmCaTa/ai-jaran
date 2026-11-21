@@ -12,7 +12,10 @@ import ServicePhotoCarousel from './ServicePhotoCarousel';
 import { loadBusinessProfile } from '../utils/profileCache';
 import Icon from './Icon';
 import PartnerLogo from './PartnerLogo';
-import { categoryLabel } from '../utils/catalog';
+import { categoryLabel, categoryOf } from '../utils/catalog';
+import StayPicker from './StayPicker';
+import { CHECK_OUT_TIME, checkInTime, isStayCategory, nightsBetween, occupiedNights } from '../utils/stay';
+import { BOOKING_TEXT, initialLang, saveLang, statusText, type Lang } from '../utils/bookingText';
 import { PARTNER_LOGOS } from '../utils/partnerLogos';
 
 interface ServicePackage {
@@ -36,6 +39,7 @@ interface Reservation {
   service_name: string;
   price: number;
   reservation_date: string;
+  check_out?: string;
   status: string;
 }
 
@@ -63,11 +67,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
 );
 
-const monthNames = [
-  "Januar", "Februar", "Mart", "April", "Maj", "Juni",
-  "Juli", "August", "Septembar", "Oktobar", "Novembar", "Decembar"
-];
-const dayNamesShort = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
 
 // Termini svakih 30 min unutar radnog vremena firme (zadnji počinje 30 min prije kraja).
 const generateTimeSlots = (start: string, end: string) => {
@@ -136,6 +135,12 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [resDate, setResDate] = useState('');
   const [resTime, setResTime] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [lang, setLang] = useState<Lang>('bs');
+  const t = BOOKING_TEXT[lang];
+  useEffect(() => { setLang(initialLang()); }, []);
+  useEffect(() => { document.documentElement.lang = lang === 'en' ? 'en' : 'bs'; }, [lang]);
+  const switchLang = (next: Lang) => { setLang(next); saveLang(next); };
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -164,6 +169,14 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
   const [busyRanges, setBusyRanges] = useState<BusyRange[]>([]);
+  const [takenRows, setTakenRows] = useState<{ reservation_date?: string; duration_minutes?: number; status?: string; service_name?: string }[]>([]);
+  // Vile i apartmani: rezervacija od datuma do datuma; svaka usluga je posebna jedinica.
+  const isStay = isStayCategory(categoryOf(businessProfile.category));
+  const stayCheckInAt = checkInTime(businessProfile.work_start);
+  const occupied = useMemo(
+    () => (selectedPackage ? occupiedNights(takenRows, selectedPackage.name) : new Set<string>()),
+    [takenRows, selectedPackage],
+  );
   const [showMyTerminiModal, setShowMyTerminiModal] = useState(false);
 
   const [reservationToCancel, setReservationToCancel] = useState<Reservation | null>(null);
@@ -190,6 +203,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
         if (packageChoice) setSelectedPackage(packageChoice);
         if (typeof booking.date === 'string') setResDate(booking.date);
         if (typeof booking.time === 'string') setResTime(booking.time);
+        if (typeof booking.checkOut === 'string') setCheckOut(booking.checkOut);
         if (typeof booking.name === 'string') setClientName(booking.name);
         if (typeof booking.phone === 'string') setClientPhone(booking.phone);
       } catch {
@@ -295,6 +309,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
             return { start, end };
           });
         setBusyRanges(ranges);
+        setTakenRows(json.data);
       }
     } catch (err) {
       console.error('Greška pri dohvatanju zauzetih termina:', err);
@@ -303,15 +318,16 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPackage || !resDate || !resTime || !clientPhone) {
-      alert('Molimo izaberite paket, datum, vrijeme i unesite broj telefona.');
+    if (!selectedPackage || !resDate || (isStay ? !checkOut : !resTime) || !clientPhone) {
+      alert(isStay ? t.alertMissingStay : t.alertMissing);
       return;
     }
 
     setLoading(true);
 
-    const formattedDateTime = `${resDate}T${resTime}:00`;
-    const priceNum = Number(selectedPackage.price.replace(/[^0-9]/g, '')) || 0;
+    const formattedDateTime = isStay ? `${resDate}T${stayCheckInAt}:00` : `${resDate}T${resTime}:00`;
+    const unitPrice = Number(selectedPackage.price.replace(/[^0-9]/g, '')) || 0;
+    const priceNum = isStay ? unitPrice * Math.max(1, nightsBetween(resDate, checkOut)) : unitPrice;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -320,6 +336,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           packageId: selectedPackage.id,
           date: resDate,
           time: resTime,
+          checkOut,
           name: clientName,
           phone: clientPhone,
         }));
@@ -328,7 +345,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
       }
       const customerName = session.user.user_metadata?.full_name || clientName.trim();
       if (!customerName || !session.user.email) {
-        alert('Dodajte ime i prezime na svoj račun i provjerite email adresu.');
+        alert(t.alertName);
         return;
       }
       const response = await fetch('/api/narudzbe', {
@@ -344,12 +361,14 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           price: priceNum,
           reservation_date: formattedDateTime,
           duration_minutes: selectedPackage.durationMinutes,
+          ...(isStay ? { stay: { check_in: resDate, check_out: checkOut } } : {}),
+          lang,
           status: 'Na čekanju',
         }),
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Došlo je do greške na serveru.');
+      if (!response.ok) throw new Error(result.error || t.serverError);
 
       const newReservation: Reservation = {
         id: result.data && result.data[0] ? result.data[0].id : Date.now(),
@@ -359,6 +378,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
         service_name: selectedPackage.name,
         price: priceNum,
         reservation_date: formattedDateTime,
+        check_out: isStay ? checkOut : undefined,
         // Status vraća server: "Potvrđeno" kad firma ima automatsku potvrdu, inače čeka potvrdu.
         status: (result.data && result.data[0] && result.data[0].status) || 'Na čekanju',
       };
@@ -373,11 +393,12 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
       setSelectedPackage(null);
       setResDate('');
       setResTime('');
+      setCheckOut('');
       setClientName('');
       setClientPhone('');
       setClientEmail('');
     } catch (err: any) {
-      alert('Greška prilikom rezervacije: ' + err.message);
+      alert(t.bookingError + err.message);
     } finally {
       setLoading(false);
     }
@@ -392,7 +413,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
     try {
       if (typeof id === 'number' || typeof id === 'string') {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Prijavite se ponovo za otkazivanje termina.');
+        if (!session) throw new Error(t.loginAgainCancel);
         const cancelResponse = await fetch('/api/cancel-appointment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
@@ -400,7 +421,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
         });
         if (!cancelResponse.ok && cancelResponse.status !== 404) {
           const cancelResult = await cancelResponse.json().catch(() => null);
-          throw new Error(cancelResult?.error || 'Termin nije otkazan.');
+          throw new Error(cancelResult?.error || t.notCancelled);
         }
       }
 
@@ -411,7 +432,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
       await fetchTakenSlots();
       setReservationToCancel(null);
     } catch (err: any) {
-      alert('Greška pri otkazivanju: ' + err.message);
+      alert(t.cancelError + err.message);
     } finally {
       setIsDeleting(false);
     }
@@ -448,7 +469,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
             href={backHref}
             className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-blue-400 bg-[#0b0f19] px-4 py-2.5 rounded-xl border border-white/10 transition-all hover:border-blue-500/40"
           >
-            ← Nazad na partnere
+            {t.back}
           </Link>
 
           <div className="flex items-center gap-3">
@@ -457,13 +478,21 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                 onClick={() => setShowMyTerminiModal(true)}
                 className="text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2.5 rounded-xl border border-blue-500/30 transition-all flex items-center gap-2 cursor-pointer"
               >
-                <Icon name="calendar" className="h-4 w-4 flex-none" /> Moji zakazani termini ({myReservations.length})
+                <Icon name="calendar" className="h-4 w-4 flex-none" /> {t.myBookings} ({myReservations.length})
               </button>
             )}
 
             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-full border border-emerald-500/20 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Slobodni termini dostupni
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> {t.slotsAvailable}
             </span>
+
+            <div role="group" aria-label="Jezik / Language" className="flex overflow-hidden rounded-full border border-white/10 bg-[#0b0f19] text-[11px] font-bold">
+              {(['bs', 'en'] as const).map((l) => (
+                <button key={l} type="button" onClick={() => switchLang(l)} aria-pressed={lang === l} className={`px-3 py-2 transition ${lang === l ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}>
+                  {l === 'bs' ? 'BS' : 'EN'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -484,7 +513,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
-                Certificirani partner
+                {t.certified}
               </div>
               <div className="flex items-center gap-4">
                 {(businessProfile.logo_url || PARTNER_LOGOS[slug]) && (
@@ -505,17 +534,17 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([businessProfile.name, businessProfile.address, businessProfile.city].filter(Boolean).join(', '))}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Otvori u mapama"
+                    title={t.openMap}
                     className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 transition hover:border-blue-500/40 active:scale-[0.98]"
                   >
                     <Icon name="mapPin" className="h-3.5 w-3.5 flex-none text-blue-400" />{[businessProfile.address, businessProfile.city].filter(Boolean).join(', ')}
-                    <span className="text-[10px] font-semibold text-blue-300">Mapa ↗</span>
+                    <span className="text-[10px] font-semibold text-blue-300">{t.map}</span>
                   </a>
                 )}
                 {businessProfile.phone && (
-                  <a href={`tel:${businessProfile.phone.replace(/[^\d+]/g, '')}`} title="Pozovi" className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 transition hover:border-blue-500/40 active:scale-[0.98]">
+                  <a href={`tel:${businessProfile.phone.replace(/[^\d+]/g, '')}`}  title={t.call} className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 transition hover:border-blue-500/40 active:scale-[0.98]">
                     <Icon name="phone" className="h-3.5 w-3.5 flex-none text-blue-400" />{businessProfile.phone}
-                    <span className="text-[10px] font-semibold text-blue-300">Pozovi</span>
+                    <span className="text-[10px] font-semibold text-blue-300">{t.call}</span>
                   </a>
                 )}
                 {businessProfile.work_start && businessProfile.work_end && (
@@ -531,12 +560,12 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">1</span>
-            <h2 className="text-xl font-bold text-white">Izaberite paket usluge</h2>
+            <h2 className="text-xl font-bold text-white">{isStay ? t.step1Stay : t.step1}</h2>
           </div>
 
           {packages.length === 0 && (
             <div className="p-4 bg-[#0b0f19] border border-white/10 rounded-2xl text-center text-sm text-gray-400">
-              Trenutno nema dostupnih usluga za rezervaciju.
+              {t.noServices}
             </div>
           )}
 
@@ -549,6 +578,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                   onClick={() => {
                     setSelectedPackage(pkg);
                     setResTime('');
+                    if (isStay && selectedPackage?.id !== pkg.id) { setResDate(''); setCheckOut(''); }
                   }}
                   className={`relative p-6 rounded-3xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                     isSelected
@@ -566,12 +596,15 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                           </span>
                         )}
                         <h3 className="text-2xl font-extrabold text-white">{pkg.name}</h3>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 mt-1">
-                          <Icon name="clock" className="h-3.5 w-3.5 flex-none" /> Trajanje: <span className="text-blue-400">{pkg.duration}</span>
-                        </span>
+                        {!isStay && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 mt-1">
+                            <Icon name="clock" className="h-3.5 w-3.5 flex-none" /> {t.duration}: <span className="text-blue-400">{pkg.duration}</span>
+                          </span>
+                        )}
                       </div>
                       <div className="text-right">
-                        <span className="text-2xl font-black text-blue-400 block">{pkg.price}</span>
+                        <span className="text-2xl font-black text-blue-400 block">{pkg.price === 'Na upit' ? t.priceOnRequest : pkg.price}</span>
+                        {isStay && pkg.price !== 'Na upit' && <span className="text-[11px] font-semibold text-gray-400">{t.perNight}</span>}
                       </div>
                     </div>
 
@@ -588,7 +621,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
                   <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
                     <span className="text-xs font-semibold text-gray-400">
-                      {isSelected ? 'Odabrano' : 'Klikni za odabir'}
+                      {isSelected ? t.selected : t.clickToSelect}
                     </span>
                     <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
                       isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-white/20'
@@ -607,22 +640,37 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           <div className="space-y-4 pt-4">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">2</span>
-              <h2 className="text-xl font-bold text-white">Odaberite datum i vrijeme dolaska</h2>
+              <h2 className="text-xl font-bold text-white">{isStay ? t.step2Stay : t.step2}</h2>
             </div>
 
             {!selectedPackage && (
               <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center text-xs text-amber-400 font-semibold">
-                Prvo izaberite paket usluge iznad, kako bismo znali koliko traje termin.
+                {isStay ? t.pickUnitFirst : t.pickPackageFirst}
               </div>
             )}
 
+            {isStay ? (
+              <StayPicker
+                t={t}
+                occupied={occupied}
+                closed={businessProfile.closed_dates}
+                checkIn={resDate}
+                checkOut={checkOut}
+                onChange={(ci, co) => { setResDate(ci); setCheckOut(co); setResTime(ci ? stayCheckInAt : ''); }}
+                disabled={!selectedPackage}
+                checkInAt={stayCheckInAt}
+                checkOutAt={CHECK_OUT_TIME}
+                pricePerNight={selectedPackage && selectedPackage.price !== 'Na upit' ? Number(selectedPackage.price.replace(/[^0-9]/g, '')) || 0 : null}
+                priceOnRequest={selectedPackage?.price === 'Na upit'}
+              />
+            ) : (
             <div className="bg-[#0b0f19] border border-white/10 p-6 rounded-3xl space-y-6">
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-gray-400 font-medium block">Odabrani datum:</span>
+                  <span className="text-xs text-gray-400 font-medium block">{t.selectedDate}</span>
                   <span className="text-sm font-bold text-blue-400">
-                    {resDate ? formatToBalkanDate(resDate) : "Nije izabran datum"}
+                    {resDate ? formatToBalkanDate(resDate) : t.noDate}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 bg-[#030712] p-1.5 rounded-xl border border-white/10">
@@ -634,7 +682,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                     ◀
                   </button>
                   <span className="text-xs font-bold px-2 text-white">
-                    {monthNames[calMonth]} {calYear}
+                    {t.months[calMonth]} {calYear}
                   </span>
                   <button
                     type="button"
@@ -648,7 +696,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
               <div className="space-y-2">
                 <div className="grid grid-cols-7 gap-1 text-center">
-                  {dayNamesShort.map((d) => (
+                  {t.days.map((d) => (
                     <span key={d} className="text-[11px] font-bold text-gray-500 uppercase">{d}</span>
                   ))}
                 </div>
@@ -713,8 +761,8 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               {resDate ? (
                 <div className="pt-4 border-t border-white/10">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
-                    Slobodni termini za <span className="text-blue-400">{formatToBalkanDate(resDate)}</span>
-                    {selectedPackage && <span className="text-gray-500"> (trajanje: {selectedPackage.duration})</span>}:
+                    {t.freeSlotsFor} <span className="text-blue-400">{formatToBalkanDate(resDate)}</span>
+                    {selectedPackage && <span className="text-gray-500"> ({t.durationLower}: {selectedPackage.duration})</span>}:
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {timeSlots.map((time) => {
@@ -736,7 +784,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                               : "bg-[#030712] text-gray-300 border-white/10 hover:border-blue-500/40"
                           }`}
                         >
-                          {time} {isTaken && '(Zauzeto)'}
+                          {time} {isTaken && `(${t.taken})`}
                         </button>
                       );
                     })}
@@ -744,34 +792,35 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                 </div>
               ) : (
                 <div className="p-3 bg-[#030712] rounded-xl border border-white/5 text-center text-xs text-gray-500 italic">
-                  Izaberite dan na kalendaru iznad da vam se prikažu slobodni termini.
+                  {t.pickDayHint}
                 </div>
               )}
 
             </div>
+            )}
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">3</span>
-              <h2 className="text-xl font-bold text-white">Vaši kontakt podaci</h2>
+              <h2 className="text-xl font-bold text-white">{t.step3}</h2>
             </div>
 
             <div className="bg-[#0b0f19] border border-white/10 p-6 rounded-3xl space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Ime i prezime *</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{t.fullName}</label>
                   <input
                     type="text"
                     required
-                    placeholder="Unesite vaše ime i prezime"
+                    placeholder={t.fullNamePh}
                     value={clientName}
                     onChange={e => setClientName(e.target.value)}
                     className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Broj telefona *</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{t.phone}</label>
                   <input
                     type="tel"
                     required
@@ -784,11 +833,11 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">E-mail adresa *</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{t.email}</label>
                   <input
                   type="email"
                   required
-                  placeholder="vasa.adresa@email.com"
+                  placeholder={t.emailPh}
                   value={clientEmail}
                   onChange={e => setClientEmail(e.target.value)}
                   className="w-full bg-[#030712] border border-white/10 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
@@ -800,24 +849,30 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           <div className="bg-gradient-to-r from-blue-900/30 via-[#0b0f19] to-blue-900/30 border border-blue-500/30 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
             <div>
               <span className="text-xs font-bold text-blue-400 uppercase tracking-widest block mb-1">
-                Pregled rezervacije
+                {t.summary}
               </span>
               <p className="text-base font-extrabold text-white">
                 {selectedPackage
-                  ? `${selectedPackage.name} — ${selectedPackage.price} (${selectedPackage.duration})`
-                  : 'Niste još izabrali paket'}
+                  ? isStay
+                    ? `${selectedPackage.name}${resDate && checkOut ? ` — ${t.nights(nightsBetween(resDate, checkOut))}` : ''}`
+                    : `${selectedPackage.name} — ${selectedPackage.price === 'Na upit' ? t.priceOnRequest : selectedPackage.price} (${selectedPackage.duration})`
+                  : isStay ? t.noUnit : t.noPackage}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                {resDate && resTime ? `Termin: ${formatToBalkanDate(resDate)} u ${resTime}h` : 'Odaberite datum i satnicu iznad.'}
+                {isStay
+                  ? resDate && checkOut
+                    ? `${t.checkIn}: ${formatToBalkanDate(resDate)} (${t.checkInFrom} ${stayCheckInAt}) · ${t.checkOut}: ${formatToBalkanDate(checkOut)} (${t.checkOutUntil} ${CHECK_OUT_TIME})`
+                    : t.pickDates
+                  : resDate && resTime ? `${t.appointment}: ${formatToBalkanDate(resDate)} ${t.at} ${resTime}h` : t.pickDateTime}
               </p>
             </div>
 
             <button
               type="submit"
-              disabled={loading || !selectedPackage || !resDate || !resTime}
+              disabled={loading || !selectedPackage || !resDate || (isStay ? !checkOut : !resTime)}
               className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600 text-white font-extrabold text-sm rounded-2xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap uppercase tracking-wider"
             >
-              {loading ? 'Spremanje...' : 'Potvrdi i rezerviši termin'}
+              {loading ? t.saving : isStay ? t.confirmStay : t.confirmBooking}
             </button>
           </div>
 
@@ -834,16 +889,16 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
             <div className="space-y-2">
               {/^potvr/i.test(String(successModalData.status || '')) ? (
                 <>
-                  <h3 className="text-xl font-black text-white">Termin je potvrđen!</h3>
+                  <h3 className="text-xl font-black text-white">{isStay ? t.confirmedTitleStay : t.confirmedTitle}</h3>
                   <p className="text-xs text-gray-300">
-                    Vidimo se u <span className="text-blue-400 font-bold">{businessProfile.name}</span>. Potvrdu ste dobili na mejl, a dan prije stiže podsjetnik.
+                    {t.confirmedText(businessProfile.name)[0]}<span className="text-blue-400 font-bold">{businessProfile.name}</span>{t.confirmedText(businessProfile.name)[2]}
                   </p>
                 </>
               ) : (
                 <>
-                  <h3 className="text-xl font-black text-white">Zahtjev za termin je poslan!</h3>
+                  <h3 className="text-xl font-black text-white">{isStay ? t.requestTitleStay : t.requestTitle}</h3>
                   <p className="text-xs text-gray-300">
-                    <span className="text-blue-400 font-bold">{businessProfile.name}</span> će uskoro potvrditi termin. Javit ćemo vam mejlom.
+                    <span className="text-blue-400 font-bold">{businessProfile.name}</span>{t.requestText(businessProfile.name)[2]}
                   </p>
                 </>
               )}
@@ -851,18 +906,20 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
             <div className="bg-[#030712] p-4 rounded-2xl border border-white/10 text-left space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-400">Usluga:</span>
+                <span className="text-gray-400">{t.service}</span>
                 <span className="font-bold text-white">{successModalData.service_name} ({successModalData.price} KM)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Termin:</span>
-                <span className="font-bold text-blue-400">
-                  {formatToBalkanDate(successModalData.reservation_date.split('T')[0])} u {successModalData.reservation_date.split('T')[1]?.slice(0, 5)}h
+                <span className="text-gray-400">{successModalData.check_out ? `${t.checkIn} / ${t.checkOut}:` : `${t.appointment}:`}</span>
+                <span className="font-bold text-blue-400 text-right">
+                  {successModalData.check_out
+                    ? `${formatToBalkanDate(successModalData.reservation_date.split('T')[0])} – ${formatToBalkanDate(successModalData.check_out)}`
+                    : `${formatToBalkanDate(successModalData.reservation_date.split('T')[0])} ${t.at} ${successModalData.reservation_date.split('T')[1]?.slice(0, 5)}h`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Status:</span>
-                <span className="font-bold text-amber-400">{successModalData.status}</span>
+                <span className="text-gray-400">{t.status}</span>
+                <span className="font-bold text-amber-400">{statusText(successModalData.status, lang)}</span>
               </div>
             </div>
 
@@ -871,7 +928,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               onClick={() => setSuccessModalData(null)}
               className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all uppercase tracking-wider"
             >
-              Razumijem, hvala
+              {t.gotIt}
             </button>
           </div>
         </div>
@@ -887,12 +944,12 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               ✕
             </button>
 
-            <h3 className="text-xl font-black text-white">Moji zakazani termini</h3>
-            <p className="text-xs text-gray-400">Ovdje možete pregledati i otkazati svoje nadolazeće termine.</p>
+            <h3 className="text-xl font-black text-white">{t.myBookingsTitle}</h3>
+            <p className="text-xs text-gray-400">{t.myBookingsText}</p>
 
             <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
               {myReservations.length === 0 ? (
-                <div className="p-4 text-center text-xs text-gray-500">Nemate aktivnih rezervacija.</div>
+                <div className="p-4 text-center text-xs text-gray-500">{t.noBookings}</div>
               ) : (
                 myReservations.map((res) => {
                   const dateObj = new Date(res.reservation_date);
@@ -908,12 +965,12 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                           <span className="text-[10px] text-blue-400 font-bold">{res.price} KM</span>
                         </div>
                         <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
-                          {res.status}
+                          {statusText(res.status, lang)}
                         </span>
                       </div>
 
                       <div className="text-xs text-gray-300">
-                        {dateStr} {timeStr ? `u ${timeStr}h` : ''}
+                        {dateStr} {timeStr ? `${t.at} ${timeStr}h` : ''}{res.check_out ? ` – ${formatToBalkanDate(res.check_out)}` : ''}
                       </div>
 
                       <div className="pt-2 border-t border-white/5 flex justify-end">
@@ -921,7 +978,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                           onClick={() => setReservationToCancel(res)}
                           className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-lg transition-all"
                         >
-                          Otkaži termin
+                          {t.cancelBooking}
                         </button>
                       </div>
                     </div>
@@ -940,9 +997,9 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               <Icon name="alert" className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-white">Otkaži termin?</h3>
+              <h3 className="text-lg font-bold text-white">{t.cancelTitle}</h3>
               <p className="text-xs text-gray-400">
-                Jeste li sigurni da želite otkazati termin za <span className="text-white font-semibold">{reservationToCancel.service_name}</span>?
+                {t.cancelText} <span className="text-white font-semibold">{reservationToCancel.service_name}</span>?
               </p>
             </div>
             <div className="flex gap-3 pt-2">
@@ -951,7 +1008,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                 onClick={() => setReservationToCancel(null)}
                 className="flex-1 py-3 bg-[#030712] hover:bg-white/5 text-gray-300 text-xs font-bold rounded-xl border border-white/10 transition-all"
               >
-                Odustani
+                {t.keep}
               </button>
               <button
                 type="button"
@@ -959,7 +1016,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                 onClick={confirmCancelReservation}
                 className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all disabled:opacity-50"
               >
-                {isDeleting ? 'Brisanje...' : 'Da, otkaži'}
+                {isDeleting ? t.deleting : t.yesCancel}
               </button>
             </div>
           </div>
@@ -968,9 +1025,9 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
       <section className="mx-auto max-w-2xl px-4 pb-16">
         <div className="rounded-3xl border border-white/10 bg-[#0b0f19] p-6">
-          <h2 className="mb-1 text-xl font-bold text-white">Imate pitanje?</h2>
-          <p className="mb-4 text-sm text-gray-400">Pošaljite upit, javit ćemo vam se (ovo nije rezervacija termina).</p>
-          <InquiryForm businessSlug={BUSINESS_SLUG} />
+          <h2 className="mb-1 text-xl font-bold text-white">{t.questionTitle}</h2>
+          <p className="mb-4 text-sm text-gray-400">{t.questionText}</p>
+          <InquiryForm businessSlug={BUSINESS_SLUG} t={t} />
         </div>
       </section>
 

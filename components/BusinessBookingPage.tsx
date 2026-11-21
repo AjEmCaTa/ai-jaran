@@ -501,13 +501,21 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
               </div>
               <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-gray-300 pt-1">
                 {(businessProfile.address || businessProfile.city) && (
-                  <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([businessProfile.name, businessProfile.address, businessProfile.city].filter(Boolean).join(', '))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Otvori u mapama"
+                    className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 transition hover:border-blue-500/40 active:scale-[0.98]"
+                  >
                     <Icon name="mapPin" className="h-3.5 w-3.5 flex-none text-blue-400" />{[businessProfile.address, businessProfile.city].filter(Boolean).join(', ')}
-                  </span>
+                    <span className="text-[10px] font-semibold text-blue-300">Mapa ↗</span>
+                  </a>
                 )}
                 {businessProfile.phone && (
-                  <a href={`tel:${businessProfile.phone.replace(/\s/g, '')}`} className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-blue-500/40">
+                  <a href={`tel:${businessProfile.phone.replace(/[^\d+]/g, '')}`} title="Pozovi" className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 transition hover:border-blue-500/40 active:scale-[0.98]">
                     <Icon name="phone" className="h-3.5 w-3.5 flex-none text-blue-400" />{businessProfile.phone}
+                    <span className="text-[10px] font-semibold text-blue-300">Pozovi</span>
                   </a>
                 )}
                 {businessProfile.work_start && businessProfile.work_end && (
@@ -569,13 +577,13 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
                     <p className="text-xs text-gray-400 mb-6 leading-relaxed">{pkg.desc}</p>
 
-                    <div className="space-y-2 border-t border-white/5 pt-4">
+                    {pkg.features.length > 0 && <div className="space-y-2 border-t border-white/5 pt-4">
                       {pkg.features.map((feat, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-xs text-gray-300">
                           <span className="text-blue-400 font-bold">✓</span> {feat}
                         </div>
                       ))}
-                    </div>
+                    </div>}
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">

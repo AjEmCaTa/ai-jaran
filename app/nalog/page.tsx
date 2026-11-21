@@ -5,6 +5,33 @@ import { createClient, type User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PasswordInput from '../../components/PasswordInput';
+import { useLang } from '../../components/site/LangProvider';
+import { statusText } from '../../utils/bookingText';
+
+const TEXT = {
+  bs: {
+    loadError: 'Termine nije moguće učitati.', confirmEmail: 'Provjerite email i potvrdite račun, zatim se prijavite.', loginFailed: 'Prijava nije uspjela. Pokušajte ponovo.',
+    confirmCancel: 'Jeste li sigurni da želite otkazati ovaj termin?', expired: 'Sesija je istekla. Prijavite se ponovo.', cancelled: 'Termin je otkazan. Obavijest je poslana na vaš email.',
+    cancelFailed: 'Otkazivanje nije uspjelo.', back: '← Nazad na katalog', myAccount: 'POSLO ONE · moj nalog', hello: 'Zdravo,',
+    loggedAs: (e: string) => `Prijavljeni ste kao ${e}. Ostajete prijavljeni na ovom uređaju, pa termine možete zakazivati bez ponovne prijave.`,
+    bookNew: 'Zakaži novi termin', signOut: 'Odjavi se', upcoming: 'Predstojeći termini', loadingRes: 'Učitavanje termina...', none: 'Nemate zakazanih termina.',
+    at: 'u', cancelling: 'Otkazujem...', cancel: 'Otkaži termin', past: 'Prošli termini', bookings: 'POSLO ONE · rezervacije',
+    createAccount: 'Kreiraj korisnički račun', login: 'Prijavi se', why: 'Vaš račun čuva rezervacije, pokazuje vaše zakazane termine i omogućava brže ponovno zakazivanje.',
+    fullName: 'Ime i prezime', password: 'Lozinka', wait: 'Molimo sačekajte...', register: 'Registruj se', or: 'ili', google: 'Nastavi s Googleom',
+    haveAccount: 'Već imate račun? Prijavite se', noAccount: 'Nemate račun? Registrujte se',
+  },
+  en: {
+    loadError: 'Could not load your bookings.', confirmEmail: 'Check your email and confirm your account, then log in.', loginFailed: 'Login failed. Please try again.',
+    confirmCancel: 'Are you sure you want to cancel this booking?', expired: 'Your session has expired. Please log in again.', cancelled: 'The booking is cancelled. A confirmation was sent to your email.',
+    cancelFailed: 'Cancellation failed.', back: '← Back to catalog', myAccount: 'POSLO ONE · my account', hello: 'Hi,',
+    loggedAs: (e: string) => `You are logged in as ${e}. You stay logged in on this device, so you can book without logging in again.`,
+    bookNew: 'Book a new appointment', signOut: 'Log out', upcoming: 'Upcoming bookings', loadingRes: 'Loading bookings...', none: 'You have no bookings.',
+    at: 'at', cancelling: 'Cancelling...', cancel: 'Cancel booking', past: 'Past bookings', bookings: 'POSLO ONE · bookings',
+    createAccount: 'Create an account', login: 'Log in', why: 'Your account keeps your bookings, shows your appointments and makes booking again faster.',
+    fullName: 'Full name', password: 'Password', wait: 'Please wait...', register: 'Sign up', or: 'or', google: 'Continue with Google',
+    haveAccount: 'Already have an account? Log in', noAccount: "Don't have an account? Sign up",
+  },
+};
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -44,6 +71,8 @@ function nowKey() {
 
 export default function CustomerAuthPage() {
   const router = useRouter();
+  const { lang } = useLang();
+  const t = TEXT[lang];
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -65,7 +94,7 @@ export default function CustomerAuthPage() {
       if (!json.success) throw new Error(json.error);
       setReservations(json.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Termine nije moguće učitati.');
+      setError(err instanceof Error ? err.message : t.loadError);
     } finally {
       setLoadingRes(false);
     }
@@ -109,14 +138,14 @@ export default function CustomerAuthPage() {
         });
         if (authError) throw authError;
         if (data.session) await completeAuth();
-        else setMessage('Provjerite email i potvrdite račun, zatim se prijavite.');
+        else setMessage(t.confirmEmail);
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (authError) throw authError;
         await completeAuth();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Prijava nije uspjela. Pokušajte ponovo.');
+      setError(err instanceof Error ? err.message : t.loginFailed);
     } finally {
       setLoading(false);
     }
@@ -145,12 +174,12 @@ export default function CustomerAuthPage() {
   };
 
   const cancelReservation = async (id: string) => {
-    if (!window.confirm('Jeste li sigurni da želite otkazati ovaj termin?')) return;
+    if (!window.confirm(t.confirmCancel)) return;
     setCancellingId(id);
     setError('');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Sesija je istekla. Prijavite se ponovo.');
+      if (!session) throw new Error(t.expired);
       const res = await fetch('/api/moje-rezervacije', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
@@ -159,9 +188,9 @@ export default function CustomerAuthPage() {
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       setReservations((prev) => prev.filter((r) => r.id !== id));
-      setMessage('Termin je otkazan. Obavijest je poslana na vaš email.');
+      setMessage(t.cancelled);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Otkazivanje nije uspjelo.');
+      setError(err instanceof Error ? err.message : t.cancelFailed);
     } finally {
       setCancellingId(null);
     }
@@ -172,7 +201,17 @@ export default function CustomerAuthPage() {
   const secondaryBtn = 'w-full rounded-xl border border-[#16264a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:opacity-60';
 
   if (checking) {
-    return <main className="flex min-h-screen items-center justify-center bg-[#050a18] text-slate-400">Učitavanje...</main>;
+    // Kostur stranice dok se provjerava prijava, umjesto praznog ekrana.
+    return (
+      <main className="min-h-screen bg-[#050a18] px-4 py-10" aria-busy="true">
+        <div className="mx-auto w-full max-w-2xl">
+          <div className="h-5 w-32 animate-pulse rounded bg-white/5" />
+          <div className="mt-6 h-56 animate-pulse rounded-2xl border border-[#16264a] bg-[#0a1226]" />
+          <div className="mt-10 h-6 w-48 animate-pulse rounded bg-white/5" />
+          <div className="mt-4 h-24 animate-pulse rounded-2xl border border-[#16264a] bg-[#0a1226]" />
+        </div>
+      </main>
+    );
   }
 
   // ---------- PRIJAVLJEN: nalog i termini ----------
@@ -184,27 +223,27 @@ export default function CustomerAuthPage() {
 
     return (
       <main className="min-h-screen bg-[#050a18] px-4 py-10 text-white">
-        <div className="mx-auto w-full max-w-2xl">
-          <Link href="/katalog" className="text-sm font-semibold text-blue-400 hover:text-blue-300">← Nazad na katalog</Link>
+        <div className="fade-in mx-auto w-full max-w-2xl">
+          <Link href="/katalog" className="text-sm font-semibold text-blue-400 hover:text-blue-300">{t.back}</Link>
 
           <section className="mt-6 rounded-2xl border border-[#16264a] bg-gradient-to-br from-[#0a1226] to-[#0b1d45] p-7 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-400">POSLO ONE · moj nalog</p>
-            <h1 className="mt-3 text-3xl font-black">Zdravo, {displayName}</h1>
-            <p className="mt-2 text-sm text-slate-400">Prijavljeni ste kao {user.email}. Ostajete prijavljeni na ovom uređaju, pa termine možete zakazivati bez ponovne prijave.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-400">{t.myAccount}</p>
+            <h1 className="mt-3 text-3xl font-black">{t.hello} {displayName}</h1>
+            <p className="mt-2 text-sm text-slate-400">{t.loggedAs(user.email || '')}</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <Link href="/katalog" className="rounded-xl bg-[#1d5bff] px-4 py-3.5 text-center text-sm font-bold text-white transition hover:bg-[#3b74ff]">Zakaži novi termin</Link>
-              <button type="button" onClick={handleSignOut} className={secondaryBtn}>Odjavi se</button>
+              <Link href="/katalog" className="rounded-xl bg-[#1d5bff] px-4 py-3.5 text-center text-sm font-bold text-white transition hover:bg-[#3b74ff]">{t.bookNew}</Link>
+              <button type="button" onClick={handleSignOut} className={secondaryBtn}>{t.signOut}</button>
             </div>
           </section>
 
           {error && <p role="alert" className="mt-5 rounded-xl border border-red-500/30 bg-red-950/40 p-3 text-sm text-red-200">{error}</p>}
           {message && <p role="status" className="mt-5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-3 text-sm text-emerald-200">{message}</p>}
 
-          <h2 className="mt-10 text-xl font-black">Predstojeći termini</h2>
+          <h2 className="mt-10 text-xl font-black">{t.upcoming}</h2>
           {loadingRes ? (
-            <p className="mt-4 text-sm text-slate-400">Učitavanje termina...</p>
+            <p className="mt-4 text-sm text-slate-400">{t.loadingRes}</p>
           ) : upcoming.length === 0 ? (
-            <p className="mt-4 rounded-2xl border border-[#16264a] bg-[#0a1226] p-5 text-sm text-slate-400">Nemate zakazanih termina.</p>
+            <p className="mt-4 rounded-2xl border border-[#16264a] bg-[#0a1226] p-5 text-sm text-slate-400">{t.none}</p>
           ) : (
             <div className="mt-4 space-y-3">
               {upcoming.map((r) => {
@@ -215,11 +254,11 @@ export default function CustomerAuthPage() {
                       <div>
                         {r.business_name && <p className="text-xs font-bold uppercase tracking-wider text-blue-400">{r.business_name}</p>}
                         <h3 className="mt-1 text-lg font-bold">{r.service_name}</h3>
-                        <p className="mt-1 text-sm text-slate-300">{d.date} u {d.time}</p>
+                        <p className="mt-1 text-sm text-slate-300">{d.date} {t.at} {d.time}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-black text-blue-400">{r.price}</p>
-                        {r.status && <span className="mt-1 inline-block rounded-full border border-[#1d5bff]/40 bg-[#1d5bff]/10 px-3 py-1 text-xs font-semibold text-blue-300">{r.status}</span>}
+                        {r.status && <span className="mt-1 inline-block rounded-full border border-[#1d5bff]/40 bg-[#1d5bff]/10 px-3 py-1 text-xs font-semibold text-blue-300">{statusText(r.status, lang)}</span>}
                       </div>
                     </div>
                     <button
@@ -228,7 +267,7 @@ export default function CustomerAuthPage() {
                       disabled={cancellingId === r.id}
                       className="mt-4 rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
                     >
-                      {cancellingId === r.id ? 'Otkazujem...' : 'Otkaži termin'}
+                      {cancellingId === r.id ? t.cancelling : t.cancel}
                     </button>
                   </article>
                 );
@@ -238,7 +277,7 @@ export default function CustomerAuthPage() {
 
           {past.length > 0 && (
             <>
-              <h2 className="mt-10 text-xl font-black text-slate-300">Prošli termini</h2>
+              <h2 className="mt-10 text-xl font-black text-slate-300">{t.past}</h2>
               <div className="mt-4 space-y-3">
                 {past.map((r) => {
                   const d = splitDate(r.reservation_date);
@@ -246,7 +285,7 @@ export default function CustomerAuthPage() {
                     <article key={r.id} className="rounded-2xl border border-[#16264a] bg-[#0a1226]/60 p-5 opacity-70">
                       <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{r.business_name}</p>
                       <h3 className="mt-1 font-bold">{r.service_name}</h3>
-                      <p className="mt-1 text-sm text-slate-400">{d.date} u {d.time} · {r.price}</p>
+                      <p className="mt-1 text-sm text-slate-400">{d.date} {t.at} {d.time} · {r.price}</p>
                     </article>
                   );
                 })}
@@ -261,34 +300,34 @@ export default function CustomerAuthPage() {
   // ---------- NIJE PRIJAVLJEN: prijava / registracija ----------
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#050a18] px-4 py-10 text-white">
-      <section className="w-full max-w-md rounded-2xl border border-[#16264a] bg-gradient-to-br from-[#0a1226] to-[#0b1d45] p-7 shadow-2xl sm:p-9">
-        <Link href="/katalog" className="text-xs font-semibold text-blue-400 hover:text-blue-300">← Nazad na katalog</Link>
-        <p className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-blue-400">POSLO ONE · rezervacije</p>
-        <h1 className="mt-3 text-3xl font-black">{isRegistering ? 'Kreiraj korisnički račun' : 'Prijavi se'}</h1>
-        <p className="mt-2 text-sm text-slate-400">Vaš račun čuva rezervacije, pokazuje vaše zakazane termine i omogućava brže ponovno zakazivanje.</p>
+      <section className="fade-in w-full max-w-md rounded-2xl border border-[#16264a] bg-gradient-to-br from-[#0a1226] to-[#0b1d45] p-7 shadow-2xl sm:p-9">
+        <Link href="/katalog" className="text-xs font-semibold text-blue-400 hover:text-blue-300">{t.back}</Link>
+        <p className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-blue-400">{t.bookings}</p>
+        <h1 className="mt-3 text-3xl font-black">{isRegistering ? t.createAccount : t.login}</h1>
+        <p className="mt-2 text-sm text-slate-400">{t.why}</p>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-red-500/30 bg-red-950/40 p-3 text-sm text-red-200">{error}</p>}
         {message && <p role="status" className="mt-5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-3 text-sm text-emerald-200">{message}</p>}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          {isRegistering && <label className="block text-sm text-slate-300">Ime i prezime
+          {isRegistering && <label className="block text-sm text-slate-300">{t.fullName}
             <input required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
           </label>}
           <label className="block text-sm text-slate-300">Email
             <input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
           </label>
-          <label className="block text-sm text-slate-300">Lozinka
+          <label className="block text-sm text-slate-300">{t.password}
             <PasswordInput required minLength={6} autoComplete={isRegistering ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
           </label>
           <button disabled={loading} className={primaryBtn}>
-            {loading ? 'Molimo sačekajte...' : isRegistering ? 'Registruj se' : 'Prijavi se'}
+            {loading ? t.wait : isRegistering ? t.register : t.login}
           </button>
         </form>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-[#16264a]" />ili<span className="h-px flex-1 bg-[#16264a]" /></div>
-        <button type="button" onClick={continueWithGoogle} disabled={loading} className={secondaryBtn}>Nastavi s Googleom</button>
+        <div className="my-5 flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-[#16264a]" />{t.or}<span className="h-px flex-1 bg-[#16264a]" /></div>
+        <button type="button" onClick={continueWithGoogle} disabled={loading} className={secondaryBtn}>{t.google}</button>
         <button type="button" onClick={() => { setIsRegistering((v) => !v); setError(''); setMessage(''); }} className="mt-5 w-full text-sm text-blue-400 hover:text-blue-300">
-          {isRegistering ? 'Već imate račun? Prijavite se' : 'Nemate račun? Registrujte se'}
+          {isRegistering ? t.haveAccount : t.noAccount}
         </button>
       </section>
     </main>

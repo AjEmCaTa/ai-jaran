@@ -4,7 +4,27 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { CATALOG_CATEGORIES } from '../../utils/catalog';
+import { CATALOG_CATEGORIES, categoryText } from '../../utils/catalog';
+import { useLang } from '../../components/site/LangProvider';
+
+const TEXT = {
+  bs: {
+    error: 'Došlo je do greške prilikom registracije.', created: 'Nalog je kreiran!',
+    confirm: 'Potvrdite email adresu preko linka koji smo vam poslali, a zatim se prijavite i podesite svoju stranicu: usluge, cijene, radno vrijeme i logo.',
+    login: 'Prijavi se u panel', back: 'Nazad na početnu', title: 'Registruj svoj biznis',
+    sub: 'Panel ti se otvara odmah nakon registracije, a prvih 30 dana je besplatno. Paket biraš i plaćaš kasnije, kad se odlučiš.',
+    owner: 'Ime i prezime', business: 'Naziv biznisa', businessPh: 'npr. Frizerski salon Ana', city: 'Grad', phone: 'Telefon', category: 'Djelatnost',
+    pickCategory: 'Izaberite djelatnost', password: 'Lozinka', passwordPh: 'Minimum 6 karaktera', creating: 'Kreiranje naloga...', create: 'Kreiraj nalog',
+  },
+  en: {
+    error: 'Something went wrong during sign-up.', created: 'Your account is created!',
+    confirm: 'Confirm your email address using the link we sent you, then log in and set up your page: services, prices, working hours and logo.',
+    login: 'Log in to the panel', back: 'Back to home', title: 'Register your business',
+    sub: 'Your panel opens right after sign-up, and the first 30 days are free. You choose and pay for a plan later, when you decide.',
+    owner: 'Full name', business: 'Business name', businessPh: "e.g. Anna's Hair Salon", city: 'City', phone: 'Phone', category: 'Category',
+    pickCategory: 'Choose a category', password: 'Password', passwordPh: 'At least 6 characters', creating: 'Creating account...', create: 'Create account',
+  },
+};
 import PasswordInput from '../../components/PasswordInput';
 
 const supabase = createClient(
@@ -24,6 +44,8 @@ export default function RegistracijaPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const { lang } = useLang();
+  const t = TEXT[lang];
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +59,7 @@ export default function RegistracijaPage() {
         body: JSON.stringify({ ownerName, businessName, email, password, phone, city, category, ref: new URLSearchParams(window.location.search).get('ref') || undefined }),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || 'Došlo je do greške prilikom registracije.');
+      if (!response.ok) throw new Error(result.error || t.error);
 
       // Odmah prijava i ulazak u panel, gdje firma sama sve podesi.
       if (!result.needsEmailConfirmation) {
@@ -49,7 +71,7 @@ export default function RegistracijaPage() {
       }
       setSuccess(true);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Doslo je do greske prilikom registracije.');
+      setErrorMsg(err.message || t.error);
     } finally {
       setLoading(false);
     }
@@ -62,18 +84,18 @@ export default function RegistracijaPage() {
           <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto text-2xl">
             ✓
           </div>
-          <h1 className="text-2xl font-extrabold text-white">Nalog je kreiran!</h1>
+          <h1 className="text-2xl font-extrabold text-white">{t.created}</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
-            Potvrdite email adresu preko linka koji smo vam poslali, a zatim se prijavite i podesite svoju stranicu: usluge, cijene, radno vrijeme i logo.
+            {t.confirm}
           </p>
           <Link
             href="/prijava"
             className="inline-flex items-center justify-center w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all text-sm"
           >
-            Prijavi se u panel
+            {t.login}
           </Link>
           <Link href="/" className="block text-xs text-slate-500 hover:text-white transition">
-            Nazad na pocetnu
+            {t.back}
           </Link>
         </div>
       </main>
@@ -90,16 +112,16 @@ export default function RegistracijaPage() {
             href="/"
             className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-slate-400 hover:text-white transition-colors duration-200 group"
           >
-            Nazad na pocetnu
+            {t.back}
           </Link>
         </div>
 
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 text-white">
-            Registruj svoj biznis
+            {t.title}
           </h1>
           <p className="text-slate-400 text-sm">
-            Panel ti se otvara odmah nakon registracije, a prvih 30 dana je besplatno. Paket biraš i plaćaš kasnije, kad se odlučiš.
+            {t.sub}
           </p>
         </div>
 
@@ -111,62 +133,62 @@ export default function RegistracijaPage() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Ime i prezime</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t.owner}</label>
             <input
               type="text"
               required
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-base sm:text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Naziv biznisa</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t.business}</label>
             <input
               type="text"
               required
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
-              placeholder="npr. Frizerski salon Ana"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+              placeholder={t.businessPh}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-base sm:text-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Grad</label>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t.city}</label>
               <input
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="Mostar"
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-base sm:text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Telefon</label>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t.phone}</label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="061 123 456"
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-base sm:text-sm"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Djelatnost</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t.category}</label>
             <select
               required
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[#0b0f19] px-4 py-3.5 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+              className="w-full rounded-xl border border-white/10 bg-[#0b0f19] px-4 py-3.5 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-base sm:text-sm"
             >
-              <option value="" disabled>Izaberite djelatnost</option>
+              <option value="" disabled>{t.pickCategory}</option>
               {CATALOG_CATEGORIES.map((c) => (
-                <option key={c.slug} value={c.slug}>{c.short}</option>
+                <option key={c.slug} value={c.slug}>{categoryText(c, lang).short}</option>
               ))}
             </select>
           </div>
@@ -178,19 +200,19 @@ export default function RegistracijaPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-base sm:text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Lozinka</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t.password}</label>
             <PasswordInput
               required
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimum 6 karaktera"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-sm"
+              placeholder={t.passwordPh}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-base sm:text-sm"
             />
           </div>
 
@@ -199,7 +221,7 @@ export default function RegistracijaPage() {
             disabled={loading}
             className="w-full mt-2 inline-flex items-center justify-center rounded-xl bg-blue-600 py-4 font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-500 disabled:opacity-50 cursor-pointer text-sm"
           >
-            {loading ? "Kreiranje naloga..." : "Kreiraj nalog"}
+            {loading ? t.creating : t.create}
           </button>
         </form>
       </div>

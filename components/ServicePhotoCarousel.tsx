@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLang } from './site/LangProvider';
 
 // Slike jedne usluge na javnoj stranici: listaju se prstom ili strelicama, tačkice pokazuju
 // gdje ste, a klik otvara sliku preko cijelog ekrana. Slika koja se ne učita jednostavno nestane,
 // a bez ijedne slike komponenta ne prikazuje ništa (kartica ostaje samo s tekstom).
 export default function ServicePhotoCarousel({ photos, title }: { photos: string[]; title: string }) {
+  const en = useLang().lang === 'en';
   const [failed, setFailed] = useState<Set<string>>(new Set());
   const list = photos.filter((p) => !failed.has(p));
   const [index, setIndex] = useState(0);
@@ -71,8 +73,8 @@ export default function ServicePhotoCarousel({ photos, title }: { photos: string
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0b0f19] to-transparent" />
       {list.length > 1 && (
         <>
-          <button type="button" onClick={() => scrollTo(Math.max(0, safeIndex - 1))} aria-label="Prethodna slika" className={`absolute left-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-lg text-white backdrop-blur transition hover:bg-black/70 sm:flex ${safeIndex === 0 ? 'opacity-0' : ''}`}>‹</button>
-          <button type="button" onClick={() => scrollTo(Math.min(list.length - 1, safeIndex + 1))} aria-label="Sljedeća slika" className={`absolute right-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-lg text-white backdrop-blur transition hover:bg-black/70 sm:flex ${safeIndex === list.length - 1 ? 'opacity-0' : ''}`}>›</button>
+          <button type="button" onClick={() => scrollTo(Math.max(0, safeIndex - 1))} aria-label={en ? 'Previous photo' : 'Prethodna slika'} className={`absolute left-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-lg text-white backdrop-blur transition hover:bg-black/70 sm:flex ${safeIndex === 0 ? 'opacity-0' : ''}`}>‹</button>
+          <button type="button" onClick={() => scrollTo(Math.min(list.length - 1, safeIndex + 1))} aria-label={en ? 'Next photo' : 'Sljedeća slika'} className={`absolute right-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-lg text-white backdrop-blur transition hover:bg-black/70 sm:flex ${safeIndex === list.length - 1 ? 'opacity-0' : ''}`}>›</button>
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
             {list.map((src, i) => (
               <button key={src} type="button" onClick={() => scrollTo(i)} aria-label={`Slika ${i + 1}`} className={`h-1.5 rounded-full transition-all ${i === safeIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/50'}`} />
@@ -100,11 +102,11 @@ export default function ServicePhotoCarousel({ photos, title }: { photos: string
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={list[open]} alt={`${title} – slika ${open + 1}`} className="max-h-[86vh] max-w-[94vw] rounded-lg object-contain" onClick={(e) => e.stopPropagation()} />
           <p className="absolute left-4 top-5 max-w-[70vw] truncate text-sm font-semibold text-white">{title}</p>
-          <button type="button" onClick={() => setOpen(null)} aria-label="Zatvori" className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-2xl text-white hover:bg-white/20">×</button>
+          <button type="button" onClick={() => setOpen(null)} aria-label={en ? 'Close' : 'Zatvori'} className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-2xl text-white hover:bg-white/20">×</button>
           {list.length > 1 && (
             <>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Prethodna" className="absolute left-3 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl text-white hover:bg-white/20 sm:flex">‹</button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Sljedeća" className="absolute right-3 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl text-white hover:bg-white/20 sm:flex">›</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label={en ? 'Previous' : 'Prethodna'} className="absolute left-3 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl text-white hover:bg-white/20 sm:flex">‹</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label={en ? 'Next' : 'Sljedeća'} className="absolute right-3 top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl text-white hover:bg-white/20 sm:flex">›</button>
               <p className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">{open + 1} / {list.length}</p>
             </>
           )}

@@ -3,14 +3,26 @@
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
-import Background from "../../../components/Background";
 import PartnerLogo from "../../../components/PartnerLogo";
 import Icon from "../../../components/Icon";
 import BusinessBookingPage from "../../../components/BusinessBookingPage";
 import { loadBusinessProfile } from "../../../utils/profileCache";
-import { CATALOG_CATEGORIES, categoryBySlug, categoryOf } from "../../../utils/catalog";
+import { CATALOG_CATEGORIES, categoryBySlug, categoryOf, categoryText } from "../../../utils/catalog";
+import { useLang, useT } from "../../../components/site/LangProvider";
+
+const TEXT = {
+  bs: {
+    back: "← Nazad na sve kategorije kataloga", category: "Kategorija", city: "Grad:", allCities: "Prikaži sve gradove", view: "Pogledaj ponudu",
+    emptyTitle: "Uskoro stižu partneri!", emptyText: "U ovoj kategoriji još nema firmi. Imate firmu ovdje? Klijenti bi vas mogli zakazivati online već danas.",
+    add: "Dodaj svoju firmu", backCatalog: "Vrati se na katalog",
+  },
+  en: {
+    back: "← Back to all catalog categories", category: "Category", city: "City:", allCities: "Show all cities", view: "View offer",
+    emptyTitle: "Partners coming soon!", emptyText: "There are no businesses in this category yet. Have a business here? Clients could be booking you online today.",
+    add: "Add your business", backCatalog: "Back to the catalog",
+  },
+};
 
 type CatalogBusiness = { slug: string; name: string; city: string; category: string; logo_url: string };
 
@@ -19,6 +31,9 @@ const CATEGORY_ALIASES: Record<string, string> = { dubinsko: "dubinsko-ciscenje"
 
 function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
   const category = categoryBySlug(categorySlug);
+  const { lang } = useLang();
+  const t = TEXT[lang];
+  const ct = category ? categoryText(category, lang) : null;
   const [businesses, setBusinesses] = useState<CatalogBusiness[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [city, setCity] = useState("");
@@ -39,31 +54,29 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
-      <Background />
-      <Navbar onOpenContact={() => (window.location.href = "/cjenovnik")} onResetHero={() => {}} onOpenCatalog={() => {}} />
 
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-32">
         <Link
           href="/katalog"
           className="mb-8 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0f19] px-4 py-2.5 text-xs font-semibold text-gray-400 shadow-sm transition-colors hover:text-blue-400"
         >
-          ← Nazad na sve kategorije kataloga
+          {t.back}
         </Link>
 
-        {category ? (
+        {category && ct ? (
           <div className="space-y-8">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-blue-400">
                 <Icon name={category.icon} className="h-3.5 w-3.5" />
-                Kategorija
+                {t.category}
               </span>
-              <h1 className="mb-2 mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">{category.title}</h1>
-              <p className="max-w-xl text-sm text-gray-400">{category.description}</p>
+              <h1 className="mb-2 mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">{ct.title}</h1>
+              <p className="max-w-xl text-sm text-gray-400">{ct.description}</p>
               {city && (
                 <p className="mt-3 text-xs text-slate-400">
-                  Grad: <span className="font-semibold text-white">{city}</span>{" "}
+                  {t.city} <span className="font-semibold text-white">{city}</span>{" "}
                   <button type="button" onClick={() => setCity("")} className="ml-2 text-blue-400 hover:text-blue-300">
-                    Prikaži sve gradove
+                    {t.allCities}
                   </button>
                 </p>
               )}
@@ -78,7 +91,7 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
             ) : list.length === 0 ? (
               <EmptyCategory />
             ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="fade-in grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {list.map((b) => (
                   <Link
                     key={b.slug}
@@ -109,7 +122,7 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
                       </div>
                     </div>
                     <span className="mt-6 block w-full rounded-xl bg-blue-600 py-3 text-center text-sm font-bold text-white transition group-hover:bg-blue-500">
-                      Pogledaj ponudu
+                      {t.view}
                     </span>
                   </Link>
                 ))}
@@ -127,21 +140,22 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
 }
 
 function EmptyCategory() {
+  const t = useT(TEXT);
   return (
-    <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0b0f19] p-8 py-20 text-center shadow-2xl">
+    <div className="fade-in mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0b0f19] p-8 py-20 text-center shadow-2xl">
       <span className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-500/25 bg-blue-500/10 text-blue-300">
         <Icon name="sparkles" className="h-7 w-7" />
       </span>
-      <h2 className="mb-3 text-3xl font-extrabold text-white">Uskoro stižu partneri!</h2>
+      <h2 className="mb-3 text-3xl font-extrabold text-white">{t.emptyTitle}</h2>
       <p className="mx-auto mb-8 max-w-md text-sm text-gray-400">
-        U ovoj kategoriji još nema firmi. Imate firmu ovdje? Klijenti bi vas mogli zakazivati online već danas.
+        {t.emptyText}
       </p>
       <div className="flex flex-col justify-center gap-2 sm:flex-row">
         <Link href="/registracija" className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-500">
-          Dodaj svoju firmu
+          {t.add}
         </Link>
         <Link href="/katalog" className="rounded-xl border border-white/10 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5">
-          Vrati se na katalog
+          {t.backCatalog}
         </Link>
       </div>
     </div>

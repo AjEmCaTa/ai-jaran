@@ -1,8 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "./site/LangProvider";
 
-const faqs = [
+const FAQS_EN = [
+  {
+    q: "What is POSLO ONE?",
+    a: "POSLO ONE is online appointment booking for small businesses. Your clients choose a service and a free slot on your page themselves, and you get notified and see everything in your panel.",
+  },
+  {
+    q: "How can I add my business to the POSLO ONE catalog?",
+    a: "Sign up your business and send us some basic information. Once it's processed, your business can be listed in the POSLO ONE catalog, where potential clients can find it.",
+  },
+  {
+    q: "How much does it cost?",
+    a: "Starter is 15 KM and Pro is 50 KM per month. The first 30 days are free on both plans, and we set up your page for you.",
+  },
+  {
+    q: "What do I get with the Pro plan?",
+    a: "Pro gives you your own dashboard where you can manage your business information yourself: prices, services, working hours and other settings.",
+  },
+  {
+    q: "How do bookings work?",
+    a: "The client picks a service, a date and a free slot. The booking is saved in the system and linked to the business calendar, which makes scheduling easier and prevents double bookings.",
+  },
+  {
+    q: "Can POSLO ONE reply to my clients automatically?",
+    a: "Automatic AI replies are not included in the basic plans. By arrangement, we can connect an AI assistant to channels like Instagram, your calendar and the booking system.",
+  },
+  {
+    q: "Can I add more features later?",
+    a: "Yes. Extra integrations and automations can be arranged later, depending on what your business needs.",
+  },
+];
+
+const FAQS_BS = [
   {
     q: "Šta je POSLO ONE?",
     a: "POSLO ONE je online zakazivanje termina za male firme. Tvoji klijenti preko tvoje stranice sami biraju uslugu i slobodan termin, a ti dobiješ obavijest i sve vidiš u svom panelu.",
@@ -35,6 +67,7 @@ const faqs = [
 
 export default function FAQ() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const t = useT({ bs: { title: "Često postavljana pitanja", faqs: FAQS_BS }, en: { title: "Frequently asked questions", faqs: FAQS_EN } });
 
   return (
     <section
@@ -44,12 +77,12 @@ export default function FAQ() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-6 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-            Često postavljana pitanja
+            {t.title}
           </h2>
         </div>
 
         <div className="space-y-4">
-          {faqs.map((faq, index) => {
+          {t.faqs.map((faq, index) => {
             const isOpen = activeIndex === index;
 
             return (
@@ -65,6 +98,7 @@ export default function FAQ() {
                   onClick={() =>
                     setActiveIndex(isOpen ? null : index)
                   }
+                  aria-expanded={isOpen}
                   className="w-full p-6 flex justify-between items-center text-left cursor-pointer focus:outline-none"
                 >
                   <h3
@@ -96,11 +130,14 @@ export default function FAQ() {
                   </div>
                 </button>
 
-                {isOpen && (
-                  <div className="px-6 pb-6 text-gray-300 text-sm sm:text-base leading-relaxed border-t border-gray-800/60 pt-4 animate-fade-in">
-                    {faq.a}
+                {/* Odgovor se glatko otvori i zatvori. */}
+                <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                  <div className="overflow-hidden">
+                    <div className="px-6 pb-6 text-gray-300 text-sm sm:text-base leading-relaxed border-t border-gray-800/60 pt-4">
+                      {faq.a}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}

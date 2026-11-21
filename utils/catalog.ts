@@ -9,6 +9,7 @@ export type CatalogCategory = {
   icon: 'car' | 'sun' | 'home' | 'sparkles' | 'scissors' | 'building';
   image: string;
   keywords: string[];
+  en: { title: string; short: string; description: string };
 };
 
 export const CATALOG_CATEGORIES: CatalogCategory[] = [
@@ -20,6 +21,7 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     icon: 'scissors',
     image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80',
     keywords: ['frizer', 'beauty', 'salon', 'kozmet', 'nokt', 'barber', 'brij', 'šminka', 'sminka', 'masaž', 'masaz', 'trepav'],
+    en: { title: 'Hairdressers & Beauty Salons', short: 'Hairdresser / beauty salon', description: 'Book haircuts, facials, treatments and beauty services without phone hassle.' },
   },
   {
     slug: 'dubinsko-ciscenje',
@@ -29,6 +31,7 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     icon: 'car',
     image: 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=800&q=80',
     keywords: ['dubinsk', 'autopraon', 'praonica', 'detailing', 'auto ', 'vozil', 'pranje'],
+    en: { title: 'Deep Cleaning & Car Washes', short: 'Deep cleaning / car wash', description: 'Deep cleaning, car washes, detailing and ceramic coating with automatic scheduling.' },
   },
   {
     slug: 'solarni-sistemi',
@@ -38,6 +41,7 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     icon: 'sun',
     image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80',
     keywords: ['solar', 'elektro', 'energet', 'instalac'],
+    en: { title: 'Solar Systems & Electrical', short: 'Solar systems / electrical', description: 'Solar power plants, electrical installations and energy solutions: browse services and send an inquiry.' },
   },
   {
     slug: 'agencije-za-ciscenje',
@@ -47,6 +51,7 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     icon: 'sparkles',
     image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
     keywords: ['čišćenj', 'ciscenj', 'cistac', 'čistač', 'higijen'],
+    en: { title: 'Cleaning Agencies', short: 'Home and office cleaning', description: 'Scheduling for residential and business cleaning, regular or deep cleaning.' },
   },
   {
     slug: 'vile-apartmani',
@@ -56,6 +61,7 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     icon: 'home',
     image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
     keywords: ['apartman', 'vila', 'smještaj', 'smjestaj', 'noćenj', 'nocenj', 'hostel', 'hotel'],
+    en: { title: 'Villas & Apartments', short: 'Apartments / accommodation', description: 'Overnight stays and guest inquiries in one place.' },
   },
   {
     slug: 'ostale-usluge',
@@ -65,6 +71,7 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     icon: 'building',
     image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80',
     keywords: [],
+    en: { title: 'Other Services', short: 'Other', description: 'Repair shops, workshops, consulting and any other business that works by appointment.' },
   },
 ];
 
@@ -80,8 +87,12 @@ export function categoryOf(value: unknown): string {
   return byKeyword ? byKeyword.slug : 'ostale-usluge';
 }
 
-export const categoryLabel = (value: unknown) => {
+export const categoryLabel = (value: unknown, lang: 'bs' | 'en' = 'bs') => {
   const raw = String(value ?? '').trim();
   const known = categoryBySlug(raw);
-  return known ? known.short : raw;
+  return known ? (lang === 'en' ? known.en.short : known.short) : raw;
 };
+
+// Naslov, kratki naziv i opis kategorije na izabranom jeziku.
+export const categoryText = (cat: CatalogCategory, lang: 'bs' | 'en') =>
+  lang === 'en' ? cat.en : { title: cat.title, short: cat.short, description: cat.description };

@@ -1,4 +1,5 @@
 "use client";
+import { useLang } from "./site/LangProvider";
 import Icon from "./Icon";
 
 import { useState, useEffect } from "react";
@@ -10,7 +11,16 @@ type InstallPromptEvent = Event & {
 
 // Dugme "Instaliraj aplikaciju". Chrome/Android/desktop: pravi install dijalog.
 // iPhone: uputa (Safari nema install dijalog). Sakriveno kad je aplikacija već otvorena kao instalirana.
-export default function InstallButton({ mobileOnly = true }: { mobileOnly?: boolean }) {
+const TEXT = {
+  bs: { install: "Instaliraj aplikaciju", iphone: "Instalacija na iPhone", app: "Instalacija aplikacije", ok: "Razumijem" },
+  en: { install: "Install the app", iphone: "Install on iPhone", app: "Install the app", ok: "Got it" },
+};
+
+// U dashboardu je uvijek bosanski (alwaysBs).
+export default function InstallButton({ mobileOnly = true, alwaysBs = false }: { mobileOnly?: boolean; alwaysBs?: boolean }) {
+  const { lang } = useLang();
+  const en = !alwaysBs && lang === "en";
+  const t = TEXT[en ? "en" : "bs"];
   const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [installed, setInstalled] = useState(false);
@@ -62,7 +72,7 @@ export default function InstallButton({ mobileOnly = true }: { mobileOnly?: bool
           onClick={handleClick}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-transparent px-4 text-sm font-semibold text-blue-300 transition-all hover:bg-blue-500/10 active:scale-95"
         >
-          <Icon name="download" className="h-4 w-4" /> Instaliraj aplikaciju
+          <Icon name="download" className="h-4 w-4" /> {t.install}
         </button>
       </div>
 
@@ -70,9 +80,25 @@ export default function InstallButton({ mobileOnly = true }: { mobileOnly?: bool
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0b0f19] p-6 text-center shadow-2xl">
             <h3 className="mb-2 text-lg font-bold text-white">
-              {isIOS ? "Instalacija na iPhone" : "Instalacija aplikacije"}
+              {isIOS ? t.iphone : t.app}
             </h3>
-            {isIOS ? (
+            {en ? (
+              <p className="mb-4 text-sm text-slate-300">
+                {isIOS ? (
+                  <>
+                    Open <strong className="text-white">poslo.one in Safari</strong>, tap the{" "}
+                    <span className="font-bold text-blue-400">Share</span> button (square with an arrow), then{" "}
+                    <span className="font-bold text-blue-400">&quot;Add to Home Screen&quot;</span>. On iPhone, notifications only work from the app added to the home screen.
+                  </>
+                ) : (
+                  <>
+                    Open the browser menu (⋮) and choose{" "}
+                    <span className="font-bold text-blue-400">&quot;Install app&quot;</span> or{" "}
+                    <span className="font-bold text-blue-400">&quot;Add to Home screen&quot;</span>. If you don&apos;t see it, the app is probably already installed.
+                  </>
+                )}
+              </p>
+            ) : isIOS ? (
               <p className="mb-4 text-sm text-slate-300">
                 Otvorite <strong className="text-white">poslo.one u Safariju</strong>, tapnite dugme{" "}
                 <span className="font-bold text-blue-400">Podijeli</span> (kvadrat sa strelicom) pa{" "}
@@ -91,7 +117,7 @@ export default function InstallButton({ mobileOnly = true }: { mobileOnly?: bool
               onClick={() => setShowHelp(false)}
               className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white shadow-lg"
             >
-              Razumijem
+              {t.ok}
             </button>
           </div>
         </div>

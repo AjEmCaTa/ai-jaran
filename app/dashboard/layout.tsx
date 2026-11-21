@@ -299,7 +299,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
         </Link>
       )}
-      <InstallButton mobileOnly={false} />
+      <InstallButton mobileOnly={false} alwaysBs />
       <div className="flex items-center gap-3 rounded-[calc(var(--po-radius)*0.8)] border border-white/[0.06] bg-gray-950/50 p-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-300">
           <Icon name="message" className="h-[17px] w-[17px]" />

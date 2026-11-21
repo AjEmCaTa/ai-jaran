@@ -3,6 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "./site/LangProvider";
+
+const TEXT = {
+  bs: { rights: "Sva prava zadržana.", pricing: "Cjenovnik", businesses: "Biznisi", terms: "Uslovi korištenja", privacy: "Politika privatnosti", refund: "Povrat novca" },
+  en: { rights: "All rights reserved.", pricing: "Pricing", businesses: "Businesses", terms: "Terms of use", privacy: "Privacy policy", refund: "Refunds" },
+};
 
 interface FooterProps {
   // Ostavljen zbog kompatibilnosti sa starim stranicama.
@@ -14,6 +20,7 @@ interface FooterProps {
 // onOpenPrivacy ostaje u tipu radi starih poziva; politika je sada stranica /privatnost.
 export default function Footer(_props: FooterProps) {
   const pathname = usePathname();
+  const t = useT(TEXT);
 
   const isCatalog = pathname.startsWith("/katalog");
   const isPricing = pathname === "/cjenovnik";
@@ -47,7 +54,7 @@ export default function Footer(_props: FooterProps) {
 
         {/* COPYRIGHT */}
         <p className="text-center text-xs text-gray-500 md:text-sm">
-          &copy; {new Date().getFullYear()} {brandName}. Sva prava zadržana.
+          &copy; {new Date().getFullYear()} {brandName}. {t.rights}
         </p>
 
         {/* NAVIGACIONI LINKOVI */}
@@ -59,7 +66,7 @@ export default function Footer(_props: FooterProps) {
               href="/cjenovnik"
               className="py-2 transition-colors hover:text-white"
             >
-              Cjenovnik
+              {t.pricing}
             </Link>
           )}
 
@@ -69,19 +76,19 @@ export default function Footer(_props: FooterProps) {
               href="/katalog"
               className="py-2 transition-colors hover:text-white"
             >
-              Biznisi
+              {t.businesses}
             </Link>
           )}
 
           {/* PRAVNE STRANICE */}
           <Link href="/uslovi" className="py-2 transition-colors hover:text-white">
-            Uslovi korištenja
+            {t.terms}
           </Link>
           <Link href="/privatnost" className="py-2 transition-colors hover:text-white">
-            Politika privatnosti
+            {t.privacy}
           </Link>
           <Link href="/povrat-novca" className="py-2 transition-colors hover:text-white">
-            Povrat novca
+            {t.refund}
           </Link>
 
           {/* INSTAGRAM */}

@@ -15,6 +15,19 @@ import StayPicker from './StayPicker';
 import { CHECK_OUT_TIME, checkInTime, isStayCategory, nightsBetween, occupiedNights } from '../utils/stay';
 import { BOOKING_TEXT, statusText } from '../utils/bookingText';
 import { useLang } from './site/LangProvider';
+import { statusKind } from '../utils/reservationFlow';
+
+// "Moji termini" na stranici firme: samo aktivni termini ove firme koji još nisu prošli.
+function isUpcomingActive(res: { status?: string; reservation_date: string; duration_minutes?: number; check_out?: string }) {
+  const kind = statusKind(res.status);
+  if (kind !== 'pending' && kind !== 'confirmed' && kind !== 'rescheduling') return false;
+  const start = new Date(String(res.reservation_date).slice(0, 19));
+  if (isNaN(start.getTime())) return true;
+  const end = res.check_out
+    ? new Date(`${res.check_out}T23:59:00`)
+    : new Date(start.getTime() + (Number(res.duration_minutes) || 60) * 60000);
+  return end.getTime() >= Date.now();
+}
 
 // Radni dani su u bazi na bosanskom (Pon, Uto, ...); na engleskom ih prikazujemo kao Mon, Tue, ...
 const DAY_EN: Record<string, string> = { pon: 'Mon', uto: 'Tue', sri: 'Wed', cet: 'Thu', čet: 'Thu', pet: 'Fri', sub: 'Sat', ned: 'Sun' };
@@ -43,6 +56,8 @@ interface Reservation {
   price: number;
   reservation_date: string;
   check_out?: string;
+  business_id?: string;
+  duration_minutes?: number;
   status: string;
 }
 
@@ -168,6 +183,11 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
   const [calMonth, setCalMonth] = useState(todayObj.getMonth());
 
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
+  const [businessId, setBusinessId] = useState('');
+  const activeReservations = useMemo(
+    () => myReservations.filter((r) => isUpcomingActive(r) && (!r.business_id || !businessId || r.business_id === businessId)),
+    [myReservations, businessId],
+  );
   const [busyRanges, setBusyRanges] = useState<BusyRange[]>([]);
   const [takenRows, setTakenRows] = useState<{ reservation_date?: string; duration_minutes?: number; status?: string; service_name?: string }[]>([]);
   // Vile i apartmani: rezervacija od datuma do datuma; svaka usluga je posebna jedinica.
@@ -219,6 +239,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           return;
         }
         const profile = result.business;
+        if (profile.id) setBusinessId(String(profile.id));
         setBusinessProfile({
           name: profile.name || '',
           category: profile.category || '',
@@ -469,12 +490,12 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           </Link>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {myReservations.length > 0 && (
+            {activeReservations.length > 0 && (
               <button
                 onClick={() => setShowMyTerminiModal(true)}
                 className="whitespace-nowrap text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-3.5 py-2.5 rounded-xl border border-blue-500/30 transition-all flex items-center gap-2 cursor-pointer"
               >
-                <Icon name="calendar" className="h-4 w-4 flex-none" /> {t.myBookings} ({myReservations.length})
+                <Icon name="calendar" className="h-4 w-4 flex-none" /> {t.myBookings} ({activeReservations.length})
               </button>
             )}
 
@@ -936,10 +957,10 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
             <p className="text-xs text-gray-400">{t.myBookingsText}</p>
 
             <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-              {myReservations.length === 0 ? (
+              {activeReservations.length === 0 ? (
                 <div className="p-4 text-center text-xs text-gray-500">{t.noBookings}</div>
               ) : (
-                myReservations.map((res) => {
+                activeReservations.map((res) => {
                   const dateObj = new Date(res.reservation_date);
                   const rawDateStr = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split('T')[0] : res.reservation_date;
                   const dateStr = formatToBalkanDate(rawDateStr);

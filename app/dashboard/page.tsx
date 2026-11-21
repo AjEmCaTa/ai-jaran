@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useState, useEffect, useMemo, type ReactNode } from 'react';
+import { businessLogo } from '../../utils/partnerLogos';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import Icon, { type IconName } from './_components/icons';
@@ -422,7 +423,7 @@ export default function DashboardPage() {
   const weekdayMax = Math.max(...data.weekdays.map((d) => d.count), 0);
 
   const checklist = [
-    { label: 'Dodajte logo', hint: 'Prikazuje se na vašoj stranici, u katalogu i na QR posteru.', done: Boolean(business.logo_url), href: '/dashboard/settings' },
+    { label: 'Dodajte logo', hint: 'Prikazuje se na vašoj stranici, u katalogu i na QR posteru.', done: Boolean(businessLogo(business.logo_url, business.slug)), href: '/dashboard/settings' },
     { label: 'Dodajte usluge i cijene', hint: 'Klijenti biraju iz vašeg cjenovnika.', done: serviceCount > 0, href: '/dashboard/services' },
     { label: 'Postavite radno vrijeme', hint: 'Početak, kraj i radni dani.', done: Boolean(business.work_start && business.work_end && business.work_days.length > 0), href: '/dashboard/settings' },
     { label: 'Upišite telefon i adresu', hint: 'Da vas klijenti lako pronađu i nazovu.', done: Boolean(business.phone && business.address), href: '/dashboard/settings' },

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { canvasToPdf, drawPoster } from './posterPdf';
+import { businessLogo } from '../../../utils/partnerLogos';
 import { useBusiness } from '../_lib/business-context';
 import Icon from '../_components/icons';
 import { categoryLabel } from '../../../utils/catalog';
@@ -44,6 +45,7 @@ export default function QrPosterPage() {
   const dark = variant === 'dark';
   const shortLink = link.replace(/^https?:\/\//, '').replace(/\/$/, '');
   const category = categoryLabel(business.category) || 'Online rezervacije';
+  const logo = businessLogo(business.logo_url, business.slug);
 
   // PDF se pripremi unaprijed, da dugme odmah otvori dijeljenje (iPhone traži da se to desi odmah nakon dodira).
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function QrPosterPage() {
         if (!qrCanvas.current) return;
         const canvas = await drawPoster({
           dark,
-          logoUrl: business.logo_url || '',
+          logoUrl: logo,
           category,
           name: business.name || 'Vaša firma',
           city: business.city || '',
@@ -73,7 +75,7 @@ export default function QrPosterPage() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [link, dark, headline, shortLink, category, business.logo_url, business.name, business.city]);
+  }, [link, dark, headline, shortLink, category, logo, business.name, business.city]);
 
   const fileName = `qr-poster-${business.slug || 'poslo-one'}.pdf`;
 
@@ -133,9 +135,9 @@ export default function QrPosterPage() {
             }}
           >
             <div className="w-full">
-              {business.logo_url && (
+              {logo && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={business.logo_url} alt="" className="mx-auto mb-[5%] h-[clamp(48px,13vw,84px)] w-auto max-w-[70%] object-contain" />
+                <img src={logo} alt="" className="mx-auto mb-[5%] h-[clamp(48px,13vw,84px)] w-auto max-w-[70%] object-contain" />
               )}
               <p className="text-[clamp(9px,2.2vw,12px)] font-bold uppercase tracking-[0.3em]" style={{ color: dark ? '#a9bcff' : '#2563eb' }}>
                 {categoryLabel(business.category) || 'Online rezervacije'}

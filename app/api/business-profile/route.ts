@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { listGallery } from '../../../utils/gallery';
+import { getCover, listServicePhotos } from '../../../utils/gallery';
 
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,6 +29,10 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: true });
   if (servicesError) return NextResponse.json({ error: 'Usluge nije moguće učitati.' }, { status: 500 });
 
-  const gallery = await listGallery(admin, business.id);
-  return NextResponse.json({ business, services: services || [], gallery: gallery.map((p) => p.url) });
+  // Slike usluga i naslovna slika: dva poziva storageu, paralelno.
+  const [photos, cover] = await Promise.all([listServicePhotos(admin, business.id), getCover(admin, business.id)]);
+  return NextResponse.json({
+    business: { ...business, cover_url: cover?.url || '' },
+    services: (services || []).map((s) => ({ ...s, photos: (photos[s.id] || []).map((p) => p.url) })),
+  });
 }

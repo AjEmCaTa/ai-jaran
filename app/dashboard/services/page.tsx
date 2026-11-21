@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import Icon from '../_components/icons';
 import { formatServicePrice } from '../../../utils/servicePrice';
 import { useBusiness } from '../_lib/business-context';
-import GalleryManager from '../_components/GalleryManager';
+import ServicePhotos, { type ServicePhoto } from '../_components/ServicePhotos';
+import CoverManager from '../_components/CoverManager';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -19,6 +20,12 @@ const EMPTY: Draft = { id: '', name: '', description: '', duration: '', price: '
 const panel = 'min-w-0 rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)] backdrop-blur';
 const input =
   'mt-2 w-full rounded-[calc(var(--po-radius)*0.6)] border border-gray-700 bg-gray-950 px-3 py-2.5 text-base text-white outline-none transition sm:text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
+
+async function bearer() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Prijavite se ponovo.');
+  return `Bearer ${session.access_token}`;
+}
 
 async function authHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -35,6 +42,8 @@ export default function ServicesPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [photos, setPhotos] = useState<Record<string, ServicePhoto[]>>({});
+  const [photoMax, setPhotoMax] = useState(50);
 
   const load = useCallback(async () => {
     try {
@@ -42,6 +51,10 @@ export default function ServicesPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Usluge nije moguće učitati.');
       setServices(Array.isArray(result.services) ? result.services : []);
+      const photoRes = await fetch('/api/dashboard/service-photos', { headers: { Authorization: await bearer() }, cache: 'no-store' }).catch(() => null);
+      const photoJson = photoRes?.ok ? await photoRes.json().catch(() => null) : null;
+      if (photoJson?.photos) setPhotos(photoJson.photos);
+      if (photoJson?.max) setPhotoMax(photoJson.max);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Usluge nije moguće učitati.');
     } finally {
@@ -111,7 +124,7 @@ export default function ServicesPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white">Usluge i cijene</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Usluge se prikazuju na javnom profilu{business.slug ? ` /katalog/${business.slug}` : ''}.
+            Usluge se prikazuju na javnom profilu{business.slug ? ` /katalog/${business.slug}` : ''}. Svakoj usluzi možete dodati slike.
           </p>
         </div>
         {!draft && !locked && (
@@ -129,6 +142,8 @@ export default function ServicesPage() {
           </button>
         )}
       </div>
+
+      <CoverManager token={bearer} name={business.name} slug={business.slug} />
 
       {locked && (
         <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
@@ -197,6 +212,13 @@ export default function ServicesPage() {
                     {formatServicePrice(service) && service.duration ? ' · ' : ''}
                     {service.duration || ''}
                   </p>
+                  <ServicePhotos
+                    serviceId={service.id}
+                    photos={photos[service.id] || []}
+                    max={photoMax}
+                    token={bearer}
+                    onChange={(list) => setPhotos((prev) => ({ ...prev, [service.id]: list }))}
+                  />
                 </div>
                 {!locked && <div className="flex gap-2">
                   <button
@@ -226,7 +248,6 @@ export default function ServicesPage() {
           </ul>
         )}
       </section>
-      <GalleryManager slug={business.slug} />
     </div>
   );
 }

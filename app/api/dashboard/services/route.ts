@@ -3,6 +3,7 @@ import { getOwnerContext } from '../../../../utils/ownerAuth';
 import { parseServicePrice } from '../../../../utils/servicePrice';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { canEditCatalogData, PLAN_LOCK_MESSAGE } from '../../../../utils/plan';
+import { MEDIA_BUCKET, listServicePhotos, servicesFolder } from '../../../../utils/gallery';
 
 // Starter paket ne mijenja usluge i cijene (to radi POSLO ONE za njih).
 async function planLocked(admin: SupabaseClient, businessId: string) {
@@ -79,6 +80,13 @@ export async function PATCH(request: NextRequest) {
       .maybeSingle();
     if (error) throw error;
     if (!data) return NextResponse.json({ error: 'Usluga nije pronađena.' }, { status: 404 });
+    // Slike obrisane usluge se uklanjaju iz storagea (greška ovdje ne vraća uslugu).
+    const photos = (await listServicePhotos(result.context.admin, result.context.businessId))[data.id] || [];
+    if (photos.length) {
+      await result.context.admin.storage.from(MEDIA_BUCKET)
+        .remove(photos.map((p) => `${servicesFolder(result.context.businessId)}/${p.name}`))
+        .catch(() => null);
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Usluga nije ažurirana:', error);
@@ -103,6 +111,13 @@ export async function DELETE(request: NextRequest) {
       .maybeSingle();
     if (error) throw error;
     if (!data) return NextResponse.json({ error: 'Usluga nije pronađena.' }, { status: 404 });
+    // Slike obrisane usluge se uklanjaju iz storagea (greška ovdje ne vraća uslugu).
+    const photos = (await listServicePhotos(result.context.admin, result.context.businessId))[data.id] || [];
+    if (photos.length) {
+      await result.context.admin.storage.from(MEDIA_BUCKET)
+        .remove(photos.map((p) => `${servicesFolder(result.context.businessId)}/${p.name}`))
+        .catch(() => null);
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Usluga nije obrisana:', error);

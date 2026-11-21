@@ -9,6 +9,7 @@ import Background from "../../../components/Background";
 import PartnerLogo from "../../../components/PartnerLogo";
 import Icon from "../../../components/Icon";
 import BusinessBookingPage from "../../../components/BusinessBookingPage";
+import { loadBusinessProfile } from "../../../utils/profileCache";
 import { CATALOG_CATEGORIES, categoryBySlug, categoryOf } from "../../../utils/catalog";
 
 type CatalogBusiness = { slug: string; name: string; city: string; category: string; logo_url: string };
@@ -158,13 +159,9 @@ export default function KatalogSlugPage() {
   useEffect(() => {
     if (isCategory) return;
     let cancelled = false;
-    fetch(`/api/business-profile?slug=${encodeURIComponent(slug)}`, { cache: "no-store" })
-      .then((response) => {
-        if (!cancelled) setMode(response.ok ? "business" : "category");
-      })
-      .catch(() => {
-        if (!cancelled) setMode("category");
-      });
+    loadBusinessProfile(slug).then((profile) => {
+      if (!cancelled) setMode(profile?.business ? "business" : "category");
+    });
     return () => {
       cancelled = true;
     };

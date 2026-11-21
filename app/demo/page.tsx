@@ -11,6 +11,9 @@ const SERVICES = [
   { id: 'sisanje', tag: 'Najtraženije', name: 'Šišanje + feniranje', price: 30, minutes: 45, desc: 'Pranje, šišanje po mjeri i feniranje.' },
   { id: 'bojanje', tag: 'Premium', name: 'Bojanje kose', price: 60, minutes: 90, desc: 'Bojanje cijele dužine uz njegu.' },
   { id: 'musko', tag: 'Brzo', name: 'Muško šišanje', price: 15, minutes: 30, desc: 'Klasično ili moderno, uz pranje.' },
+  { id: 'pramenovi', tag: 'Novo', name: 'Pramenovi', price: 80, minutes: 120, desc: 'Pramenovi s toniranjem i feniranjem.' },
+  { id: 'manikir', tag: 'Njega', name: 'Manikir', price: 25, minutes: 45, desc: 'Uređivanje i lakiranje noktiju.' },
+  { id: 'feniranje', tag: 'Brzo', name: 'Feniranje', price: 15, minutes: 30, desc: 'Pranje i feniranje za svaki dan.' },
 ];
 const TIMES = ['09:00', '09:45', '10:30', '11:15', '12:00', '13:00', '13:45', '14:30', '15:15', '16:00', '16:45', '17:30', '18:15'];
 const DAY_NAMES = ['Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub'];
@@ -20,11 +23,22 @@ const pretty = (k: string) => {
   const [y, m, d] = k.split('-');
   return `${d}.${m}.${y}.`;
 };
-// Isti "zauzeti" termini za isti dan, da demo djeluje stvarno.
+// Isti "zauzeti" termini za isti dan, da demo djeluje stvarno: petak i subota su gušći,
+// sredina dana je popularnija, subotom se radi do 15h, a danas se ne nude termini koji su prošli.
+const BUSY_BY_DAY = [0, 0.25, 0.3, 0.38, 0.42, 0.55, 0.6];
+const hash = (text: string) => {
+  let h = 2166136261;
+  for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  h ^= h >>> 15; h = Math.imul(h, 2246822507); h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
+};
+const timesFor = (day: string) => (new Date(`${day}T12:00:00`).getDay() === 6 ? TIMES.filter((t) => t < '15:00') : TIMES);
 const isTaken = (day: string, time: string) => {
-  let h = 0;
-  for (const c of day + time) h = (h * 31 + c.charCodeAt(0)) % 997;
-  return h % 4 === 0;
+  const date = new Date(`${day}T${time}:00`);
+  if (date.getTime() < Date.now() + 30 * 60000) return true;
+  const hour = Number(time.slice(0, 2));
+  const peak = hour >= 10 && hour <= 13 ? 0.12 : hour >= 17 ? 0.08 : 0;
+  return hash(day + time) < BUSY_BY_DAY[date.getDay()] + peak;
 };
 
 const card = 'rounded-3xl border border-white/10 bg-[#0b0f19] p-5 sm:p-7';
@@ -141,9 +155,9 @@ export default function DemoPage() {
               </div>
               {day ? (
                 <div className="mt-4 border-t border-white/10 pt-4">
-                  <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">Slobodni termini za <span className="text-blue-400">{pretty(day)}</span></p>
+                  <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">Slobodni termini za <span className="text-blue-400">{pretty(day)}</span> <span className="ml-1 normal-case tracking-normal text-gray-500">({timesFor(day).filter((t) => !isTaken(day, t)).length} slobodno)</span></p>
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                    {TIMES.map((t) => {
+                    {timesFor(day).map((t) => {
                       const taken = isTaken(day, t);
                       return (
                         <button

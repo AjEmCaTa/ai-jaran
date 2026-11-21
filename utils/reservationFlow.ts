@@ -76,9 +76,10 @@ export function startMs(date: unknown): number | null {
   return Number.isFinite(ms) ? ms : null;
 }
 
+// Trajanje u minutama: obični termini do 12 h, a noćenja (apartmani) do 60 noći.
 export function durationOf(minutes: unknown) {
   const n = Number(minutes);
-  return Number.isFinite(n) && n >= 30 && n <= 720 ? n : 120;
+  return Number.isFinite(n) && n >= 30 && n <= 60 * 1440 ? n : 120;
 }
 
 export type Slot = { id?: string; reservation_date: unknown; duration_minutes?: unknown; status?: unknown };

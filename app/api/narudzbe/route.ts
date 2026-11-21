@@ -5,6 +5,8 @@ import { buildReservationPayload, durationOf, findConflict, startMs, STATUS_LABE
 import { escapeHtml } from '../../../utils/marketingEmail';
 import { notifyBusinessPush } from '../../../utils/pushSender';
 import { reservationStartMs } from '../../../utils/reservationRules';
+import { categoryOf } from '../../../utils/catalog';
+import { CHECK_OUT_TIME, isStayCategory, nightsOf, planStay } from '../../../utils/stay';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'missing-service-role-key';
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
         }
 
         const result = await supabase.from('reservations')
-            .select('reservation_date, duration_minutes, status')
+            .select('reservation_date, duration_minutes, status, service_name')
             .eq('business_id', businessResult.data.id);
         if (result.error) throw result.error;
         return NextResponse.json({ success: true, data: result.data });
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
 
         const businessResult = await supabase
             .from('businesses')
-            .select('id, name, owner_email, telegram_chat_id, status, closed_dates, auto_confirm')
+            .select('id, name, owner_email, telegram_chat_id, status, closed_dates, auto_confirm, category, work_start')
             .eq('slug', businessSlug)
             .maybeSingle();
 
@@ -105,7 +107,17 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'Odabrana usluga više nije dostupna.' }, { status: 400 });
         }
 
-        const reservationDate = body.reservation_date || '';
+        // Vile i apartmani: boravak od datuma do datuma (prijava/odjava), cijena po noći.
+        const stayMode = isStayCategory(categoryOf((business as { category?: string | null }).category));
+        let stayPlan: { reservationDate: string; durationMinutes: number; nights: number } | null = null;
+        if (stayMode) {
+            const plan = planStay(body.stay?.check_in, body.stay?.check_out, (business as { work_start?: string | null }).work_start);
+            if ('error' in plan) {
+                return NextResponse.json({ success: false, error: plan.error }, { status: 400 });
+            }
+            stayPlan = plan;
+        }
+        const reservationDate = stayPlan ? stayPlan.reservationDate : (body.reservation_date || '');
         const dateSplit = reservationDate.split('T');
         const datePart = dateSplit[0] || '';
         const timePartRaw = dateSplit[1] || '';
@@ -114,16 +126,20 @@ export async function POST(request: NextRequest) {
         const partnerName = business.name;
         const autoConfirm = (business as { auto_confirm?: boolean | null }).auto_confirm !== false;
         const packageName = serviceResult.data.name;
-        const price = serviceResult.data.price_on_request ? 'Na upit' : Number(serviceResult.data.price) + ' KM';
+        const price = serviceResult.data.price_on_request
+            ? 'Na upit'
+            : (stayPlan ? Number(serviceResult.data.price) * stayPlan.nights : Number(serviceResult.data.price)) + ' KM';
         const vehicle = body.vehicle || body.vozilo || body.car || '';
         const savedDuration = String(serviceResult.data.duration || '');
         const durationHours = savedDuration.match(/(\d+(?:[.,]\d+)?)\s*h/i);
         const durationValue = durationHours
             ? Number(durationHours[1].replace(',', '.')) * 60
             : Number.parseInt(savedDuration, 10);
-        const durationMinutes = Number.isFinite(durationValue) && durationValue >= 30 && durationValue <= 720
-            ? durationValue
-            : 120;
+        const durationMinutes = stayPlan
+            ? stayPlan.durationMinutes
+            : Number.isFinite(durationValue) && durationValue >= 30 && durationValue <= 720
+                ? durationValue
+                : 120;
 
         const clientName = body.customer_name || body.clientName || body.name || authData.user.user_metadata?.full_name || '';
         const clientPhone = body.customer_phone || body.clientPhone || body.phone || '';
@@ -141,8 +157,14 @@ export async function POST(request: NextRequest) {
         if (Array.isArray(business.closed_dates) && business.closed_dates.includes(datePart)) {
             return NextResponse.json({ success: false, error: 'Firma taj dan ne radi. Odaberite drugi datum.' }, { status: 409 });
         }
+        if (stayPlan && Array.isArray(business.closed_dates)
+            && nightsOf(body.stay.check_in, body.stay.check_out).some((d) => business.closed_dates.includes(d))) {
+            return NextResponse.json({ success: false, error: 'Neki od odabranih dana nisu dostupni. Odaberite druge datume.' }, { status: 409 });
+        }
 
         const displayDate = formatToBalkanDate(datePart) || datePart;
+        const checkOutDisplay = stayPlan ? formatToBalkanDate(String(body.stay.check_out)) : '';
+        const stayText = stayPlan ? (displayDate + ' (prijava od ' + time + ') - ' + checkOutDisplay + ' (odjava do ' + CHECK_OUT_TIME + '), noćenja: ' + stayPlan.nights) : '';
         const vehicleSuffix = vehicle ? (' - Vozilo: ' + vehicle) : '';
         const vehicleInfo = vehicle ? (' | Vozilo: ' + h(vehicle)) : '';
 
@@ -158,11 +180,14 @@ export async function POST(request: NextRequest) {
         }
         const existingResult = await supabase
             .from('reservations')
-            .select('id, reservation_date, duration_minutes, status, created_at')
+            .select('id, reservation_date, duration_minutes, status, created_at, service_name')
             .eq('business_id', business.id);
         if (existingResult.error) throw existingResult.error;
-        if (findConflict({ start: startTime, durationMinutes: durationMinutes }, existingResult.data || [])) {
-            return NextResponse.json({ success: false, error: 'Odabrani termin je upravo zauzet. Odaberite drugo vrijeme.' }, { status: 409 });
+        // Kod apartmana je svaka usluga posebna jedinica: preklapanje se gleda samo za isti apartman.
+        const sameUnit = <T extends { service_name?: string | null }>(rows: T[]) =>
+            stayPlan ? rows.filter((r) => String(r.service_name || '').trim() === String(packageName).trim()) : rows;
+        if (findConflict({ start: startTime, durationMinutes: durationMinutes }, sameUnit(existingResult.data || []))) {
+            return NextResponse.json({ success: false, error: stayPlan ? 'Odabrani datumi su upravo zauzeti. Odaberite druge datume.' : 'Odabrani termin je upravo zauzet. Odaberite drugo vrijeme.' }, { status: 409 });
         }
 
         const insertResult = await supabase.from('reservations').insert([
@@ -172,7 +197,7 @@ export async function POST(request: NextRequest) {
                 customer_name: clientName,
                 customer_phone: clientPhone,
                 customer_email: clientEmail,
-                service_name: packageName + vehicleSuffix,
+                service_name: stayPlan ? packageName : packageName + vehicleSuffix,
                 price: price,
                 reservation_date: reservationDate,
                 duration_minutes: durationMinutes,
@@ -191,10 +216,10 @@ export async function POST(request: NextRequest) {
         if (created) {
             const afterResult = await supabase
                 .from('reservations')
-                .select('id, reservation_date, duration_minutes, status, created_at')
+                .select('id, reservation_date, duration_minutes, status, created_at, service_name')
                 .eq('business_id', business.id)
                 .neq('id', created.id);
-            const earlier = (afterResult.data || []).filter(function (o: { created_at?: string }) {
+            const earlier = sameUnit(afterResult.data || []).filter(function (o: { created_at?: string }) {
                 return !o.created_at || !created.created_at || o.created_at <= created.created_at;
             });
             if (findConflict({ start: startTime, durationMinutes: durationOf(durationMinutes) }, earlier)) {
@@ -217,7 +242,7 @@ export async function POST(request: NextRequest) {
             const chatId = business.telegram_chat_id || process.env.TELEGRAM_CHAT_ID;
             if (token && chatId) {
                 const vehicleLine = vehicle ? ('\nVozilo: ' + vehicle) : '';
-                const telegramMessage = (autoConfirm ? "NOVA REZERVACIJA (potvrđena)" : "NOVI ZAHTJEV (potvrdite u panelu)") + "\n\nBiznis: " + partnerName + "\nPaket: " + packageName + " (" + price + ")\nDatum: " + displayDate + " u " + time + " (traje " + durationMinutes + " min)" + vehicleLine + "\n\nKlijent: " + clientName + "\nTelefon: " + clientPhone + "\nEmail: " + (clientEmail || 'Nije naveden');
+                const telegramMessage = (autoConfirm ? "NOVA REZERVACIJA (potvrđena)" : "NOVI ZAHTJEV (potvrdite u panelu)") + "\n\nBiznis: " + partnerName + "\nPaket: " + packageName + " (" + price + ")" + (stayPlan ? "\nBoravak: " + stayText : "\nDatum: " + displayDate + " u " + time + " (traje " + durationMinutes + " min)") + vehicleLine + "\n\nKlijent: " + clientName + "\nTelefon: " + clientPhone + "\nEmail: " + (clientEmail || 'Nije naveden');
 
                 await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
                     method: 'POST',
@@ -248,8 +273,10 @@ export async function POST(request: NextRequest) {
                     '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">' + (autoConfirm ? 'Nova rezervacija (potvrđena)' : 'Novi zahtjev za termin') + '</h2>' +
                     '<p style="font-size:14px;margin:0 0 16px 0;">' + (autoConfirm ? 'Termin je automatski potvrđen i klijent je dobio potvrdu.' : 'Potvrdite ga u panelu u roku od 24 sata, inače ističe.') + '</p>' +
                     '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + h(packageName) + ' (' + h(price) + ')</p>' +
-                    '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + h(displayDate) + '</p>' +
-                    '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + h(time) + vehicleInfo + '</p>' +
+                    (stayPlan
+                        ? '<p style="font-size:14px;margin:0 0 16px 0;"><b>Boravak:</b> ' + h(stayText) + '</p>'
+                        : '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + h(displayDate) + '</p>' +
+                          '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + h(time) + vehicleInfo + '</p>') +
                     '<p style="font-size:14px;margin:0 0 4px 0;"><b>Klijent:</b> ' + h(clientName) + '</p>' +
                     '<p style="font-size:14px;margin:0 0 4px 0;"><b>Telefon:</b> ' + h(clientPhone) + '</p>' +
                     '<p style="font-size:14px;margin:0 0 16px 0;"><b>Email:</b> ' + h(clientEmail || 'Nije naveden') + '</p>' +
@@ -261,7 +288,7 @@ export async function POST(request: NextRequest) {
                     const ownerResult = await resend.emails.send({
                         from: fromHeader,
                         to: business.owner_email,
-                        subject: 'Nova rezervacija: ' + clientName + ' - ' + displayDate + ' u ' + time,
+                        subject: 'Nova rezervacija: ' + clientName + ' - ' + (stayPlan ? displayDate + ' - ' + checkOutDisplay : displayDate + ' u ' + time),
                         html: ownerEmailHtml
                     });
 
@@ -278,22 +305,35 @@ export async function POST(request: NextRequest) {
                     // mali razmak zbog Resend rate limita (2 zahtjeva u sekundi)
                     await new Promise((resolve) => setTimeout(resolve, 600));
 
+                    // Gost dobija mejl na jeziku na kojem je zakazao (bosanski ili engleski).
+                    const en = body.lang === 'en';
+                    const whenHtml = stayPlan
+                        ? '<p style="font-size:14px;margin:0 0 16px 0;"><b>' + (en ? 'Stay' : 'Boravak') + ':</b> ' + h(en
+                            ? displayDate + ' (check-in from ' + time + ') - ' + checkOutDisplay + ' (check-out until ' + CHECK_OUT_TIME + '), nights: ' + stayPlan.nights
+                            : stayText) + '</p>'
+                        : '<p style="font-size:14px;margin:0 0 4px 0;"><b>' + (en ? 'Date' : 'Datum') + ':</b> ' + h(displayDate) + '</p>' +
+                          '<p style="font-size:14px;margin:0 0 16px 0;"><b>' + (en ? 'Time' : 'Vrijeme') + ':</b> ' + h(time) + vehicleInfo + '</p>';
                     const clientEmailHtml =
                         '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1f2937;">' +
                         '<tr><td style="padding:20px 0;">' +
-                        '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">Pozdrav ' + h(clientName) + '</h2>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;">' + (autoConfirm ? 'Hvala ti na povjerenju! Termin je potvrđen.' : 'Hvala ti! Zahtjev za termin je poslan, a ' + h(partnerName) + ' će ga uskoro potvrditi. Javit ćemo ti mejlom.') + '</p>' +
-                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Usluga:</b> ' + h(partnerName) + ' - ' + h(packageName) + ' (' + h(price) + ')</p>' +
-                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>Datum:</b> ' + h(displayDate) + '</p>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;"><b>Vrijeme:</b> ' + h(time) + vehicleInfo + '</p>' +
-                        '<p style="font-size:14px;margin:0 0 16px 0;">Vidimo se u dogovoreno vrijeme! Ako budes zelio pomjeriti ili otkazati termin, mozes to uciniti direktno preko nase platforme.</p>' +
-                        '<p style="font-size:13px;color:#6b7280;margin:0;">S postovanjem,<br>' + h(partnerName) + ' & POSLO ONE</p>' +
+                        '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">' + (en ? 'Hello ' : 'Pozdrav ') + h(clientName) + '</h2>' +
+                        '<p style="font-size:14px;margin:0 0 16px 0;">' + (en
+                            ? (autoConfirm ? 'Thank you! Your booking is confirmed.' : 'Thank you! Your request has been sent and ' + h(partnerName) + ' will confirm it shortly. We will let you know by email.')
+                            : (autoConfirm ? 'Hvala ti na povjerenju! Termin je potvrđen.' : 'Hvala ti! Zahtjev za termin je poslan, a ' + h(partnerName) + ' će ga uskoro potvrditi. Javit ćemo ti mejlom.')) + '</p>' +
+                        '<p style="font-size:14px;margin:0 0 4px 0;"><b>' + (en ? 'Service' : 'Usluga') + ':</b> ' + h(partnerName) + ' - ' + h(packageName) + ' (' + h(en && price === 'Na upit' ? 'On request' : price) + ')</p>' +
+                        whenHtml +
+                        '<p style="font-size:14px;margin:0 0 16px 0;">' + (en
+                            ? 'See you soon! If you need to change or cancel, you can do it directly on our platform.'
+                            : 'Vidimo se u dogovoreno vrijeme! Ako budes zelio pomjeriti ili otkazati termin, mozes to uciniti direktno preko nase platforme.') + '</p>' +
+                        '<p style="font-size:13px;color:#6b7280;margin:0;">' + (en ? 'Kind regards,' : 'S postovanjem,') + '<br>' + h(partnerName) + ' & POSLO ONE</p>' +
                         '</td></tr></table>';
 
                     const clientResult = await resend.emails.send({
                         from: fromHeader,
                         to: clientEmail,
-                        subject: (autoConfirm ? 'Termin potvrđen - ' : 'Zahtjev za termin poslan - ') + partnerName,
+                        subject: en
+                            ? (autoConfirm ? 'Booking confirmed - ' : 'Booking request sent - ') + partnerName
+                            : (autoConfirm ? 'Termin potvrđen - ' : 'Zahtjev za termin poslan - ') + partnerName,
                         html: clientEmailHtml
                     });
 

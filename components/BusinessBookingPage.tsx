@@ -8,7 +8,8 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import Background from './Background';
 import InquiryForm from './InquiryForm';
-import PhotoGallery from './PhotoGallery';
+import ServicePhotoCarousel from './ServicePhotoCarousel';
+import { loadBusinessProfile } from '../utils/profileCache';
 import Icon from './Icon';
 import PartnerLogo from './PartnerLogo';
 import { categoryLabel } from '../utils/catalog';
@@ -24,6 +25,7 @@ interface ServicePackage {
   badge?: string;
   desc: string;
   features: string[];
+  photos?: string[];
 }
 
 interface Reservation {
@@ -53,6 +55,7 @@ interface BusinessProfile {
   work_days: string[];
   closed_dates: string[];
   logo_url: string;
+  cover_url: string;
 }
 
 const supabase = createClient(
@@ -123,7 +126,7 @@ const LEGACY_PACKAGES: ServicePackage[] = [
 
 const EMPTY_PROFILE: BusinessProfile = {
   name: '', category: '', city: '', address: '', phone: '',
-  work_start: '', work_end: '', work_days: [], closed_dates: [], logo_url: '',
+  work_start: '', work_end: '', work_days: [], closed_dates: [], logo_url: '', cover_url: '',
 };
 
 export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { slug: string; backHref?: string }) {
@@ -141,7 +144,6 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
   // Dok se podaci ne ucitaju iz baze, stranica prikazuje skeleton (nema "stare verzije")
   const [dataLoaded, setDataLoaded] = useState(false);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(EMPTY_PROFILE);
-  const [gallery, setGallery] = useState<string[]>([]);
   const [packages, setPackages] = useState<ServicePackage[]>([]);
 
   const timeSlots = useMemo(
@@ -196,18 +198,13 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
       sessionStorage.removeItem('poslo_one_pending_booking');
     };
 
-    fetch(`/api/business-profile?slug=${BUSINESS_SLUG}`, { cache: 'no-store' })
-      .then(async (response) => {
-        if (!response.ok) return null;
-        return response.json();
-      })
+    loadBusinessProfile(BUSINESS_SLUG)
       .then((result) => {
         if (!result?.business) {
           setBusinessProfile({ ...EMPTY_PROFILE, name: '' });
           return;
         }
         const profile = result.business;
-        setGallery(Array.isArray(result.gallery) ? result.gallery.filter((u: unknown): u is string => typeof u === 'string') : []);
         setBusinessProfile({
           name: profile.name || '',
           category: profile.category || '',
@@ -219,6 +216,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           work_days: Array.isArray(profile.work_days) ? profile.work_days : [],
           closed_dates: Array.isArray(profile.closed_dates) ? profile.closed_dates : [],
           logo_url: typeof profile.logo_url === 'string' ? profile.logo_url : '',
+          cover_url: typeof profile.cover_url === 'string' ? profile.cover_url : '',
         });
 
         const services: {
@@ -228,6 +226,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           duration: string | null;
           price: number | null;
           price_on_request?: boolean | null;
+          photos?: unknown;
         }[] = Array.isArray(result.services) ? result.services : [];
 
         const mapped: ServicePackage[] = services.map((service, index) => {
@@ -251,6 +250,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
             desc: service.description || legacy?.desc || '',
             features: legacy?.features || [],
             badge: legacy?.badge,
+            photos: Array.isArray(service.photos) ? service.photos.filter((u): u is string => typeof u === 'string' && u.startsWith('https://')) : [],
           };
         });
         setPackages(mapped);
@@ -441,7 +441,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
       <Background />
       <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
 
-      <div className="pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
+      <div className="fade-in pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
 
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
@@ -467,8 +467,19 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0e172a] to-[#0b0f19] border border-white/10 p-6 md:p-10 shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0e172a] to-[#0b0f19] border border-white/10 p-6 md:p-10 shadow-2xl ${businessProfile.cover_url ? 'pt-44 sm:pt-56 md:pt-72' : ''}`}>
+          {businessProfile.cover_url ? (
+            // Naslovna slika: gore čista, prema nazivu firme se postepeno zamuti i stopi s pozadinom.
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[78%] fade-in">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={businessProfile.cover_url} alt="" decoding="async" fetchPriority="high" onError={() => setBusinessProfile((p) => ({ ...p, cover_url: '' }))} className="absolute inset-0 h-full w-full object-cover" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={businessProfile.cover_url} alt="" decoding="async" className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl [mask-image:linear-gradient(to_bottom,transparent_35%,black_80%)]" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#0b0f19]/30 to-[#0b0f19]" />
+            </div>
+          ) : (
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+          )}
 
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-3">
@@ -509,8 +520,6 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           </div>
         </div>
 
-        <PhotoGallery photos={gallery} name={businessProfile.name} />
-
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">1</span>
@@ -540,12 +549,15 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                   }`}
                 >
                   <div>
+                    <ServicePhotoCarousel photos={pkg.photos || []} title={pkg.name} />
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2.5 py-1 rounded-md border border-blue-500/20">
-                          {pkg.badge}
-                        </span>
-                        <h3 className="text-2xl font-extrabold text-white mt-2">{pkg.name}</h3>
+                        {pkg.badge && (
+                          <span className="mb-2 inline-block text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2.5 py-1 rounded-md border border-blue-500/20">
+                            {pkg.badge}
+                          </span>
+                        )}
+                        <h3 className="text-2xl font-extrabold text-white">{pkg.name}</h3>
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 mt-1">
                           <Icon name="clock" className="h-3.5 w-3.5 flex-none" /> Trajanje: <span className="text-blue-400">{pkg.duration}</span>
                         </span>

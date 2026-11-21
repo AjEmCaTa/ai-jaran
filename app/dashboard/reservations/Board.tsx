@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BOARD_COLUMNS, columnOf, dropAction, localToday, sortForColumn, statusKind, type BoardColumn, type ReservationAction } from '../../../utils/reservationFlow';
 import { dayMonthTime } from '../_lib/dates';
 
@@ -81,8 +81,10 @@ export default function Board({
   // Mobitel: tab iznad skrola pomjera na kolonu (i obrnuto, skrol mijenja aktivni tab).
   const goTo = (id: BoardColumn) => {
     setMobileCol(id);
-    const el = scroller.current?.querySelector<HTMLElement>(`[data-col="${id}"]`);
-    el?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    const box = scroller.current;
+    const el = box?.querySelector<HTMLElement>(`[data-col="${id}"]`);
+    // Samo vodoravno pomjeranje, bez skakanja stranice gore-dolje.
+    if (box && el) box.scrollTo({ left: el.offsetLeft - 12, behavior: 'smooth' });
   };
   const onScroll = () => {
     const el = scroller.current;
@@ -91,6 +93,16 @@ export default function Board({
     const id = visible[Math.max(0, Math.min(visible.length - 1, idx))].id;
     if (id !== activeMobile) setMobileCol(id);
   };
+
+  // Izabrani tab se uvijek glatko pomjeri tako da se vidi cijeli (na sredinu reda tabova).
+  const tabs = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = tabs.current;
+    const chip = row?.querySelector<HTMLElement>(`[data-tab="${activeMobile}"]`);
+    if (!row || !chip) return;
+    const target = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
+    row.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+  }, [activeMobile]);
 
   const card = (r: BoardReservation, column: BoardColumn) => {
     const canDrag = visible.some((c) => dropAction(r.status, r.reservation_date, c.id, today));
@@ -187,10 +199,11 @@ export default function Board({
 
       {/* Mobitel: tabovi + kolone koje se listaju prstom */}
       <div className="lg:hidden">
-        <div className="-mx-3 mb-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none]">
+        <div ref={tabs} className="relative -mx-3 mb-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none]">
           {visible.map((c) => (
             <button
               key={c.id}
+              data-tab={c.id}
               onClick={() => goTo(c.id)}
               aria-pressed={activeMobile === c.id}
               className={`flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-xs font-semibold transition ${
@@ -202,7 +215,7 @@ export default function Board({
             </button>
           ))}
         </div>
-        <div ref={scroller} onScroll={onScroll} className="-mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-3 pb-2 [scrollbar-width:none]">
+        <div ref={scroller} onScroll={onScroll} className="relative -mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-3 pb-2 [scrollbar-width:none]">
           {visible.map((c) => column(c, true))}
         </div>
       </div>

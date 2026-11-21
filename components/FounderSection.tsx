@@ -2,6 +2,32 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useT } from "./site/LangProvider";
+
+const TEXT = {
+  bs: {
+    badge: "Upoznaj osnivača",
+    h2a: "Iza POSLO ONE-a stoji",
+    h2b: "jasna vizija.",
+    alt: "osnivač POSLO ONE platforme",
+    role: "Osnivač i kreator POSLO ONE platforme",
+    p1: "Zdravo, ja sam Harun, osnivač i kreator platforme POSLO ONE. Pokrenuo sam ovaj projekat s ciljem da biznisima olakšam poslovanje kroz praktična digitalna rješenja koja im pomažu da unaprijede svoje poslovanje i budu prisutniji na internetu.",
+    p2: "POSLO ONE razvijam s vizijom da na jednom mjestu objedini korisne alate za poslovanje, od web stranica i online rezervacija do digitalnog marketinga i automatizacije. Moj cilj je graditi platformu koja će se kontinuirano razvijati i prilagođavati stvarnim potrebama biznisa.",
+    quote: "„Digitalna rješenja trebaju olakšati poslovanje, a ne ga komplikovati.”",
+    linkedin: "Harun Ćatić na LinkedInu",
+  },
+  en: {
+    badge: "Meet the founder",
+    h2a: "Behind POSLO ONE is a",
+    h2b: "clear vision.",
+    alt: "founder of the POSLO ONE platform",
+    role: "Founder and creator of the POSLO ONE platform",
+    p1: "Hi, I'm Harun, the founder and creator of POSLO ONE. I started this project to make running a business easier through practical digital tools that help businesses grow and be more present online.",
+    p2: "I'm building POSLO ONE with the vision of bringing useful business tools together in one place, from websites and online booking to digital marketing and automation. My goal is a platform that keeps growing and adapting to what businesses really need.",
+    quote: "“Digital tools should make business easier, not more complicated.”",
+    linkedin: "Harun Ćatić on LinkedIn",
+  },
+};
 
 // Fotografiju osnivača zamijeni tako što zamijeniš fajl
 // public/founder/harun-catic.jpg (ista putanja, bez izmjene koda).
@@ -13,6 +39,7 @@ const LINKEDIN_URL =
 
 export default function FounderSection() {
   const [photoFailed, setPhotoFailed] = useState(false);
+  const t = useT(TEXT);
 
   return (
     <section
@@ -25,12 +52,12 @@ export default function FounderSection() {
       <div className="relative z-10 max-w-5xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-7 sm:mb-14">
           <span className="inline-block mb-4 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs tracking-wider uppercase">
-            Upoznaj osnivača
+            {t.badge}
           </span>
           <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-            Iza POSLO ONE-a stoji{" "}
+            {t.h2a}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
-              jasna vizija.
+              {t.h2b}
             </span>
           </h2>
         </div>
@@ -51,7 +78,7 @@ export default function FounderSection() {
               ) : (
                 <Image
                   src={FOUNDER_PHOTO}
-                  alt={`${FOUNDER_NAME}, osnivač POSLO ONE platforme`}
+                  alt={`${FOUNDER_NAME}, ${t.alt}`}
                   fill
                   sizes="(min-width: 768px) 400px, 320px"
                   className="object-cover object-top"
@@ -67,35 +94,23 @@ export default function FounderSection() {
               {FOUNDER_NAME}
             </h3>
             <p className="text-center md:text-left mt-1 mb-4 sm:mb-6 text-sm sm:text-base font-semibold text-blue-400">
-              Osnivač i kreator POSLO ONE platforme
+              {t.role}
             </p>
 
             <div className="space-y-4 text-slate-300 leading-relaxed text-sm sm:text-base">
-              <p>
-                Zdravo, ja sam Harun, osnivač i kreator platforme POSLO ONE.
-                Pokrenuo sam ovaj projekat s ciljem da biznisima olakšam
-                poslovanje kroz praktična digitalna rješenja koja im pomažu da
-                unaprijede svoje poslovanje i budu prisutniji na internetu.
-              </p>
-              <p>
-                POSLO ONE razvijam s vizijom da na jednom mjestu objedini
-                korisne alate za poslovanje, od web stranica i online
-                rezervacija do digitalnog marketinga i automatizacije. Moj cilj
-                je graditi platformu koja će se kontinuirano razvijati i
-                prilagođavati stvarnim potrebama biznisa.
-              </p>
+              <p>{t.p1}</p>
+              <p>{t.p2}</p>
             </div>
 
             <blockquote className="mt-8 border-l-2 border-blue-500/60 pl-5 text-lg sm:text-xl font-semibold text-white leading-snug">
-              „Digitalna rješenja trebaju olakšati poslovanje, a ne ga
-              komplikovati.”
+              {t.quote}
             </blockquote>
 
             <a
               href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Harun Ćatić na LinkedInu"
+              aria-label={t.linkedin}
               className="mt-8 inline-flex items-center gap-3 rounded-xl border border-blue-500/25 bg-blue-500/10 px-5 py-3 text-sm font-semibold text-slate-200 transition-all duration-300 hover:border-blue-500/50 hover:bg-blue-500/20 hover:text-white"
             >
               <svg

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import { useT } from "./site/LangProvider";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
@@ -23,7 +24,8 @@ export default function AuthNavButton({ variant = "desktop", onClick }: AuthNavB
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const label = loggedIn ? "Moj nalog" : "Prijava";
+  const t = useT({ bs: { account: "Moj nalog", login: "Prijava" }, en: { account: "My account", login: "Log in" } });
+  const label = loggedIn ? t.account : t.login;
 
   if (variant === "mobile") {
     return (

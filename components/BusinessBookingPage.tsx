@@ -4,9 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import Navbar from './Navbar';
 import Footer from './Footer';
-import Background from './Background';
 import InquiryForm from './InquiryForm';
 import ServicePhotoCarousel from './ServicePhotoCarousel';
 import { loadBusinessProfile } from '../utils/profileCache';
@@ -15,7 +13,12 @@ import PartnerLogo from './PartnerLogo';
 import { categoryLabel, categoryOf } from '../utils/catalog';
 import StayPicker from './StayPicker';
 import { CHECK_OUT_TIME, checkInTime, isStayCategory, nightsBetween, occupiedNights } from '../utils/stay';
-import { BOOKING_TEXT, initialLang, saveLang, statusText, type Lang } from '../utils/bookingText';
+import { BOOKING_TEXT, statusText } from '../utils/bookingText';
+import { useLang } from './site/LangProvider';
+
+// Radni dani su u bazi na bosanskom (Pon, Uto, ...); na engleskom ih prikazujemo kao Mon, Tue, ...
+const DAY_EN: Record<string, string> = { pon: 'Mon', uto: 'Tue', sri: 'Wed', cet: 'Thu', čet: 'Thu', pet: 'Fri', sub: 'Sat', ned: 'Sun' };
+const dayLabel = (day: string, en: boolean) => (en ? DAY_EN[day.trim().toLocaleLowerCase('bs').slice(0, 3)] || day : day);
 import { PARTNER_LOGOS } from '../utils/partnerLogos';
 
 interface ServicePackage {
@@ -136,11 +139,8 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
   const [resDate, setResDate] = useState('');
   const [resTime, setResTime] = useState('');
   const [checkOut, setCheckOut] = useState('');
-  const [lang, setLang] = useState<Lang>('bs');
+  const { lang } = useLang();
   const t = BOOKING_TEXT[lang];
-  useEffect(() => { setLang(initialLang()); }, []);
-  useEffect(() => { document.documentElement.lang = lang === 'en' ? 'en' : 'bs'; }, [lang]);
-  const switchLang = (next: Lang) => { setLang(next); saveLang(next); };
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -444,8 +444,6 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
   if (!dataLoaded) {
     return (
       <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
-        <Background />
-        <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
         <div className="pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
           <div className="h-56 animate-pulse rounded-3xl border border-white/10 bg-[#0b0f19]" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -459,8 +457,6 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
 
   return (
     <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
-      <Background />
-      <Navbar onOpenContact={() => {}} onResetHero={() => {}} onOpenCatalog={() => {}} />
 
       <div className="fade-in pt-32 pb-24 px-4 max-w-6xl mx-auto space-y-10">
 
@@ -472,27 +468,19 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
             {t.back}
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {myReservations.length > 0 && (
               <button
                 onClick={() => setShowMyTerminiModal(true)}
-                className="text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2.5 rounded-xl border border-blue-500/30 transition-all flex items-center gap-2 cursor-pointer"
+                className="whitespace-nowrap text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-3.5 py-2.5 rounded-xl border border-blue-500/30 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Icon name="calendar" className="h-4 w-4 flex-none" /> {t.myBookings} ({myReservations.length})
               </button>
             )}
 
-            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-full border border-emerald-500/20 flex items-center gap-2">
+            <span className="whitespace-nowrap text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-full border border-emerald-500/20 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> {t.slotsAvailable}
             </span>
-
-            <div role="group" aria-label="Jezik / Language" className="flex overflow-hidden rounded-full border border-white/10 bg-[#0b0f19] text-[11px] font-bold">
-              {(['bs', 'en'] as const).map((l) => (
-                <button key={l} type="button" onClick={() => switchLang(l)} aria-pressed={lang === l} className={`px-3 py-2 transition ${lang === l ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}>
-                  {l === 'bs' ? 'BS' : 'EN'}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -524,7 +512,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                     {businessProfile.name}
                   </h1>
                   {businessProfile.category && (
-                    <p className="mt-1 text-sm font-medium text-blue-300/90">{categoryLabel(businessProfile.category)}</p>
+                    <p className="mt-1 text-sm font-medium text-blue-300/90">{categoryLabel(businessProfile.category, lang)}</p>
                   )}
                 </div>
               </div>
@@ -549,7 +537,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                 )}
                 {businessProfile.work_start && businessProfile.work_end && (
                   <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-blue-400">
-                    <Icon name="clock" className="h-3.5 w-3.5 flex-none" />{businessProfile.work_days.length > 0 ? `${businessProfile.work_days.join(' – ')}: ` : ''}{businessProfile.work_start} – {businessProfile.work_end}
+                    <Icon name="clock" className="h-3.5 w-3.5 flex-none" />{businessProfile.work_days.length > 0 ? `${businessProfile.work_days.map((d) => dayLabel(d, lang === 'en')).join(' – ')}: ` : ''}{businessProfile.work_start} – {businessProfile.work_end}
                   </span>
                 )}
               </div>

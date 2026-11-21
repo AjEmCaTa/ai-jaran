@@ -275,3 +275,24 @@ h1, h2 {
 @media (prefers-reduced-motion: reduce) {
   .fade-in { animation: none; }
 }
+
+/* Prelaz između stranica: nova stranica lagano uđe. */
+/* Samo prozirnost (bez pomjeranja), da fiksni elementi na stranici ostanu na mjestu. */
+@keyframes pageEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-enter { animation: pageEnter 0.28s ease-out both; }
+
+/* Dok se ne odredi engleski, sadržaj je skriven (najviše 1,5 s). */
+html.lang-pending body { opacity: 0; }
+body { transition: opacity 0.2s ease-out; }
+
+/* Slike koje se pojave tek kad se učitaju. */
+.img-reveal { opacity: 0; transition: opacity 0.45s ease-out; }
+.img-reveal.is-loaded { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter { animation: none; }
+  .img-reveal { transition: none; }
+}

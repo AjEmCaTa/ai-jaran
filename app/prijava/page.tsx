@@ -5,6 +5,20 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PasswordInput from '../../components/PasswordInput';
+import { useT } from '../../components/site/LangProvider';
+
+const TEXT = {
+  bs: {
+    noConfig: 'Supabase postavke nisu pronađene. Provjeri .env.local fajl.', failed: 'Prijava nije uspjela. Pokušaj ponovo.', invalid: 'Neispravni podaci za prijavu. Pokušaj ponovo.',
+    back: 'Nazad na početnu', title: 'Moj Panel', sub: 'Prijavite se sa podacima koje vam je dodijelio POSLO ONE tim.', password: 'Lozinka',
+    loading: 'Prijava u toku...', submit: 'Prijavi se u panel', emailPh: 'vas@email.com',
+  },
+  en: {
+    noConfig: 'Supabase settings not found. Check the .env.local file.', failed: 'Login failed. Please try again.', invalid: 'Invalid login details. Please try again.',
+    back: 'Back to home', title: 'My Panel', sub: 'Log in with the details the POSLO ONE team gave you.', password: 'Password',
+    loading: 'Logging in...', submit: 'Log in to the panel', emailPh: 'you@email.com',
+  },
+};
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -18,6 +32,7 @@ export default function AuthPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const router = useRouter();
+  const t = useT(TEXT);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,9 +44,7 @@ export default function AuthPage() {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      setErrorMsg(
-        'Supabase postavke nisu pronađene. Provjeri .env.local fajl.'
-      );
+      setErrorMsg(t.noConfig);
       setLoading(false);
       return;
     }
@@ -49,7 +62,7 @@ export default function AuthPage() {
       const user = data.user;
 
       if (!user) {
-        throw new Error('Prijava nije uspjela. Pokušaj ponovo.');
+        throw new Error(t.failed);
       }
 
       const { data: profile, error: profileError } = await supabase
@@ -91,9 +104,7 @@ export default function AuthPage() {
       if (error instanceof Error) {
         setErrorMsg(error.message);
       } else {
-        setErrorMsg(
-          'Neispravni podaci za prijavu. Pokušaj ponovo.'
-        );
+        setErrorMsg(t.invalid);
       }
     } finally {
       setLoading(false);
@@ -113,17 +124,17 @@ export default function AuthPage() {
             <span className="transition-transform duration-200 group-hover:-translate-x-1">
               ←
             </span>
-            Nazad na početnu
+            {t.back}
           </Link>
         </div>
 
         <div className="mb-8">
           <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            Moj Panel
+            {t.title}
           </h1>
 
           <p className="text-sm text-slate-400">
-            Prijavite se sa podacima koje vam je dodijelio POSLO ONE tim.
+            {t.sub}
           </p>
         </div>
 
@@ -149,8 +160,8 @@ export default function AuthPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="vas@email.com"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder={t.emailPh}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-base sm:text-sm text-white placeholder-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -159,7 +170,7 @@ export default function AuthPage() {
               htmlFor="password"
               className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400"
             >
-              Lozinka
+              {t.password}
             </label>
 
             <PasswordInput
@@ -178,7 +189,7 @@ export default function AuthPage() {
             disabled={loading}
             className="mt-2 inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-blue-600 py-4 text-sm font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Prijava u toku...' : 'Prijavi se u panel'}
+            {loading ? t.loading : t.submit}
           </button>
         </form>
       </div>

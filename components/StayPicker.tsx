@@ -68,9 +68,9 @@ export default function StayPicker({
       </div>
 
       <div className="flex items-center justify-between">
-        <button type="button" onClick={() => shift(-1)} disabled={!canPrev} className="rounded-lg bg-[#030712] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-600 disabled:opacity-30" aria-label="Prethodni mjesec">◀</button>
+        <button type="button" onClick={() => shift(-1)} disabled={!canPrev} className="rounded-lg bg-[#030712] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-600 disabled:opacity-30" aria-label={t.days[0] === 'Mon' ? 'Previous month' : 'Prethodni mjesec'}>◀</button>
         <span className="text-sm font-bold text-white">{t.months[month]} {year}</span>
-        <button type="button" onClick={() => shift(1)} className="rounded-lg bg-[#030712] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-600" aria-label="Sljedeći mjesec">▶</button>
+        <button type="button" onClick={() => shift(1)} className="rounded-lg bg-[#030712] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-600" aria-label={t.days[0] === 'Mon' ? 'Next month' : 'Sljedeći mjesec'}>▶</button>
       </div>
 
       <div className="space-y-2">

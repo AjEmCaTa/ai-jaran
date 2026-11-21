@@ -1,4 +1,7 @@
+"use client";
+
 import Icon, { type IconName } from "./Icon";
+import { useT } from "./site/LangProvider";
 interface AdvantageItem {
   title: string;
   desc: string;
@@ -6,7 +9,16 @@ interface AdvantageItem {
 
 const icons: IconName[] = ["phone", "check", "smartphone", "handshake", "shield", "banknote"];
 
-const items: AdvantageItem[] = [
+const ITEMS_EN: AdvantageItem[] = [
+  { title: "Fewer calls and messages", desc: "Clients don't have to call to ask if you're free. They see it and book, and you don't stop working to answer the phone." },
+  { title: "No double bookings", desc: "The system never allows two clients at the same time. Your calendar is always accurate." },
+  { title: "Everything from your phone", desc: "Manage bookings from your phone, and add POSLO ONE to your home screen like an app." },
+  { title: "We set everything up for you", desc: "Send us your services and prices, and we prepare your page. No computer skills needed." },
+  { title: "Your data is protected", desc: "Every business's data is kept separate. Only you see your bookings and clients." },
+  { title: "Clear pricing", desc: "Starter 15 KM, Pro 50 KM per month. The first 30 days are free on both plans." },
+];
+
+const ITEMS_BS: AdvantageItem[] = [
   {
     title: "Manje poziva i poruka",
     desc: "Klijenti ne moraju zvati da pitaju ima li slobodno. Vide sami i zakažu, a ti ne prekidaš posao zbog telefona.",
@@ -33,7 +45,13 @@ const items: AdvantageItem[] = [
   },
 ];
 
+const TEXT = {
+  bs: { items: ITEMS_BS, why: "Zašto", sub: "Napravljen za male firme koje rade po terminima i nemaju vremena za komplikovane programe." },
+  en: { items: ITEMS_EN, why: "Why", sub: "Built for small businesses that work by appointment and have no time for complicated software." },
+};
+
 export default function Comparison() {
+  const t = useT(TEXT);
   return (
     <section className="py-12 px-5 sm:py-28 sm:px-8 bg-[#030712] relative z-25 overflow-hidden">
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-600/[0.06] blur-[140px]" />
@@ -41,18 +59,18 @@ export default function Comparison() {
       <div className="relative z-10 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-7 sm:mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-            Zašto{" "}
+            {t.why}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">
               POSLO ONE?
             </span>
           </h2>
           <p className="text-gray-400 text-sm sm:text-base md:text-lg">
-            Napravljen za male firme koje rade po terminima i nemaju vremena za komplikovane programe.
+            {t.sub}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8 items-stretch">
-          {items.map((item, index) => (
+          {t.items.map((item, index) => (
             <div
               key={index}
               className="group relative overflow-hidden rounded-[24px] border border-blue-500/15 bg-[#080d1c]/80 p-4 sm:p-8 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-blue-500/40 hover:bg-[#0b1329] hover:shadow-[0_10px_30px_rgba(37,99,235,0.1)] flex flex-col justify-between"

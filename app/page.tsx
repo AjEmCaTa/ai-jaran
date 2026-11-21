@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
+import { useRouter } from "next/navigation";
 import Hero from "../components/Hero";
 import Features from "../components/Features";
 import Comparison from "../components/Comparison";
@@ -9,116 +9,46 @@ import FAQ from "../components/FAQ";
 import FounderSection from "../components/FounderSection";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
-import Background from "../components/Background";
-import ContactModal from "../components/ContactModal";
-import CookieBanner from "../components/CookieBanner";
-import PrivacyModal from "../components/PrivacyModal";
+import { GENERAL_SUBJECT, useSite } from "../components/site/siteContext";
 
 export default function Home() {
-  const [isContactOpen, setIsContactOpen] = useState(false);
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
-
-  const [selectedPlan, setSelectedPlan] = useState(
-    "Opšta pitanja / Konsultacije"
-  );
-
+  const router = useRouter();
+  const { openContact } = useSite();
   const [heroKey, setHeroKey] = useState(0);
 
-  const openContact = (
-    planName: string = "Opšta pitanja / Konsultacije"
-  ) => {
-    setSelectedPlan(planName);
-    setIsContactOpen(true);
-  };
-
-  // Otvori ContactModal kada se dođe sa /cjenovnik
-  // npr. /?contact=true&plan=starter
+  // Klik na logo na početnoj ponovo pokrene animaciju naslova.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-
-    const contact = params.get("contact");
-    const plan = params.get("plan");
-
-    if (contact === "true") {
-      if (plan === "starter") {
-        openContact("Starter");
-      } else if (plan === "pro") {
-        openContact("POSLO ONE Pro (50 KM)");
-      } else {
-        openContact("Opšta pitanja / Konsultacije");
-      }
-
-      // Očisti URL nakon otvaranja modala
-      window.history.replaceState({}, "", "/");
-    }
+    const reset = () => setHeroKey((k) => k + 1);
+    window.addEventListener("poslo:reset-hero", reset);
+    return () => window.removeEventListener("poslo:reset-hero", reset);
   }, []);
 
+  // Otvori kontakt kada se dođe sa /cjenovnik, npr. /?contact=true&plan=starter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("contact") !== "true") return;
+    const plan = params.get("plan");
+    openContact(plan === "starter" ? "Starter" : plan === "pro" ? "POSLO ONE Pro (50 KM)" : GENERAL_SUBJECT);
+    window.history.replaceState({}, "", "/");
+  }, [openContact]);
+
   return (
-    <main className="relative min-h-screen bg-[#030712] text-white overflow-x-hidden font-sans">
-      <Background />
-
-      <Navbar
-        onOpenContact={() =>
-          openContact("Opšta pitanja / Konsultacije")
-        }
-        onResetHero={() => {
-          setHeroKey((prev) => prev + 1);
-        }}
-        onOpenCatalog={() => {
-          window.location.href = "/katalog";
-        }}
-      />
-
+    <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
       <Hero
         animationKey={heroKey}
-        onStartFree={() => {
-          window.location.href = "/cjenovnik";
-        }}
-        onCatalogJoin={() => {
-          window.location.href = "/katalog";
-        }}
+        onStartFree={() => router.push("/cjenovnik")}
+        onCatalogJoin={() => router.push("/katalog")}
         onHowItWorks={() => {
-          document
-            .getElementById("demo")
-            ?.scrollIntoView({ behavior: "smooth" });
+          document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
         }}
       />
 
       <Features />
-
       <Comparison />
-
       <FounderSection />
-
-      <CTASection
-        onDemoClick={() => {
-          window.location.href = "/cjenovnik";
-        }}
-        onContactClick={() => {
-          openContact("Opšta pitanja / Konsultacije");
-        }}
-      />
-
+      <CTASection onDemoClick={() => router.push("/cjenovnik")} onContactClick={() => openContact(GENERAL_SUBJECT)} />
       <FAQ />
-
-      <Footer
-        onOpenPrivacy={() => setIsPrivacyOpen(true)}
-      />
-
-      <ContactModal
-        isOpen={isContactOpen}
-        onClose={() => setIsContactOpen(false)}
-        defaultSubject={selectedPlan}
-      />
-
-      <PrivacyModal
-        isOpen={isPrivacyOpen}
-        onClose={() => setIsPrivacyOpen(false)}
-      />
-
-      <CookieBanner
-        onOpenPrivacy={() => setIsPrivacyOpen(true)}
-      />
+      <Footer />
     </main>
   );
 }

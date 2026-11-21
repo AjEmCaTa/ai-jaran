@@ -35,7 +35,7 @@ const SECTIONS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/dashboard", label: "Kontrolna ploča", icon: "dashboard", exact: true },
       { href: "/dashboard/reservations", label: "Rezervacije i kalendar", icon: "calendar" },
-      { href: "/dashboard/services", label: "Usluge i cijene", icon: "tag" },
+      { href: "/dashboard/services", label: "Usluge, cijene i slike", icon: "tag" },
       { href: "/dashboard/inquiries", label: "Upiti", icon: "bell" },
       { href: "/dashboard/customers", label: "Klijenti", icon: "users" },
     ],
@@ -63,6 +63,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [accessStatus, setAccessStatus] = useState("none");
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
   const drawerRef = useRef<HTMLElement>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Administrator (samo dozvoljeni mejlovi) dobije prečicu do Master panela; server to ponovo provjerava.
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch("/api/master/me", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }).catch(() => null);
+      if (alive && res?.ok) setIsAdmin(true);
+    })();
+    return () => { alive = false; };
+  }, []);
   const dragX = useSwipeMenu(mobileMenuOpen, setMobileMenuOpen, drawerRef);
 
   // Dok je meni otvoren, stranica ispod se ne pomjera.
@@ -271,6 +284,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const sidebarFooter = (
     <div className="space-y-2 border-t border-white/[0.06] p-4">
+      {isAdmin && (
+        <Link
+          href="/master-panel"
+          onClick={() => setMobileMenuOpen(false)}
+          className="flex items-center gap-3 rounded-[calc(var(--po-radius)*0.8)] border border-amber-500/30 bg-amber-500/10 p-3 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/15"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-300">
+            <Icon name="shield" className="h-[17px] w-[17px]" />
+          </span>
+          <span className="min-w-0">
+            <span className="block">Master panel</span>
+            <span className="block text-[11px] font-normal text-amber-200/70">Samo za administratora</span>
+          </span>
+        </Link>
+      )}
       <InstallButton mobileOnly={false} />
       <div className="flex items-center gap-3 rounded-[calc(var(--po-radius)*0.8)] border border-white/[0.06] bg-gray-950/50 p-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-300">

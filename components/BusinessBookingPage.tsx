@@ -8,6 +8,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import Background from './Background';
 import InquiryForm from './InquiryForm';
+import PhotoGallery from './PhotoGallery';
 import Icon from './Icon';
 import PartnerLogo from './PartnerLogo';
 import { categoryLabel } from '../utils/catalog';
@@ -140,6 +141,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
   // Dok se podaci ne ucitaju iz baze, stranica prikazuje skeleton (nema "stare verzije")
   const [dataLoaded, setDataLoaded] = useState(false);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(EMPTY_PROFILE);
+  const [gallery, setGallery] = useState<string[]>([]);
   const [packages, setPackages] = useState<ServicePackage[]>([]);
 
   const timeSlots = useMemo(
@@ -205,6 +207,7 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
           return;
         }
         const profile = result.business;
+        setGallery(Array.isArray(result.gallery) ? result.gallery.filter((u: unknown): u is string => typeof u === 'string') : []);
         setBusinessProfile({
           name: profile.name || '',
           category: profile.category || '',
@@ -505,6 +508,8 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
             </div>
           </div>
         </div>
+
+        <PhotoGallery photos={gallery} name={businessProfile.name} />
 
         <div className="space-y-4">
           <div className="flex items-center gap-3">

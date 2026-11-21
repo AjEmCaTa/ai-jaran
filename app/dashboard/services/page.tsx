@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import Icon from '../_components/icons';
 import { formatServicePrice } from '../../../utils/servicePrice';
 import { useBusiness } from '../_lib/business-context';
+import GalleryManager from '../_components/GalleryManager';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -225,6 +226,7 @@ export default function ServicesPage() {
           </ul>
         )}
       </section>
+      <GalleryManager slug={business.slug} />
     </div>
   );
 }

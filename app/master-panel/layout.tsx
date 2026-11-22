@@ -12,7 +12,10 @@ type NavItem = { href: string; label: string; icon: IconName; exact?: boolean; s
 const SECTIONS: { title: string; items: NavItem[] }[] = [
   {
     title: "Platforma",
-    items: [{ href: "/master-panel", label: "Biznisi", icon: "building", exact: true }],
+    items: [
+      { href: "/master-panel", label: "Biznisi", icon: "building", exact: true },
+      { href: "/master-panel/placanja", label: "Plaćanja", icon: "wallet" },
+    ],
   },
   {
     title: "Marketing",

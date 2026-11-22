@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useEffect, useMemo, type ReactNode } from 'react';
 import { businessLogo } from '../../utils/partnerLogos';
+import { setPref } from './_lib/prefs';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import Icon, { type IconName } from './_components/icons';
@@ -284,11 +285,7 @@ export default function DashboardPage() {
 
   const saveLink = (link: string) => {
     setBookingLink(link);
-    try {
-      window.localStorage.setItem(linkKeyFor(business.id), link);
-    } catch {
-      /* privatni mod */
-    }
+    setPref(linkKeyFor(business.id), link);
   };
 
   const updateStatus = async (id: string, newStatus: NewStatus) => {

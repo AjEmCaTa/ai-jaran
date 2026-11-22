@@ -1,3 +1,4 @@
+import { setPref } from "./prefs";
 export type Surface = "midnight" | "graphite";
 export type Radius = "sharp" | "soft" | "round";
 export type Density = "compact" | "comfortable";
@@ -106,10 +107,6 @@ export function loadTheme(): ThemeSettings {
 }
 
 export function saveTheme(theme: ThemeSettings) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
-  } catch {
-    /* privatni mod: tema važi samo do zatvaranja taba */
-  }
+  setPref(STORAGE_KEY, JSON.stringify(theme));
   window.dispatchEvent(new CustomEvent<ThemeSettings>(THEME_EVENT, { detail: theme }));
 }

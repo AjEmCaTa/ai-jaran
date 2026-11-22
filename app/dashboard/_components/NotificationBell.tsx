@@ -1,6 +1,7 @@
 'use client';
 
 import { lastSeenKey } from '../_lib/storage-keys';
+import { setPref } from '../_lib/prefs';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -84,7 +85,7 @@ export default function NotificationBell({ getToken, businessId }: { getToken: (
     const now = Date.now();
     setLastSeen(now);
     try {
-      window.localStorage.setItem(seenKey(businessId), String(now));
+      setPref(seenKey(businessId), String(now));
     } catch {
       /* privatni mod */
     }

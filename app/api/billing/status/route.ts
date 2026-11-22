@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
     testMode: dodo && dodoTestMode(),
     trialEnds: data?.created_at ? new Date(Date.parse(data.created_at) + 30 * 86400000).toISOString() : null,
     trialDaysLeft: trialDaysLeft(data?.created_at, data?.billing_provider === 'dodo' && Boolean(data?.billing_subscription_id)),
-    requiresPayment: requiresPaymentSetup(row, dodo || bankEnabled),
+    // U test modu kartice nisu prave, pa se izbor paketa ne nameće (osim ako je uključena uplatnica).
+    requiresPayment: requiresPaymentSetup(row, (dodo && !dodoTestMode()) || bankEnabled),
     bank: bankEnabled ? { ...bank, reference: bankReference(businessId) } : null,
     paypal: { enabled: paypalConfigured(), sandbox: paypalMode() === 'sandbox' },
     prices: PLAN_PRICES,

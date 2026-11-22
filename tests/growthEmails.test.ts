@@ -82,5 +82,9 @@ test('kategorija iz upisane djelatnosti', () => {
 test('paketi: starter ne uređuje, pro i nepoznato uređuju', () => {
   assert.equal(canEditCatalogData('starter'), false);
   assert.equal(canEditCatalogData('pro'), true);
+  const now = Date.parse('2026-12-01T00:00:00Z');
+  assert.equal(canEditCatalogData('starter', '2026-11-20T00:00:00Z', now), true);
+  assert.equal(canEditCatalogData('starter', '2026-10-01T00:00:00Z', now), false);
+  assert.equal(canEditCatalogData('pro', '2026-10-01T00:00:00Z', now), true);
   assert.equal(normalizePlan(null), 'pro');
 });

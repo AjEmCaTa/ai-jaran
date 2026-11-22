@@ -33,7 +33,7 @@ const PLANS = [
     id: 'starter' as const,
     name: 'Starter',
     km: 15,
-    features: ['Online zakazivanje i stranica firme', 'Obavijesti i podsjetnici', 'Panel za termine i upite', 'Usluge i radno vrijeme uređuje POSLO ONE'],
+    features: ['Online zakazivanje i stranica firme', 'Obavijesti i podsjetnici', 'Panel za termine i upite', 'Usluge i radno vrijeme sami postavite u prvih 30 dana'],
   },
   {
     id: 'pro' as const,

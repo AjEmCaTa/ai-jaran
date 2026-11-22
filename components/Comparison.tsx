@@ -13,7 +13,7 @@ const ITEMS_EN: AdvantageItem[] = [
   { title: "Fewer calls and messages", desc: "Clients don't have to call to ask if you're free. They see it and book, and you don't stop working to answer the phone." },
   { title: "No double bookings", desc: "The system never allows two clients at the same time. Your calendar is always accurate." },
   { title: "Everything from your phone", desc: "Manage bookings from your phone, and add POSLO ONE to your home screen like an app." },
-  { title: "We set everything up for you", desc: "Send us your services and prices, and we prepare your page. No computer skills needed." },
+  { title: "Ready in a few minutes", desc: "Enter your services, prices and hours, and your page is ready. No computer skills needed." },
   { title: "Your data is protected", desc: "Every business's data is kept separate. Only you see your bookings and clients." },
   { title: "Clear pricing", desc: "Starter 15 KM, Pro 50 KM per month. The first 30 days are free on both plans." },
 ];
@@ -32,8 +32,8 @@ const ITEMS_BS: AdvantageItem[] = [
     desc: "Rezervacije vodiš s mobitela, a POSLO ONE možeš dodati na početni ekran kao aplikaciju.",
   },
   {
-    title: "Postavimo sve za tebe",
-    desc: "Pošalji nam usluge i cijene, a mi pripremimo tvoju stranicu. Ne trebaš znati ništa o računarima.",
+    title: "Spremno za par minuta",
+    desc: "Upišeš usluge, cijene i radno vrijeme i stranica je spremna. Ne trebaš znati ništa o računarima.",
   },
   {
     title: "Tvoji podaci su zaštićeni",

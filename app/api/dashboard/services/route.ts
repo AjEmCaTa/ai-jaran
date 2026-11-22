@@ -7,8 +7,8 @@ import { MEDIA_BUCKET, listServicePhotos, servicesFolder } from '../../../../uti
 
 // Starter paket ne mijenja usluge i cijene (to radi POSLO ONE za njih).
 async function planLocked(admin: SupabaseClient, businessId: string) {
-  const { data } = await admin.from('businesses').select('plan').eq('id', businessId).maybeSingle();
-  return !canEditCatalogData(data?.plan);
+  const { data } = await admin.from('businesses').select('plan, created_at').eq('id', businessId).maybeSingle();
+  return !canEditCatalogData(data?.plan, data?.created_at);
 }
 
 function serviceFields(body: Record<string, unknown>) {

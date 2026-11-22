@@ -25,7 +25,7 @@ const BANK_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: "swift", label: "SWIFT / BIC", placeholder: "npr. UNCRBA22" },
 ];
 
-const PROVIDER: Record<string, string> = { dodo: "Kartica (Dodo)", bank: "Uplatnica", lemonsqueezy: "Lemon Squeezy", paypal: "PayPal" };
+const PROVIDER: Record<string, string> = { free: "Trajno besplatno", dodo: "Kartica (Dodo)", bank: "Uplatnica", lemonsqueezy: "Lemon Squeezy", paypal: "PayPal" };
 const STATUS: Record<string, { label: string; tone: Tone }> = {
   active: { label: "Aktivna", tone: "green" },
   pending: { label: "Čeka potvrdu", tone: "amber" },
@@ -170,7 +170,7 @@ export default function MasterBillingPage() {
                       <span className="text-[11px] text-slate-500">Vrijedi do {fmt(f.plan_until)}</span>
                     </div>
                   </div>
-                  {f.billing_provider !== "dodo" && (
+                  {f.billing_provider !== "dodo" && f.billing_provider !== "free" && (
                     <button
                       type="button"
                       className={btnGhost}

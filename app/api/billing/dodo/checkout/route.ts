@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
       .eq('id', businessId)
       .maybeSingle();
     if (!business) return NextResponse.json({ error: 'Firma nije pronađena.' }, { status: 404 });
+    if (business.billing_provider === 'free') return NextResponse.json({ error: 'Vaša firma ima besplatan pristup.' }, { status: 409 });
     if (business.billing_provider === 'dodo' && business.billing_status === 'active') {
       return NextResponse.json({ error: 'Već imate aktivnu pretplatu. Paket promijenite dugmetom na kartici paketa.' }, { status: 409 });
     }

@@ -11,6 +11,7 @@ export type BillingRow = {
 
 export function hasPaidAccess(row: BillingRow, now = Date.now()) {
   if (row.billing_status === 'active') return true;
+  if (row.billing_provider === 'free') return true; // trajno besplatno (vlasnik platforme)
   if (row.billing_provider === 'bank') return true; // izabrao uplatnicu; potvrdu uplate radi administrator
   if (row.billing_status === 'cancelled' && row.plan_until && Date.parse(row.plan_until) > now) return true;
   return false;

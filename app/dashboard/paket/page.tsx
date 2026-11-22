@@ -218,13 +218,15 @@ export default function BillingPage() {
   const dodoLive = dodoSub && (active || s?.billingStatus === 'pending');
   const lemonSub = provider === 'lemonsqueezy' && !!s?.hasSubscription;
   const onBank = provider === 'bank';
+  const free = provider === 'free';
   const cardEnabled = s?.provider === 'dodo' || s?.provider === 'lemonsqueezy' || !!s?.paypal.enabled;
   const bankEnabled = !!s?.bank;
   const dodo = s?.provider === 'dodo';
 
   let summary = 'Nemate aktivnu pretplatu.';
   if (s) {
-    if (dodoSub && active && s.planUntil) summary = s.trialDaysLeft > 0 ? `Besplatni period traje još ${s.trialDaysLeft} ${s.trialDaysLeft === 1 ? 'dan' : 'dana'}. Prva naplata oko ${fmt(s.planUntil)}.` : `Sljedeća naplata oko ${fmt(s.planUntil)}.`;
+    if (free) summary = 'Trajno besplatan pristup. Ništa ne plaćate.';
+    else if (dodoSub && active && s.planUntil) summary = s.trialDaysLeft > 0 ? `Besplatni period traje još ${s.trialDaysLeft} ${s.trialDaysLeft === 1 ? 'dan' : 'dana'}. Prva naplata oko ${fmt(s.planUntil)}.` : `Sljedeća naplata oko ${fmt(s.planUntil)}.`;
     else if (s.billingStatus === 'cancelled' && s.planUntil) summary = `Pretplata je otkazana. Paket vrijedi do ${fmt(s.planUntil)}.`;
     else if (onBank && active && s.planUntil) summary = `Plaćeno uplatnicom do ${fmt(s.planUntil)}.`;
     else if (onBank) summary = `Plaćanje uplatnicom. ${s.planUntil ? `Paket vrijedi do ${fmt(s.planUntil)}, a uplata se potvrđuje kad stigne na račun.` : 'Uplata se potvrđuje kad stigne na račun.'}`;
@@ -275,7 +277,7 @@ export default function BillingPage() {
             <div className="min-w-0">
               <p className="font-display text-2xl font-bold text-white">
                 {planName(s.plan)}
-                {s.billingStatus && (
+                {s.billingStatus && !free && (
                   <span className="ml-3 align-middle text-sm font-medium text-slate-300">
                     · {onBank ? 'Uplatnica' : 'Pretplata'}: {STATUS_TEXT[s.billingStatus] || s.billingStatus}
                   </span>
@@ -299,7 +301,7 @@ export default function BillingPage() {
         )}
       </section>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {!free && <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {PLANS.map((p) => {
           const current = s?.plan === p.id && (active || dodoLive || onBank);
           const canSwitch = dodoLive && !current;
@@ -359,7 +361,7 @@ export default function BillingPage() {
             </section>
           );
         })}
-      </div>
+      </div>}
 
       {onBank && s?.bank && (
         <section id="uplatnica" className={panel}>

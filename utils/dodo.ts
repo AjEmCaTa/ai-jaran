@@ -132,7 +132,9 @@ export async function applyDodoSubscription(admin: SupabaseClient, businessId: s
   const status = sub.cancel_at_next_billing_date && sub.status === 'active' ? 'cancelled' : mapDodoStatus(sub.status);
   const plan = planForProduct(sub.product_id);
 
-  const { data: current } = await admin.from('businesses').select('billing_subscription_id, billing_status').eq('id', businessId).maybeSingle();
+  const { data: current } = await admin.from('businesses').select('billing_subscription_id, billing_status, billing_provider').eq('id', businessId).maybeSingle();
+  // Firma s trajnim besplatnim pristupom: Dodo je više ne mijenja.
+  if (current?.billing_provider === 'free') return { ignored: true, status };
   // Stara pretplata ne smije ugasiti novu, aktivnu.
   if (current?.billing_status === 'active' && current.billing_subscription_id && current.billing_subscription_id !== sub.subscription_id && status !== 'active') {
     return { ignored: true, status };

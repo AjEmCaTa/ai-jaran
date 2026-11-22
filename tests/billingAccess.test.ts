@@ -47,3 +47,8 @@ test('Dodo potpis (Standard Webhooks)', () => {
   assert.equal(verifyDodoSignature(body + ' ', { id: 'msg_1', timestamp: ts, signature: `v1,${sig}` }, now), false);
   assert.equal(verifyDodoSignature(body, { id: 'msg_1', timestamp: String(Number(ts) - 3600), signature: `v1,${sig}` }, now), false);
 });
+
+test('trajno besplatna firma nikad ne mora plaćati', () => {
+  assert.equal(hasPaidAccess({ billing_provider: 'free', billing_status: 'active' }), true);
+  assert.equal(requiresPaymentSetup({ created_at: '2027-01-01T00:00:00Z', billing_provider: 'free' }, true, Date.parse('2027-03-01T00:00:00Z')), false);
+});

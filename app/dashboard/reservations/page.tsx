@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useEffectEvent, useState } from 'react';
+import { setPref } from '../_lib/prefs';
 import { createClient } from '@supabase/supabase-js';
 import { fullDate } from '../_lib/dates';
 import PushToggle from '../_components/PushToggle';
@@ -79,7 +80,7 @@ export default function AdminReservationsPage() {
   }, []);
   const pickView = (v: 'board' | 'list') => {
     setView(v);
-    try { window.localStorage.setItem(VIEW_KEY, v); } catch { /* privatni mod */ }
+    setPref(VIEW_KEY, v);
   };
 
   const fetchReservations = useCallback(async (silent = false) => {

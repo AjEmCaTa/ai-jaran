@@ -1,6 +1,7 @@
 'use client';
 
 import { monthlyGoalKey } from '../_lib/storage-keys';
+import { setPref } from '../_lib/prefs';
 
 import { useEffect, useState } from 'react';
 import Icon from './icons';
@@ -33,7 +34,7 @@ export default function MonthlyGoal({ revenue, loading, businessId }: { revenue:
     setGoal(value);
     setEditing(false);
     try {
-      window.localStorage.setItem(storageKey(businessId), String(value));
+      setPref(storageKey(businessId), String(value));
     } catch {
       /* privatni mod */
     }

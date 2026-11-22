@@ -12,6 +12,7 @@ import NotificationBell from "./_components/NotificationBell";
 import InstallButton from "../../components/InstallButton";
 import { DEFAULT_THEME, THEME_EVENT, loadTheme, themeVars, type ThemeSettings } from "./_lib/theme";
 import { useSwipeMenu } from "./_lib/useSwipeMenu";
+import { pullPrefs } from "./_lib/prefs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
@@ -57,6 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
 
   const [business, setBusiness] = useState<DashboardBusiness>(normalizeBusiness(null));
+  const [prefsVersion, setPrefsVersion] = useState(0);
   const [ownerName, setOwnerName] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
@@ -116,6 +118,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       } else {
         const loaded = normalizeBusiness(result.business);
         setBusiness(loaded);
+        // Postavke panela s naloga (iste na svakom uređaju); ako su drugačije, osvježi prikaz.
+        pullPrefs(getToken).then((changed) => {
+          if (!changed) return;
+          setTheme(loadTheme());
+          setPrefsVersion((v) => v + 1);
+        });
         setOwnerName(typeof result.ownerName === "string" ? result.ownerName.trim() : "");
         setAccessStatus("active");
       }
@@ -421,7 +429,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-2">
-            <NotificationBell getToken={getToken} businessId={business.id} />
+            <NotificationBell key={prefsVersion} getToken={getToken} businessId={business.id} />
             <Link
               href="/dashboard/izgled"
               className="hidden items-center gap-2 rounded-full border border-white/[0.08] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:border-blue-500/40 hover:text-white sm:flex"
@@ -437,7 +445,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-8">
           <BusinessContext.Provider value={ctx}>
-            <div key={pathname} className="page-in">{children}</div>
+            <div key={`${pathname}:${prefsVersion}`} className="page-in">{children}</div>
           </BusinessContext.Provider>
         </main>
 

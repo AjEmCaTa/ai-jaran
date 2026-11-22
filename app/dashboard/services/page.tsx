@@ -7,6 +7,9 @@ import { formatServicePrice } from '../../../utils/servicePrice';
 import { useBusiness } from '../_lib/business-context';
 import ServicePhotos, { type ServicePhoto } from '../_components/ServicePhotos';
 import CoverManager from '../_components/CoverManager';
+import { canEditCatalogData, setupEndsAt } from '../../../utils/plan';
+const MONTHS_GEN = ['januara', 'februara', 'marta', 'aprila', 'maja', 'juna', 'jula', 'augusta', 'septembra', 'oktobra', 'novembra', 'decembra'];
+const fmtDay = (t: number) => { const d = new Date(t); return `${d.getDate()}. ${MONTHS_GEN[d.getMonth()]}`; };
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -35,7 +38,8 @@ async function authHeaders() {
 
 export default function ServicesPage() {
   const { business } = useBusiness();
-  const locked = business.plan === 'starter';
+  const locked = !canEditCatalogData(business.plan, business.created_at);
+  const setupUntil = business.plan === 'starter' && !locked ? setupEndsAt(business.created_at) : 0;
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -147,7 +151,12 @@ export default function ServicesPage() {
 
       {locked && (
         <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
-          Vaš paket je Starter: usluge i cijene za vas uređuje POSLO ONE. Javite nam izmjenu ili pređite na Pro paket da ih mijenjate sami.
+          Vaš paket je Starter: usluge i cijene su zaključane. Slike možete mijenjati. <a href="/dashboard/paket" className="font-semibold underline">Pređite na Pro</a> da usluge i cijene mijenjate sami.
+        </p>
+      )}
+      {setupUntil > 0 && (
+        <p className="rounded-lg border border-blue-500/25 bg-blue-500/10 p-3 text-xs leading-relaxed text-blue-100">
+          Starter paket: usluge i cijene možete uređivati do {fmtDay(setupUntil)}. Poslije se zaključaju, a mijenjati ih možete na Pro paketu.
         </p>
       )}
 

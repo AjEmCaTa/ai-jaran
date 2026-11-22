@@ -20,6 +20,7 @@ export type DashboardBusiness = {
   logo_url: string;
   plan: "starter" | "pro";
   auto_confirm: boolean;
+  created_at: string;
 };
 
 export type BusinessContextValue = {
@@ -57,5 +58,6 @@ export function normalizeBusiness(b: Record<string, unknown> | null | undefined)
     logo_url: str(b?.logo_url),
     plan: b?.plan === "starter" ? "starter" : "pro",
     auto_confirm: b?.auto_confirm !== false,
+    created_at: str(b?.created_at),
   };
 }

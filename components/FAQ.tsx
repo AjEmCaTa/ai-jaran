@@ -14,7 +14,7 @@ const FAQS_EN = [
   },
   {
     q: "How much does it cost?",
-    a: "Starter is 15 KM and Pro is 50 KM per month. The first 30 days are free on both plans, and we set up your page for you.",
+    a: "Starter is 15 KM and Pro is 50 KM per month. The first 30 days are free on both plans, and you can cancel anytime.",
   },
   {
     q: "What do I get with the Pro plan?",
@@ -45,7 +45,7 @@ const FAQS_BS = [
   },
   {
     q: "Koliko košta?",
-    a: "Starter je 15 KM, a Pro 50 KM mjesečno. Prvih 30 dana je besplatno za oba paketa, a stranicu ti postavimo mi.",
+    a: "Starter je 15 KM, a Pro 50 KM mjesečno. Prvih 30 dana je besplatno za oba paketa, a otkazati možeš bilo kada.",
   },
   {
     q: "Šta dobijam sa Pro paketom?",

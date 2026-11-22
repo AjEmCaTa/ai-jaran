@@ -7,6 +7,9 @@ import Icon from '../_components/icons';
 import TimeInput24 from '../_components/TimeInput24';
 import PartnerLogo from '../../../components/PartnerLogo';
 import { CATALOG_CATEGORIES, categoryOf } from '../../../utils/catalog';
+import { canEditCatalogData, setupEndsAt } from '../../../utils/plan';
+const MONTHS_GEN = ['januara', 'februara', 'marta', 'aprila', 'maja', 'juna', 'jula', 'augusta', 'septembra', 'oktobra', 'novembra', 'decembra'];
+const fmtDay = (t: number) => { const d = new Date(t); return `${d.getDate()}. ${MONTHS_GEN[d.getMonth()]}`; };
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -85,7 +88,8 @@ export default function SettingsPage() {
   const [closedTo, setClosedTo] = useState('');
   const [logoBusy, setLogoBusy] = useState(false);
   const [logoMessage, setLogoMessage] = useState('');
-  const locked = ctxBusiness.plan === 'starter';
+  const locked = !canEditCatalogData(ctxBusiness.plan, ctxBusiness.created_at);
+  const setupUntil = ctxBusiness.plan === 'starter' && !locked ? setupEndsAt(ctxBusiness.created_at) : 0;
 
   const changeLogo = async (file: File | null) => {
     setLogoMessage('');
@@ -233,7 +237,12 @@ export default function SettingsPage() {
 
         {locked && (
           <p className="mb-5 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
-            Vaš paket je Starter: radno vrijeme, radne dane i zaključane dane za vas mijenja POSLO ONE. Javite nam izmjenu ili pređite na Pro paket da ih uređujete sami.
+            Vaš paket je Starter: radno vrijeme, radni dani i zaključani dani su zaključani. <a href="/dashboard/paket" className="font-semibold underline">Pređite na Pro</a> da ih uređujete sami.
+          </p>
+        )}
+        {setupUntil > 0 && (
+          <p className="mb-5 rounded-lg border border-blue-500/25 bg-blue-500/10 p-3 text-xs leading-relaxed text-blue-100">
+            Starter paket: radno vrijeme i radne dane možete uređivati do {fmtDay(setupUntil)}. Poslije se zaključaju, a mijenjati ih možete na Pro paketu.
           </p>
         )}
 

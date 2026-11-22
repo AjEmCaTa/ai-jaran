@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const lightweight = request.nextUrl.searchParams.get('scope') === 'business';
     const [businessResult, reservations, servicesResult, profileResult] = await Promise.all([
       admin.from('businesses')
-        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates, logo_url, plan, plan_until, auto_confirm')
+        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates, logo_url, plan, plan_until, auto_confirm, created_at')
         .eq('id', businessId)
         .single(),
       lightweight ? Promise.resolve([] as Record<string, unknown>[]) : loadReservations(admin, businessId),
@@ -67,10 +67,10 @@ export async function PATCH(request: NextRequest) {
       Object.entries(body).filter(([key]) => allowedFields.includes(key)),
     );
 
-    // Starter: radno vrijeme i zaključane dane mijenja samo POSLO ONE.
+    // Starter: radno vrijeme i zaključani dani su nakon prvih 30 dana zaključani.
     if (PRO_ONLY_BUSINESS_FIELDS.some((field) => field in changes)) {
-      const { data: planRow } = await result.context.admin.from('businesses').select('plan').eq('id', result.context.businessId).maybeSingle();
-      if (!canEditCatalogData(planRow?.plan)) {
+      const { data: planRow } = await result.context.admin.from('businesses').select('plan, created_at').eq('id', result.context.businessId).maybeSingle();
+      if (!canEditCatalogData(planRow?.plan, planRow?.created_at)) {
         for (const field of PRO_ONLY_BUSINESS_FIELDS) delete changes[field];
         if (body.require_pro_fields) return NextResponse.json({ error: PLAN_LOCK_MESSAGE, planLocked: true }, { status: 403 });
       }

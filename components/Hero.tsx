@@ -13,7 +13,7 @@ const TEXT = {
     start: "Probaj 30 dana besplatno",
     how: "Pogledaj kako radi",
     demo: "Isprobaj demo stranicu kao klijent →",
-    benefits: ["30 dana besplatno", "Postavimo sve za tebe", "Od 15 KM mjesečno"],
+    benefits: ["30 dana besplatno", "Spremno za par minuta", "Od 15 KM mjesečno"],
     video: "Kako klijent zakaže termin preko POSLO ONE",
   },
   en: {
@@ -25,7 +25,7 @@ const TEXT = {
     start: "Try 30 days free",
     how: "See how it works",
     demo: "Try the demo page as a client →",
-    benefits: ["30 days free", "We set everything up for you", "From 15 KM per month"],
+    benefits: ["30 days free", "Ready in a few minutes", "From 15 KM per month"],
     video: "How a client books through POSLO ONE",
   },
 };

@@ -44,7 +44,7 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         preheader: 'Za 10 minuta možete primiti prvu online rezervaciju.',
         heading: 'Dobrodošli u POSLO ONE',
         body:
-          'Pozdrav {{ime}},\n\nhvala što ste registrovali **{{firma}}**. Vaš panel je aktivan i prvih 30 dana je besplatno.\n\nDa vam klijenti počnu zakazivati sami, uradite ova tri koraka:\n- Dodajte usluge i cijene\n- Postavite radno vrijeme\n- Podijelite svoj link na Instagramu i WhatsAppu\n\nAko negdje zapne, samo odgovorite na ovaj mejl ili nazovite 060 30 50 153. Postavimo vam sve zajedno.',
+          'Pozdrav {{ime}},\n\nhvala što ste registrovali **{{firma}}**. Vaš panel je aktivan i prvih 30 dana je besplatno.\n\nDa vam klijenti počnu zakazivati sami, uradite ova tri koraka:\n- Dodajte usluge i cijene\n- Postavite radno vrijeme\n- Podijelite svoj link na Instagramu i WhatsAppu\n\nAko negdje zapne, samo odgovorite na ovaj e-mail ili nazovite 060 30 50 153 i pomoći ćemo vam.',
         cta_label: 'Otvori moj panel',
         cta_url: 'https://poslo.one/dashboard',
       },
@@ -77,7 +77,7 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         preheader: 'POSLO ONE može sam zamoliti klijenta za recenziju.',
         heading: 'Neka klijenti rade marketing za vas',
         body:
-          'Pozdrav {{ime}},\n\ndvije stvari koje vlasnici najviše vole:\n- **Google recenzije:** kad označite termin kao završen, klijent dobije mejl s linkom za vašu recenziju.\n- **Povratak klijenata:** nakon par sedmica klijent dobije podsjetnik da zakaže ponovo.\n\nOboje uključite jednom u Podacima o firmi i radi samo.',
+          'Pozdrav {{ime}},\n\ndvije stvari koje vlasnici najviše vole:\n- **Google recenzije:** kad označite termin kao završen, klijent dobije e-mail s linkom za vašu recenziju.\n- **Povratak klijenata:** nakon par sedmica klijent dobije podsjetnik da zakaže ponovo.\n\nOboje uključite jednom u Podacima o firmi i radi samo.',
         cta_label: 'Uključi u panelu',
         cta_url: 'https://poslo.one/dashboard/settings',
       },
@@ -100,7 +100,7 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         preheader: 'Jedan klik i {{firma}} nastavlja primati rezervacije.',
         heading: 'Sutra je zadnji besplatni dan',
         body:
-          'Pozdrav {{ime}},\n\nsutra ističe besplatni period za {{firma}}. Izaberite paket i sve nastavlja raditi kao do sada, bez ikakvog podešavanja.\n\nAko vam treba više vremena ili imate pitanje, odgovorite na ovaj mejl.',
+          'Pozdrav {{ime}},\n\nsutra ističe besplatni period za {{firma}}. Izaberite paket i sve nastavlja raditi kao do sada, bez ikakvog podešavanja.\n\nAko vam treba više vremena ili imate pitanje, odgovorite na ovaj e-mail.',
         cta_label: 'Izaberi paket',
         cta_url: 'https://poslo.one/dashboard/paket',
         note: 'Uključite tek kad plaćanje karticom pređe na pravi (Live) način.',
@@ -131,7 +131,7 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         preheader: 'Registracija traje minut i panel se odmah otvori.',
         heading: 'Panel za jedan minut',
         body:
-          'Pozdrav {{ime}},\n\nnajbrže ćete vidjeti da li vam POSLO ONE odgovara ako ga probate:\n- Registracija traje jedan minut\n- Panel se otvori odmah\n- Prvih 30 dana je besplatno, bez kartice\n\nAko želite, postavimo vam usluge i radno vrijeme zajedno, preko telefona.',
+          'Pozdrav {{ime}},\n\nnajbrže ćete vidjeti da li vam POSLO ONE odgovara ako ga probate:\n- Registracija traje jedan minut\n- Panel se otvori odmah\n- Prvih 30 dana je besplatno, bez kartice\n\nAko negdje zapne, nazovite 060 30 50 153 i pomoći ćemo vam.',
         cta_label: 'Registruj firmu',
         cta_url: 'https://poslo.one/registracija',
       },
@@ -139,10 +139,10 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         delay_days: 7,
         enabled: true,
         subject: 'Imate li pitanje o POSLO ONE?',
-        preheader: 'Odgovorite na ovaj mejl, javljamo se isti dan.',
+        preheader: 'Odgovorite na ovaj e-mail, javljamo se isti dan.',
         heading: 'Tu smo ako treba pomoć',
         body:
-          'Pozdrav {{ime}},\n\nsamo da provjerim da li vam je nešto ostalo nejasno. Najčešća pitanja su:\n- Koliko košta? Starter je 15 KM, a Pro 50 KM mjesečno, uz 30 dana besplatno.\n- Moraju li klijenti instalirati aplikaciju? Ne, zakazuju preko obične stranice.\n- Ko postavlja sve? Možete sami za par minuta, ili mi umjesto vas.\n\nOdgovorite na ovaj mejl ili nazovite 060 30 50 153.',
+          'Pozdrav {{ime}},\n\nsamo da provjerim da li vam je nešto ostalo nejasno. Najčešća pitanja su:\n- Koliko košta? Starter je 15 KM, a Pro 50 KM mjesečno, uz 30 dana besplatno.\n- Moraju li klijenti instalirati aplikaciju? Ne, zakazuju preko obične stranice.\n- Ko postavlja sve? Možete sami za par minuta, ili mi umjesto vas.\n\nOdgovorite na ovaj e-mail ili nazovite 060 30 50 153.',
         cta_label: 'Registruj firmu',
         cta_url: 'https://poslo.one/registracija',
       },

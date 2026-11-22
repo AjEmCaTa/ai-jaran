@@ -140,6 +140,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     loadBusiness();
   }, [loadBusiness]);
 
+  // Nove firme moraju izabrati paket (kartica ili uplatnica) prije korištenja panela.
+  const [needsPlan, setNeedsPlan] = useState(false);
+  useEffect(() => {
+    if (accessStatus !== "active") return;
+    let cancelled = false;
+    (async () => {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch("/api/billing/status", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }).catch(() => null);
+      const json = res?.ok ? await res.json().catch(() => null) : null;
+      if (!cancelled) setNeedsPlan(Boolean(json?.requiresPayment));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessStatus, business]);
+
+  useEffect(() => {
+    if (needsPlan && pathname && !pathname.startsWith("/dashboard/paket")) router.replace("/dashboard/paket?prvi=1");
+  }, [needsPlan, pathname, router]);
+
   useEffect(() => {
     if (accessStatus === "unauthenticated") {
       router.replace(`/prijava?next=${encodeURIComponent(pathname || "/dashboard")}`);

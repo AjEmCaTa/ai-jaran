@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
   }
   const { data: firm } = await auth.admin.from('businesses').select('plan_until, billing_provider').eq('id', id).maybeSingle();
   if (!firm) return NextResponse.json({ error: 'Firma nije pronađena.' }, { status: 404 });
+  if (firm.billing_provider === 'free') return NextResponse.json({ error: 'Ova firma ima trajno besplatan pristup.' }, { status: 409 });
   if (firm.billing_provider === 'dodo') return NextResponse.json({ error: 'Ova firma plaća karticom preko Dodoa.' }, { status: 409 });
   const start = Math.max(Date.now(), firm.plan_until ? Date.parse(firm.plan_until) : 0);
   const until = new Date(start);

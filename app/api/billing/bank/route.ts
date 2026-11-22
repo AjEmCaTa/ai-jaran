@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
   if (!plan) return NextResponse.json({ error: 'Izaberite paket.' }, { status: 400 });
 
   const { data: current } = await admin.from('businesses').select('billing_provider, billing_status, created_at, plan_until').eq('id', businessId).maybeSingle();
+  if (current?.billing_provider === 'free') return NextResponse.json({ error: 'Vaša firma ima besplatan pristup.' }, { status: 409 });
   if (current?.billing_status === 'active' && current.billing_provider && current.billing_provider !== 'bank') {
     return NextResponse.json({ error: 'Već imate aktivnu pretplatu karticom.' }, { status: 409 });
   }

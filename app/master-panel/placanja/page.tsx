@@ -113,7 +113,7 @@ export default function MasterBillingPage() {
           <div>
             <h2 className="font-display text-lg font-bold text-white">Podaci za uplatnicu</h2>
             <p className="mt-1 text-xs text-slate-400">
-              {bankReady ? "Uplatnica je uključena za firme." : "Dok ne upišete primaoca i broj računa (ili IBAN), opcija uplatnice se firmama ne prikazuje."}
+              {bankReady ? "Uplatnica je uključena: firme je vide kao opciju na stranici Paket." : "Dok ne upišete primaoca i broj računa (ili IBAN), opcija uplatnice se firmama ne prikazuje."}
             </p>
           </div>
           <Badge tone={bankReady ? "green" : "gray"}>{bankReady ? "Uključeno" : "Isključeno"}</Badge>

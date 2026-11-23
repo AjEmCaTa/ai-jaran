@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PasswordInput from '../../components/PasswordInput';
 import { useLang } from '../../components/site/LangProvider';
+import { authErrorText } from '../../utils/authErrors';
 import { statusText } from '../../utils/bookingText';
 
 const TEXT = {
   bs: {
-    loadError: 'Termine nije moguće učitati.', confirmEmail: 'Provjerite email i potvrdite račun, zatim se prijavite.', loginFailed: 'Prijava nije uspjela. Pokušajte ponovo.',
+    loadError: 'Termine nije moguće učitati.', confirmEmail: 'Poslali smo vam e-mail. Otvorite link u njemu da potvrdite nalog, pa se prijavite. Provjerite i folder Spam.', loginFailed: 'Prijava nije uspjela. Pokušajte ponovo.',
     confirmCancel: 'Jeste li sigurni da želite otkazati ovaj termin?', expired: 'Sesija je istekla. Prijavite se ponovo.', cancelled: 'Termin je otkazan. Obavijest je poslana na vaš email.',
     cancelFailed: 'Otkazivanje nije uspjelo.', back: '← Nazad na katalog', myAccount: 'POSLO ONE · moj nalog', hello: 'Zdravo,',
     loggedAs: (e: string) => `Prijavljeni ste kao ${e}. Ostajete prijavljeni na ovom uređaju, pa termine možete zakazivati bez ponovne prijave.`,
@@ -146,6 +147,8 @@ export default function CustomerAuthPage() {
           },
         });
         if (authError) throw authError;
+        // Supabase za već postojeći e-mail ne vraća grešku, nego korisnika bez identiteta.
+        if (data.user && data.user.identities && data.user.identities.length === 0) throw new Error('User already registered');
         if (data.session) await completeAuth();
         else setMessage(t.confirmEmail);
       } else {
@@ -154,7 +157,7 @@ export default function CustomerAuthPage() {
         await completeAuth();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : t.loginFailed);
+      setError(authErrorText(err, lang, t.loginFailed));
     } finally {
       setLoading(false);
     }
@@ -171,7 +174,7 @@ export default function CustomerAuthPage() {
       options: { redirectTo: redirectTo.toString() },
     });
     if (authError) {
-      setError(authError.message);
+      setError(authErrorText(authError, lang, t.loginFailed));
       setLoading(false);
     }
   };
@@ -328,6 +331,11 @@ export default function CustomerAuthPage() {
           <label className="block text-sm text-slate-300">{t.password}
             <PasswordInput required minLength={6} autoComplete={isRegistering ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
           </label>
+          {!isRegistering && (
+            <Link href="/zaboravljena-lozinka?nazad=/nalog" className="-mt-1 inline-block text-xs font-medium text-blue-400 hover:text-blue-300">
+              {lang === 'en' ? 'Forgot password?' : 'Zaboravili ste lozinku?'}
+            </Link>
+          )}
           <button disabled={loading} className={primaryBtn}>
             {loading ? t.wait : isRegistering ? t.register : t.login}
           </button>

@@ -52,9 +52,9 @@ export default function TermsPage() {
                 Nova firma dobija 30 dana besplatnog korištenja. Nakon toga paket se plaća mjesečno, unaprijed.
               </p>
               <p>
-                Online plaćanje karticom obrađuje Lemon Squeezy (Lemon Squeezy LLC), koji je zvanični prodavac (merchant of
-                record) i izdaje račun kupcu. Podatke o kartici ne vidimo i ne čuvamo. Pretplata se automatski obnavlja dok je
-                ne otkažete.
+                Online plaćanje karticom, Apple Payom i Google Payom obrađuje Dodo Payments, koji je zvanični prodavac (merchant
+                of record) i izdaje račun kupcu. Podatke o kartici ne vidimo i ne čuvamo. Pretplata se automatski obnavlja dok je
+                ne otkažete. Paket se može platiti i uplatnicom na račun naveden na stranici Paket, uz poziv na broj firme.
               </p>
               <p>
                 Ako paket nije plaćen, zakazivanje preko stranice firme i panel se privremeno zaključavaju. Podaci se ne brišu
@@ -106,7 +106,7 @@ export default function TermsPage() {
       englishSections={[
         { title: 'Service', body: <p>POSLO ONE (poslo.one) is online booking software (SaaS) for small businesses, operated by Harun Ćatić, Mostar, Bosnia and Herzegovina. Businesses get a booking page and a dashboard; their customers book appointments and send inquiries through that page.</p> },
         { title: 'Accounts', body: <p>Businesses are responsible for the accuracy of their data and for keeping their credentials safe. Appointments are agreements between the customer and the business; POSLO ONE is not a party to them.</p> },
-        { title: 'Plans and billing', body: <p>Plans are listed on the Pricing page. New businesses get a 30-day free trial, after which the plan is billed monthly in advance. Payments are processed by Lemon Squeezy, our merchant of record. Subscriptions renew automatically until cancelled. Unpaid plans are paused (no data is deleted) until payment.</p> },
+        { title: 'Plans and billing', body: <p>Plans are listed on the Pricing page. New businesses get a 30-day free trial, after which the plan is billed monthly in advance. Card, Apple Pay and Google Pay payments are processed by Dodo Payments, our merchant of record. Plans can also be paid by bank transfer to the account shown on the Plan page. Subscriptions renew automatically until cancelled. Unpaid plans are paused (no data is deleted) until payment.</p> },
         { title: 'Acceptable use', body: <p>Illegal activity, spam, impersonation, unauthorized access attempts and disrupting the service are prohibited and may lead to suspension.</p> },
         { title: 'Liability', body: <p>The service is provided as is. Our total liability is limited to the amount paid by the business in the last three months.</p> },
         { title: 'Contact', body: <p>info@poslo.one · +387 60 30 50 153</p> },

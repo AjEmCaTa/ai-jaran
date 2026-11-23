@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getCover, listServicePhotos } from '../../../utils/gallery';
+import { retryFetch } from '../../../utils/supabaseRetryFetch';
 
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
   if (!slug) return NextResponse.json({ error: 'Slug biznisa nije naveden.' }, { status: 400 });
 
-  const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
   const { data: business, error } = await admin
     .from('businesses')
     .select('id, name, category, city, address, phone, work_start, work_end, work_days, closed_dates, logo_url, status, is_active')

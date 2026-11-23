@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { buildReservationPayload, statusKind } from '../../../utils/reservationFlow';
 import { customerCancelDecision } from '../../../utils/reservationRules';
 import { notifyBusinessPush } from '../../../utils/pushSender';
+import { retryFetch } from '../../../utils/supabaseRetryFetch';
 
 // Posiljalac mora biti na domeni koja je verifikovana u Resendu
 const FROM_EMAIL = 'POSLO ONE <info@poslo.one>';
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (supabaseUrl && serviceRoleKey) {
-            const supabase = createClient(supabaseUrl, serviceRoleKey);
+            const supabase = createClient(supabaseUrl, serviceRoleKey, { global: { fetch: retryFetch } });
 
             // Otkazivanje smije samo prijavljeni klijent koji je napravio rezervaciju.
             const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
             if (!token || !anonKey) {
                 return NextResponse.json({ success: false, error: "Prijavite se za otkazivanje termina." }, { status: 401 });
             }
-            const authClient = createClient(supabaseUrl, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
+            const authClient = createClient(supabaseUrl, anonKey, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
             const authResult = await authClient.auth.getUser(token);
             if (authResult.error || !authResult.data.user) {
                 return NextResponse.json({ success: false, error: "Sesija nije važeća. Prijavite se ponovo." }, { status: 401 });

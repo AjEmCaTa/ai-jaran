@@ -7,10 +7,11 @@ import { notifyBusinessPush } from '../../../utils/pushSender';
 import { reservationStartMs } from '../../../utils/reservationRules';
 import { categoryOf } from '../../../utils/catalog';
 import { CHECK_OUT_TIME, isStayCategory, nightsOf, planStay } from '../../../utils/stay';
+import { retryFetch } from '../../../utils/supabaseRetryFetch';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'missing-service-role-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey, { global: { fetch: retryFetch } });
 const authSupabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
 // Posiljalac mora biti na domeni koja je VERIFIKOVANA u Resendu (resend.com -> Domains).

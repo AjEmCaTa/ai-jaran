@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { retryFetch } from './supabaseRetryFetch';
 
 export type OwnerContext = {
   admin: SupabaseClient;
@@ -27,6 +28,7 @@ export async function getOwnerContext(request: NextRequest): Promise<OwnerContex
 
   const authClient = createClient(supabaseUrl, anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: retryFetch },
   });
   const { data: authData, error: authError } = await authClient.auth.getUser(token);
   if (authError || !authData.user) {
@@ -35,6 +37,7 @@ export async function getOwnerContext(request: NextRequest): Promise<OwnerContex
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: retryFetch },
   });
   const { data: profile, error: profileError } = await admin
     .from('profiles')

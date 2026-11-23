@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { applyDodoSubscription, verifyDodoSignature, type DodoSubscription } from '../../../../../utils/dodo';
+import { retryFetch } from '../../../../../utils/supabaseRetryFetch';
 
 // Dodo javlja početak pretplate, obnovu, neuspjelu naplatu i otkazivanje. Samo poruke s ispravnim potpisom.
 export async function POST(request: NextRequest) {
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ error: 'not configured' }, { status: 503 });
-  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
 
   let event: { type?: string; data?: Record<string, unknown> };
   try {

@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
+import { retryFetch } from './supabaseRetryFetch';
 
 // Provjera administratora POSLO ONE-a za /api/master/* rute (ista pravila kao /api/master/businesses).
 // MASTER_ADMIN_EMAILS (zarezom odvojeno) ima prednost; bez nje ostaje postojeći admin.
@@ -25,14 +26,14 @@ export async function requireMasterAdmin(request: NextRequest): Promise<MasterAu
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return { response: NextResponse.json({ error: 'Prijavite se.' }, { status: 401 }) };
 
-  const authClient = createClient(url, anon, { auth: { autoRefreshToken: false, persistSession: false } });
+  const authClient = createClient(url, anon, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
   const { data, error } = await authClient.auth.getUser(token);
   const email = data.user?.email?.toLowerCase();
   if (error || !email) return { response: NextResponse.json({ error: 'Sesija nije važeća.' }, { status: 401 }) };
   if (!masterAdminEmails().includes(email)) {
     return { response: NextResponse.json({ error: 'Nemate pristup.' }, { status: 403 }) };
   }
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
   return { admin, email };
 }
 

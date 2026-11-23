@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, clientIp } from '../../../utils/rateLimit';
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSlug, parseRegistration } from '../../../utils/registration';
+import { retryFetch } from '../../../utils/supabaseRetryFetch';
 
 // Serverska registracija biznisa. Zamjenjuje direktan upis iz browsera:
 // - firma je aktivna odmah (30 dana besplatno, Pro); administrator je može isključiti u master panelu,
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
   const rawRef = rawBody && typeof rawBody === 'object' ? (rawBody as Record<string, unknown>).ref : undefined;
   const referredBy = typeof rawRef === 'string' && /^[a-z0-9-]{1,80}$/.test(rawRef) ? rawRef : null;
 
-  const options = { auth: { autoRefreshToken: false, persistSession: false } };
+  const options = { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } };
   const authClient = createClient(supabaseUrl, anonKey, options);
   const admin = createClient(supabaseUrl, serviceRoleKey, options);
 
@@ -42,7 +43,15 @@ export async function POST(request: NextRequest) {
     options: { emailRedirectTo: `${siteUrl}/prijava` },
   });
   if (signUp.error) {
-    return NextResponse.json({ error: 'Nalog nije moguće kreirati. Provjerite podatke ili pokušajte ponovo.' }, { status: 400 });
+    const m = signUp.error.message || '';
+    const error = /already registered|already been registered|already exists/i.test(m)
+      ? 'Ovaj e-mail već ima nalog. Prijavite se na stranici Prijava (ili obnovite lozinku preko „Zaboravili ste lozinku?”).'
+      : /password/i.test(m)
+        ? 'Lozinka mora imati najmanje 6 znakova.'
+        : /rate limit|too many|security purposes/i.test(m)
+          ? 'Previše pokušaja. Sačekajte minut pa pokušajte ponovo.'
+          : 'Nalog nije moguće kreirati. Provjerite podatke ili pokušajte ponovo.';
+    return NextResponse.json({ error }, { status: 400 });
   }
   const user = signUp.data.user;
   // Prazan identities = email već postoji (Supabase vraća prikriveni korisnik): ne dira se ništa.

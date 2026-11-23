@@ -43,7 +43,7 @@ export default function PrivacyPage() {
           body: (
             <p>
               Koristimo provjerene servise: Supabase (baza podataka), Vercel (hosting i statistika posjeta), Resend (slanje
-              emailova), Lemon Squeezy (plaćanje; podatke o kartici vidi samo on) i Google Analytics (statistika posjeta).
+              emailova), Dodo Payments (plaćanje; podatke o kartici vidi samo on) i Google Analytics (statistika posjeta).
               Podaci svake firme su odvojeni i firma vidi samo svoje termine i klijente.
             </p>
           ),
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
       englishSections={[
         { title: 'Data we collect', body: <p>Business details (name, contact, services, prices, hours); customer details needed for bookings (name, phone, email, booked service and time, inquiry text); basic analytics data.</p> },
         { title: 'Purpose', body: <p>To run bookings, send confirmations, reminders and notifications, optional review and rebooking emails enabled by the business, billing and support. We do not sell personal data.</p> },
-        { title: 'Processors', body: <p>Supabase (database), Vercel (hosting, analytics), Resend (email), Lemon Squeezy (payments, card data handled only by them), Google Analytics.</p> },
+        { title: 'Processors', body: <p>Supabase (database), Vercel (hosting, analytics), Resend (email), Dodo Payments (payments, card data handled only by them), Google Analytics.</p> },
         { title: 'Your rights', body: <p>You may request access, correction or deletion of your data at info@poslo.one.</p> },
       ]}
     />

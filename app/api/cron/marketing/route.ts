@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { timingSafeEqual } from 'crypto';
 import { runMarketing } from '../../../../utils/marketingRunner';
+import { retryFetch } from '../../../../utils/supabaseRetryFetch';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ error: 'Nedostaje konfiguracija.' }, { status: 503 });
-  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
   try {
     const result = await runMarketing(admin, { actor: 'planer' });
     if (result.sent || result.simulated || result.failed) {

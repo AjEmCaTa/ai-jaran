@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { syncPaypalSubscription } from '../../../../../utils/paypal';
+import { retryFetch } from '../../../../../utils/supabaseRetryFetch';
 
 // PayPal javlja promjene pretplate (obnova, otkazivanje, neuspjela naplata).
 // Sadržaju poruke se ne vjeruje: uzima se samo broj pretplate, a stanje se čita sa PayPala.
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ error: 'not configured' }, { status: 503 });
-  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
   try {
     await syncPaypalSubscription(admin, id);
     return NextResponse.json({ ok: true });

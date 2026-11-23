@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Footer from '../../components/Footer';
 import Icon from '../../components/Icon';
@@ -37,7 +37,26 @@ import type { CatalogBusiness } from '../../utils/catalogData';
 
 // Podaci stižu sa servera zajedno sa stranicom, pa se kartice i brojke prikažu odmah,
 // bez "skakanja" redoslijeda kad se podaci kasnije učitaju.
-export default function KatalogClient({ businesses }: { businesses: CatalogBusiness[] }) {
+export default function KatalogClient({ businesses: initial, retry = false }: { businesses: CatalogBusiness[]; retry?: boolean }) {
+  const [businesses, setBusinesses] = useState(initial);
+  useEffect(() => {
+    if (!retry) return;
+    let stop = false;
+    (async () => {
+      for (let i = 0; i < 3 && !stop; i += 1) {
+        const res = await fetch('/api/catalog', { cache: 'no-store' }).catch(() => null);
+        const json = res?.ok ? await res.json().catch(() => null) : null;
+        if (json?.businesses) {
+          setBusinesses(json.businesses);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+    })();
+    return () => {
+      stop = true;
+    };
+  }, [retry]);
   const { lang } = useLang();
   const t = TEXT[lang];
   const { openContact } = useSite();

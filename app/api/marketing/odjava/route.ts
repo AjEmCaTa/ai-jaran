@@ -8,14 +8,14 @@ export const dynamic = 'force-dynamic';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://poslo.one').replace(/\/$/, '');
 const isToken = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v);
 
-// Link iz mejla otvara stranicu s potvrdom (da skeneri linkova ne odjave nikoga slučajno).
+// Link iz e-maila otvara stranicu s potvrdom (da skeneri linkova ne odjave nikoga slučajno).
 export async function GET(request: NextRequest) {
   const t = request.nextUrl.searchParams.get('t') || '';
   return NextResponse.redirect(`${SITE_URL}/odjava${isToken(t) ? `?t=${t}` : ''}`, 303);
 }
 
 // Odjava: sa stranice /odjava ili "jednim klikom" iz Gmaila (List-Unsubscribe-Post).
-// Odjava važi samo za marketing; mejlovi o rezervacijama i nalogu se šalju i dalje.
+// Odjava važi samo za marketing; e-mailovi o rezervacijama i nalogu se šalju i dalje.
 export async function POST(request: NextRequest) {
   const rl = checkRateLimit(`odjava:${clientIp(request)}`, 20, 600000);
   if (!rl.allowed) return NextResponse.json({ error: 'Previše pokušaja.' }, { status: 429 });

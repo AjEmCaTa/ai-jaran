@@ -66,7 +66,7 @@ export async function PATCH(request: NextRequest) {
     if (!isId(body.id)) return NextResponse.json({ error: 'Neispravan zahtjev.' }, { status: 400 });
     if (body.action === 'approve') {
       const { count } = await admin.from('marketing_sequence_steps').select('id', { count: 'exact', head: true }).eq('sequence_id', body.id).eq('enabled', true);
-      if (!count) return NextResponse.json({ error: 'Niz nema nijedan uključen mejl.' }, { status: 400 });
+      if (!count) return NextResponse.json({ error: 'Niz nema nijedan uključen e-mail.' }, { status: 400 });
     }
     const update = body.action === 'approve'
       ? { status: 'active', approved_by: actor, approved_at: new Date().toISOString() }
@@ -80,15 +80,15 @@ export async function PATCH(request: NextRequest) {
   if (body.action === 'updateStep') {
     if (!isId(body.stepId)) return NextResponse.json({ error: 'Neispravan zahtjev.' }, { status: 400 });
     const { data: step } = await admin.from('marketing_sequence_steps').select('id, sequence_id').eq('id', body.stepId).maybeSingle();
-    if (!step) return NextResponse.json({ error: 'Mejl nije pronađen.' }, { status: 404 });
+    if (!step) return NextResponse.json({ error: 'E-mail nije pronađen.' }, { status: 404 });
     const update: Record<string, unknown> = {};
     for (const [k, max] of Object.entries(STEP_FIELDS)) {
       if (!(k in body)) continue;
       const v = typeof body[k] === 'string' ? body[k].trim() : '';
       update[k] = v ? v.slice(0, max) : null;
     }
-    if ('subject' in update && !update.subject) return NextResponse.json({ error: 'Naslov mejla ne može biti prazan.' }, { status: 400 });
-    if ('body' in update && !update.body) return NextResponse.json({ error: 'Tekst mejla ne može biti prazan.' }, { status: 400 });
+    if ('subject' in update && !update.subject) return NextResponse.json({ error: 'Naslov e-maila ne može biti prazan.' }, { status: 400 });
+    if ('body' in update && !update.body) return NextResponse.json({ error: 'Tekst e-maila ne može biti prazan.' }, { status: 400 });
     if (update.cta_url && !safeUrl(update.cta_url as string, SITE_URL)) {
       return NextResponse.json({ error: 'Link dugmeta mora počinjati sa https:// ili /' }, { status: 400 });
     }
@@ -101,8 +101,8 @@ export async function PATCH(request: NextRequest) {
     if (Object.keys(update).length === 0) return NextResponse.json({ error: 'Nema izmjena.' }, { status: 400 });
 
     const { error } = await admin.from('marketing_sequence_steps').update(update).eq('id', body.stepId);
-    if (error) return NextResponse.json({ error: 'Mejl nije sačuvan.' }, { status: 500 });
-    // Izmijenjen sadržaj traži ponovno odobrenje prije nego što se ijedan mejl pošalje.
+    if (error) return NextResponse.json({ error: 'E-mail nije sačuvan.' }, { status: 500 });
+    // Izmijenjen sadržaj traži ponovno odobrenje prije nego što se ijedan e-mail pošalje.
     const { data: seq } = await admin.from('marketing_sequences').select('status').eq('id', step.sequence_id).single();
     let needsApproval = false;
     if (seq?.status === 'active') {
@@ -124,7 +124,7 @@ export async function PATCH(request: NextRequest) {
     }
     if ('footer_address' in body) {
       const a = typeof body.footer_address === 'string' ? body.footer_address.trim().slice(0, 120) : '';
-      if (a.length < 3) return NextResponse.json({ error: 'Upišite adresu za podnožje mejla.' }, { status: 400 });
+      if (a.length < 3) return NextResponse.json({ error: 'Upišite adresu za podnožje e-maila.' }, { status: 400 });
       rows.push({ key: 'footer_address', value: a, updated_by: actor, updated_at: at });
     }
     if (rows.length === 0) return NextResponse.json({ error: 'Nema izmjena.' }, { status: 400 });

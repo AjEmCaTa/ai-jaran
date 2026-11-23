@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
                 }
             }
         } catch (emailErr) {
-            console.error("Mejl za otkazivanje nije poslan:", emailErr);
+            console.error("E-mail za otkazivanje nije poslan:", emailErr);
         }
 
         return NextResponse.json({ success: true, message: "Rezervacija je uspjesno otkazana i obavjestenja su poslana." });

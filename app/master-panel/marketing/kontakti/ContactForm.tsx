@@ -102,11 +102,11 @@ export default function ContactForm({ contact, onSaved, onDeleted, onClose }: {
           <div className="rounded-[calc(var(--po-radius)*0.8)] border border-blue-500/25 bg-blue-500/[0.06] p-4">
             <p className="text-sm font-semibold text-white">Piši lično</p>
             <p className="mt-1 text-xs leading-relaxed text-slate-400">
-              Otvara gotovu, personalizovanu poruku u vašem mejlu. Šaljete je vi, ručno, jednom kontaktu. Ovo nije automatsko slanje.
+              Otvara gotovu, personalizovanu poruku u vašem e-mailu. Šaljete je vi, ručno, jednom kontaktu. Ovo nije automatsko slanje.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <a href={gmail} target="_blank" rel="noopener noreferrer" onClick={() => action({ contacted: true }, "contacted")} className={btnPrimary}>Otvori u Gmailu</a>
-              <a href={mailto} onClick={() => action({ contacted: true }, "contacted")} className={btnGhost}>Drugi mejl program</a>
+              <a href={mailto} onClick={() => action({ contacted: true }, "contacted")} className={btnGhost}>Drugi e-mail program</a>
             </div>
             {contact.last_contacted_at && <p className="mt-2 text-[11px] text-slate-500">Zadnji kontakt: {fmtDate(contact.last_contacted_at)}</p>}
           </div>
@@ -180,7 +180,7 @@ export default function ContactForm({ contact, onSaved, onDeleted, onClose }: {
             </label>
           </div>
         )}
-        {basis && !basis.sendable && <p className="text-xs text-slate-400">Hladnim kontaktima sistem ne dozvoljava slanje mejlova. Ostaju samo u evidenciji.</p>}
+        {basis && !basis.sendable && <p className="text-xs text-slate-400">Hladnim kontaktima sistem ne dozvoljava slanje e-mailova. Ostaju samo u evidenciji.</p>}
       </fieldset>
 
       {error && <Notice tone="error">{error}</Notice>}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-// Javna stranica za odjavu od POSLO ONE marketing mejlova.
+// Javna stranica za odjavu od POSLO ONE marketing e-mailova.
 export default function UnsubscribePage() {
   const [token, setToken] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
@@ -38,16 +38,16 @@ export default function UnsubscribePage() {
           <>
             <h1 className="mt-4 font-display text-2xl font-bold text-white">Odjavljeni ste</h1>
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              Više vam nećemo slati marketinške mejlove. Obavijesti o vašim rezervacijama i nalogu i dalje stižu normalno.
+              Više vam nećemo slati marketinške e-mailove. Obavijesti o vašim rezervacijama i nalogu i dalje stižu normalno.
             </p>
           </>
         ) : (
           <>
-            <h1 className="mt-4 font-display text-2xl font-bold text-white">Odjava od mejlova</h1>
+            <h1 className="mt-4 font-display text-2xl font-bold text-white">Odjava od e-mailova</h1>
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              Kliknite ispod i više vam nećemo slati novosti i savjete o POSLO ONE. Mejlovi o rezervacijama ostaju.
+              Kliknite ispod i više vam nećemo slati novosti i savjete o POSLO ONE. E-mailovi o rezervacijama ostaju.
             </p>
-            {!token && <p className="mt-4 text-sm text-amber-300">Link za odjavu nije potpun. Otvorite ga ponovo iz mejla.</p>}
+            {!token && <p className="mt-4 text-sm text-amber-300">Link za odjavu nije potpun. Otvorite ga ponovo iz e-maila.</p>}
             {state === "error" && <p className="mt-4 text-sm text-red-300">{message}</p>}
             <button
               onClick={unsubscribe}

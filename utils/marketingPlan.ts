@@ -1,13 +1,13 @@
-// Planiranje sljedećeg mejla u nizu. Čista funkcija, bez baze.
+// Planiranje sljedećeg e-maila u nizu. Čista funkcija, bez baze.
 
 export type PlanStep = { id: string; position: number; delay_days: number; enabled: boolean };
 
 const DAY = 86400000;
 export const STALE_DAYS = 14; // korak zakasnio više od ovoga se preskače
-export const MIN_GAP_HOURS = 20; // najviše jedan marketing mejl istom kontaktu u ovom razmaku
+export const MIN_GAP_HOURS = 20; // najviše jedan marketing e-mail istom kontaktu u ovom razmaku
 
 // Od dospjelih, a još neobrađenih koraka šalje se samo najnoviji; stariji se preskaču
-// (da kontakt koji kasnije uđe u niz ne dobije pet mejlova zaredom).
+// (da kontakt koji kasnije uđe u niz ne dobije pet e-mailova zaredom).
 export function planNext(steps: PlanStep[], startedAt: string, handled: Set<string>, now: number) {
   const start = Date.parse(startedAt);
   const due = steps

@@ -45,7 +45,7 @@ export default function RefundPage() {
           title: '4. Kako se vraća novac',
           body: (
             <p>
-              Povrat ide na istu karticu ili račun s kojeg je plaćeno, preko Lemon Squeezyja, obično u roku od 5 do 10 radnih
+              Povrat ide na istu karticu ili račun s kojeg je plaćeno, preko Doda (Dodo Payments), obično u roku od 5 do 10 radnih
               dana, zavisno od banke.
             </p>
           ),
@@ -63,7 +63,7 @@ export default function RefundPage() {
       englishSections={[
         { title: 'Free trial', body: <p>New businesses get a 30-day free trial.</p> },
         { title: 'Cancellation', body: <p>You can cancel anytime via the link in your receipt email or at info@poslo.one. No further charges are made and the plan stays active until the end of the paid month.</p> },
-        { title: 'Refunds', body: <p>Full refund of the first payment if requested within 14 days of that payment. Later payments are not refunded for a month already started, except in case of extended service outages caused by us. Refunds are issued via Lemon Squeezy to the original payment method within 5–10 business days.</p> },
+        { title: 'Refunds', body: <p>Full refund of the first payment if requested within 14 days of that payment. Later payments are not refunded for a month already started, except in case of extended service outages caused by us. Refunds are issued via Dodo Payments to the original payment method within 5–10 business days.</p> },
         { title: 'Contact', body: <p>info@poslo.one · +387 60 30 50 153</p> },
       ]}
     />

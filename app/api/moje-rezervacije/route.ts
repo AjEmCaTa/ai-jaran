@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { statusKind } from '../../../utils/reservationFlow';
 import { POST as cancelAppointment } from '../cancel-appointment/route';
+import { retryFetch } from '../../../utils/supabaseRetryFetch';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'missing-service-role-key';
-const supabase = createClient(supabaseUrl, serviceKey);
+const supabase = createClient(supabaseUrl, serviceKey, { global: { fetch: retryFetch } });
 const authSupabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
 
 async function getUser(request: NextRequest) {

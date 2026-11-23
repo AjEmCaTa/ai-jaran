@@ -4,10 +4,20 @@ import "./globals.css";
 import SiteShell from "../components/site/SiteShell";
 
 export const metadata: Metadata = {
-  title: "POSLO ONE",
+  metadataBase: new URL("https://poslo.one"),
+  title: "POSLO ONE – online zakazivanje termina za male firme",
   description:
     "POSLO ONE – online zakazivanje termina za male firme u BiH. Klijenti zakazuju sami, ti dobiješ obavijest. 30 dana besplatno.",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "POSLO ONE – online zakazivanje termina za male firme",
+    description: "Klijenti zakazuju sami, a ti dobiješ obavijest. Za frizere, salone, auto-praonice, apartmane i druge male firme u BiH. 30 dana besplatno.",
+    url: "https://poslo.one",
+    siteName: "POSLO ONE",
+    locale: "bs_BA",
+    type: "website",
+    images: [{ url: "/poslo.one.png", width: 1254, height: 1254, alt: "POSLO ONE" }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

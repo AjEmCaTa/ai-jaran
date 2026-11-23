@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, clientIp } from '../../../../utils/rateLimit';
+import { retryFetch } from '../../../../utils/supabaseRetryFetch';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ error: 'Odjava trenutno nije dostupna.' }, { status: 503 });
-  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
 
   const { data: contact } = await admin.from('marketing_contacts').select('id, status').eq('unsubscribe_token', token).maybeSingle();
   // Isti odgovor i za nepoznat link, da se tokeni ne mogu pogađati.

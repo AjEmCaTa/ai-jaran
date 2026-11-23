@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { applyLemonSubscription, verifyLemonSignature } from '../../../../../utils/lemonsqueezy';
+import { retryFetch } from '../../../../../utils/supabaseRetryFetch';
 
 // Lemon Squeezy javlja kupovinu, obnovu i otkazivanje. Prihvataju se samo poruke s ispravnim potpisom.
 export async function POST(request: NextRequest) {
@@ -8,7 +9,7 @@ export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ error: 'not configured' }, { status: 503 });
-  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }, global: { fetch: retryFetch } });
 
   if (!(await verifyLemonSignature(admin, raw, request.headers.get('x-signature')))) {
     return NextResponse.json({ error: 'invalid signature' }, { status: 401 });

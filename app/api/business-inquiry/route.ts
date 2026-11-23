@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { buildInquiryPayload, sendPushToBusiness, type PushStore } from '../../../utils/push';
 import { isPushConfigured, sendWebPush } from '../../../utils/pushSender';
+import { retryFetch } from '../../../utils/supabaseRetryFetch';
 
 // Univerzalni upit za bilo koju firmu iz tabele `businesses`.
 // Primalac se UVIJEK uzima iz baze (businesses.owner_email) po slug-u firme,
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: retryFetch },
   });
   const { data: business, error: businessError } = await admin
     .from('businesses')

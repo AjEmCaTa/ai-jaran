@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PasswordInput from '../../components/PasswordInput';
-import { useT } from '../../components/site/LangProvider';
+import { useLang, useT } from '../../components/site/LangProvider';
+import { authErrorText } from '../../utils/authErrors';
 
 const TEXT = {
   bs: {
@@ -33,6 +34,7 @@ export default function AuthPage() {
 
   const router = useRouter();
   const t = useT(TEXT);
+  const { lang } = useLang();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -101,11 +103,7 @@ export default function AuthPage() {
 
       router.refresh();
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        setErrorMsg(error.message);
-      } else {
-        setErrorMsg(t.invalid);
-      }
+      setErrorMsg(authErrorText(error, lang, t.invalid));
     } finally {
       setLoading(false);
     }
@@ -182,6 +180,9 @@ export default function AuthPage() {
               placeholder="••••••••"
               className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+            <Link href="/zaboravljena-lozinka?nazad=/prijava" className="mt-2 inline-block text-xs font-medium text-blue-400 hover:text-blue-300">
+              {lang === 'en' ? 'Forgot password?' : 'Zaboravili ste lozinku?'}
+            </Link>
           </div>
 
           <button

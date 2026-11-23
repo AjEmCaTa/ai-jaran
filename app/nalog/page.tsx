@@ -134,7 +134,16 @@ export default function CustomerAuthPage() {
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { full_name: name.trim() } },
+          options: {
+            data: { full_name: name.trim() },
+            // Link za potvrdu e-maila vraća na ovu stranicu (i na termin koji je klijent zakazivao).
+            emailRedirectTo: (() => {
+              const u = new URL('/nalog', window.location.origin);
+              const next = getNextParam();
+              if (next) u.searchParams.set('next', next);
+              return u.toString();
+            })(),
+          },
         });
         if (authError) throw authError;
         if (data.session) await completeAuth();

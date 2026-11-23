@@ -34,7 +34,13 @@ export async function POST(request: NextRequest) {
   const admin = createClient(supabaseUrl, serviceRoleKey, options);
 
   // signUp (a ne admin.createUser) zadržava postojeće ponašanje potvrde emaila iz Supabase postavki.
-  const signUp = await authClient.auth.signUp({ email: input.email, password: input.password });
+  // Link iz e-maila za potvrdu vodi na poslo.one (ne na adresu iz Supabase postavki).
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://poslo.one').replace(/\/$/, '');
+  const signUp = await authClient.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: { emailRedirectTo: `${siteUrl}/prijava` },
+  });
   if (signUp.error) {
     return NextResponse.json({ error: 'Nalog nije moguće kreirati. Provjerite podatke ili pokušajte ponovo.' }, { status: 400 });
   }

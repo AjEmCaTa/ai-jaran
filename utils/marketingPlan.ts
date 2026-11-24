@@ -36,3 +36,11 @@ export function startOfLocalDay(now: number, timeZone = 'Europe/Sarajevo'): stri
   const midnightUtc = Date.UTC(get('year'), get('month') - 1, get('day')) - offset * 3600000;
   return new Date(midnightUtc).toISOString();
 }
+
+// Marketing e-mailovi idu samo danju po bosanskom vremenu (9-20 h), da ne stižu u ponoć.
+export const SEND_FROM_HOUR = 9;
+export const SEND_TO_HOUR = 20;
+export function isSendingHour(now: number, timeZone = 'Europe/Sarajevo') {
+  const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hour12: false }).format(new Date(now))) % 24;
+  return h >= SEND_FROM_HOUR && h < SEND_TO_HOUR;
+}

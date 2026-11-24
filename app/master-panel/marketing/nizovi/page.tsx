@@ -82,7 +82,7 @@ export default function SequencesPage() {
     setFlash(null);
     try {
       const res = await adminFetch<{ needsApproval?: boolean }>("/api/master/marketing/sequences", { method: "PATCH", body });
-      if (res.needsApproval) setFlash({ tone: "info", text: "Mejl je sačuvan. Niz je pauziran dok izmjenu ponovo ne odobrite." });
+      if (res.needsApproval) setFlash({ tone: "info", text: "E-mail je sačuvan. Niz je pauziran dok izmjenu ponovo ne odobrite." });
       else if (ok) setFlash({ tone: "ok", text: ok });
       await load();
       return true;
@@ -120,7 +120,7 @@ export default function SequencesPage() {
     setFlash(null);
     try {
       const r = await adminFetch<{ status: string; to: string }>("/api/master/marketing/test", { method: "POST", body: { stepId: step.id } });
-      setFlash({ tone: "ok", text: r.status === "simulated" ? `Test je simuliran (probna verzija ne šalje prave mejlove). Na produkciji ide na ${r.to}.` : `Test mejl je poslan na ${r.to}.` });
+      setFlash({ tone: "ok", text: r.status === "simulated" ? `Test je simuliran (probna verzija ne šalje prave e-mailove). Na produkciji ide na ${r.to}.` : `Test e-mail je poslan na ${r.to}.` });
       await load();
     } catch (e) {
       setFlash({ tone: "error", text: (e as Error).message });
@@ -136,8 +136,8 @@ export default function SequencesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
       <PageHeader
-        title="Automatski mejlovi"
-        text="Nizovi mejlova koji sami stižu novim firmama i ljudima koji su poslali upit. Šalju se samo odobreni nizovi, samo kontaktima koji to smiju primati, uz dnevni limit."
+        title="Automatski e-mailovi"
+        text="Nizovi e-mailova koji sami stižu novim firmama i ljudima koji su poslali upit. Šalju se samo odobreni nizovi, samo kontaktima koji to smiju primati, uz dnevni limit."
         actions={
           <button onClick={runNow} disabled={busy === "run"} className={btnGhost}>
             <Icon name="clock" className="h-4 w-4" />
@@ -148,7 +148,7 @@ export default function SequencesPage() {
 
       {flash && <Notice tone={flash.tone}>{flash.text}</Notice>}
       {data.mode === "simulated" && (
-        <Notice tone="info">Ovo je probna verzija: mejlovi se samo simuliraju i zapisuju, ništa ne odlazi stvarnim primaocima.</Notice>
+        <Notice tone="info">Ovo je probna verzija: e-mailovi se samo simuliraju i zapisuju, ništa ne odlazi stvarnim primaocima.</Notice>
       )}
 
       {/* Postavke slanja */}
@@ -163,24 +163,24 @@ export default function SequencesPage() {
           <div>
             <p className="text-sm font-semibold text-white">{s.sending_enabled ? "Slanje je uključeno" : "Slanje je isključeno"}</p>
             <p className="mt-1 text-xs leading-relaxed text-slate-400">
-              {s.sending_enabled ? "Odobreni nizovi se šalju automatski, nekoliko puta dnevno." : "Dok je isključeno, sistem samo priprema kontakte i nizove, a mejlovi se ne šalju."}
+              {s.sending_enabled ? "Odobreni nizovi se šalju automatski, nekoliko puta dnevno." : "Dok je isključeno, sistem samo priprema kontakte i nizove, a e-mailovi se ne šalju."}
             </p>
             <p className="mt-2 text-xs text-slate-500">Danas: {data.sentToday} od {s.daily_limit}</p>
           </div>
         </div>
         <div>
           <label className={labelCls}>
-            Dnevni limit mejlova
+            Dnevni limit e-mailova
             <div className="mt-1.5 flex gap-2">
               <input type="number" min={1} max={500} value={limit} onChange={(e) => setLimit(e.target.value)} className={inputCls} />
               <button onClick={() => patch({ action: "settings", daily_limit: Number(limit) }, "limit", "Dnevni limit je sačuvan.")} disabled={busy === "limit" || Number(limit) === s.daily_limit} className={btnGhost}>Sačuvaj</button>
             </div>
           </label>
-          <p className="mt-1.5 text-[11px] text-slate-500">Resend besplatno: 100 mejlova dnevno, zajedno s mejlovima za rezervacije.</p>
+          <p className="mt-1.5 text-[11px] text-slate-500">Resend besplatno: 100 e-mailova dnevno, zajedno s e-mailovima za rezervacije.</p>
         </div>
         <div>
           <label className={labelCls}>
-            Adresa u podnožju mejla
+            Adresa u podnožju e-maila
             <div className="mt-1.5 flex gap-2">
               <input value={address} onChange={(e) => setAddress(e.target.value)} className={inputCls} />
               <button onClick={() => patch({ action: "settings", footer_address: address }, "address", "Adresa je sačuvana.")} disabled={busy === "address" || address.trim() === s.footer_address} className={btnGhost}>Sačuvaj</button>
@@ -203,7 +203,7 @@ export default function SequencesPage() {
                 </div>
                 <p className="mt-1 text-sm text-slate-400">{AUDIENCE_INFO[seq.audience].who}</p>
                 <p className="mt-2 text-xs text-slate-500">
-                  {seq.enrolled.active} trenutno u nizu · {seq.enrolled.total} ukupno · {enabledSteps} od {seq.steps.length} mejlova uključeno
+                  {seq.enrolled.active} trenutno u nizu · {seq.enrolled.total} ukupno · {enabledSteps} od {seq.steps.length} e-mailova uključeno
                   {seq.approved_at && seq.status === "active" ? ` · odobrio ${seq.approved_by} ${fmtDateTime(seq.approved_at)}` : ""}
                 </p>
               </div>
@@ -235,7 +235,7 @@ export default function SequencesPage() {
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2 pl-[4.5rem] sm:pl-0">
-                      <Switch on={step.enabled} label={`Mejl dan ${step.delay_days} uključen`} disabled={!!busy} onChange={(v) => patch({ action: "updateStep", stepId: step.id, enabled: v }, `en-${step.id}`)} />
+                      <Switch on={step.enabled} label={`E-mail dan ${step.delay_days} uključen`} disabled={!!busy} onChange={(v) => patch({ action: "updateStep", stepId: step.id, enabled: v }, `en-${step.id}`)} />
                       <button onClick={() => testSend(step)} disabled={!!busy} className="rounded-lg px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/5 disabled:opacity-50">
                         {busy === `test-${step.id}` ? "Šaljem..." : "Test meni"}
                       </button>
@@ -283,7 +283,7 @@ export default function SequencesPage() {
             siteUrl={data.siteUrl}
             active={editing.seq.status === "active"}
             onSave={async (fields) => {
-              const ok = await patch({ action: "updateStep", stepId: editing.step.id, ...fields }, "save", "Mejl je sačuvan.");
+              const ok = await patch({ action: "updateStep", stepId: editing.step.id, ...fields }, "save", "E-mail je sačuvan.");
               if (ok) setEditing(null);
             }}
             saving={busy === "save"}
@@ -295,7 +295,7 @@ export default function SequencesPage() {
       {approving && (
         <Modal title={`Odobri: ${approving.name}`} onClose={() => setApproving(null)}>
           <div className="space-y-4 text-sm">
-            <p className="text-slate-300">Ovi mejlovi će se slati automatski, svakom kontaktu najviše jednom:</p>
+            <p className="text-slate-300">Ovi e-mailovi će se slati automatski, svakom kontaktu najviše jednom:</p>
             <ul className="space-y-2">
               {approving.steps.filter((x) => x.enabled).map((x) => (
                 <li key={x.id} className="flex gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2">
@@ -305,9 +305,9 @@ export default function SequencesPage() {
               ))}
             </ul>
             <p className="text-xs leading-relaxed text-slate-400">
-              Primaoci: {AUDIENCE_INFO[approving.audience].who} Hladni i odjavljeni kontakti se nikad ne uključuju. Ako kasnije izmijenite neki mejl, niz se pauzira dok ga ponovo ne odobrite.
+              Primaoci: {AUDIENCE_INFO[approving.audience].who} Hladni i odjavljeni kontakti se nikad ne uključuju. Ako kasnije izmijenite neki e-mail, niz se pauzira dok ga ponovo ne odobrite.
             </p>
-            {!s.sending_enabled && <Notice tone="info">Slanje je trenutno isključeno u postavkama. Niz će biti odobren, a mejlovi kreću tek kad uključite slanje.</Notice>}
+            {!s.sending_enabled && <Notice tone="info">Slanje je trenutno isključeno u postavkama. Niz će biti odobren, a e-mailovi kreću tek kad uključite slanje.</Notice>}
             <div className="flex justify-end gap-2">
               <button onClick={() => setApproving(null)} className={btnGhost}>Odustani</button>
               <button
@@ -325,7 +325,7 @@ export default function SequencesPage() {
       {confirmEnable && (
         <Modal title="Uključiti automatsko slanje?" onClose={() => setConfirmEnable(false)}>
           <div className="space-y-4 text-sm text-slate-300">
-            <p>Sistem će nekoliko puta dnevno slati mejlove iz odobrenih nizova, najviše {s.daily_limit} dnevno. Isključiti možete u svakom trenutku.</p>
+            <p>Sistem će nekoliko puta dnevno slati e-mailove iz odobrenih nizova, najviše {s.daily_limit} dnevno. Isključiti možete u svakom trenutku.</p>
             <ul className="list-disc space-y-1 pl-5 text-xs text-slate-400">
               {data.sequences.map((q) => <li key={q.id}>{q.name}: {SEQ_STATUS[q.status].label.toLowerCase()}</li>)}
             </ul>
@@ -364,10 +364,10 @@ function StepEditor({ step, audience, address, siteUrl, active, onSave, saving, 
       <div className="space-y-3">
         <div className="grid grid-cols-[110px_1fr] gap-3">
           <label className={labelCls}>Dan slanja<input type="number" min={0} max={365} value={f.delay_days} onChange={set("delay_days")} className={`${inputCls} mt-1.5`} /></label>
-          <label className={labelCls}>Naslov mejla (subject)<input value={f.subject} onChange={set("subject")} className={`${inputCls} mt-1.5`} /></label>
+          <label className={labelCls}>Naslov e-maila (subject)<input value={f.subject} onChange={set("subject")} className={`${inputCls} mt-1.5`} /></label>
         </div>
         <label className={labelCls}>Kratki uvod (vidi se u inboxu pored naslova)<input value={f.preheader} onChange={set("preheader")} className={`${inputCls} mt-1.5`} /></label>
-        <label className={labelCls}>Veliki naslov u mejlu<input value={f.heading} onChange={set("heading")} className={`${inputCls} mt-1.5`} /></label>
+        <label className={labelCls}>Veliki naslov u e-mailu<input value={f.heading} onChange={set("heading")} className={`${inputCls} mt-1.5`} /></label>
         <label className={labelCls}>
           Tekst
           <textarea value={f.body} onChange={set("body")} rows={11} className={`${inputCls} mt-1.5 resize-y font-mono text-[13px] leading-relaxed`} />
@@ -382,7 +382,7 @@ function StepEditor({ step, audience, address, siteUrl, active, onSave, saving, 
         {active && <Notice tone="info">Niz je aktivan. Nakon izmjene se pauzira dok ga ponovo ne odobrite.</Notice>}
         <div className="flex justify-end gap-2 pt-1">
           <button onClick={onClose} className={btnGhost}>Odustani</button>
-          <button onClick={() => onSave({ ...f, delay_days: Number(f.delay_days) })} disabled={saving} className={btnPrimary}>{saving ? "Čuvam..." : "Sačuvaj mejl"}</button>
+          <button onClick={() => onSave({ ...f, delay_days: Number(f.delay_days) })} disabled={saving} className={btnPrimary}>{saving ? "Čuvam..." : "Sačuvaj e-mail"}</button>
         </div>
       </div>
       <div>
@@ -391,7 +391,7 @@ function StepEditor({ step, audience, address, siteUrl, active, onSave, saving, 
           <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 text-[11px] text-gray-600">
             <b className="text-gray-900">{preview.subject}</b>
           </div>
-          <iframe title="Pregled mejla" srcDoc={preview.html} sandbox="" className="h-[560px] w-full" />
+          <iframe title="Pregled e-maila" srcDoc={preview.html} sandbox="" className="h-[560px] w-full" />
         </div>
       </div>
     </div>

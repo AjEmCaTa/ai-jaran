@@ -1,4 +1,4 @@
-// Marketing mejl: personalizacija i HTML u POSLO ONE stilu. Čiste funkcije (koristi ih i pregled u panelu).
+// Marketing e-mail: personalizacija i HTML u POSLO ONE stilu. Čiste funkcije (koristi ih i pregled u panelu).
 
 export type EmailContent = {
   subject: string;
@@ -103,9 +103,9 @@ ${ctaUrl && ctaLabel ? `<table role="presentation" cellpadding="0" cellspacing="
 <p style="margin:26px 0 0;font-size:15px;line-height:22px;color:#374151">Pozdrav,<br><strong style="color:#0b0f1a">POSLO ONE tim</strong></p>
 </div></td></tr>
 <tr><td style="padding:20px 10px 0;font-size:12px;line-height:19px;color:#8a93a6;text-align:center">
-Ovaj mejl ste dobili jer ${escapeHtml(ctx.reason)}.<br>
+Ovaj e-mail ste dobili jer ${escapeHtml(ctx.reason)}.<br>
 POSLO ONE &middot; ${escapeHtml(ctx.address)} &middot; <a href="mailto:info@poslo.one" style="color:#8a93a6">info@poslo.one</a><br>
-<a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:#6b7280;text-decoration:underline">Odjavi se od ovih mejlova</a>
+<a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:#6b7280;text-decoration:underline">Odjavi se od ovih e-mailova</a>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;
@@ -120,7 +120,7 @@ POSLO ONE &middot; ${escapeHtml(ctx.address)} &middot; <a href="mailto:info@posl
     'Pozdrav,',
     'POSLO ONE tim',
     '',
-    `Ovaj mejl ste dobili jer ${ctx.reason}.`,
+    `Ovaj e-mail ste dobili jer ${ctx.reason}.`,
     `POSLO ONE · ${ctx.address} · info@poslo.one`,
     `Odjava: ${ctx.unsubscribeUrl}`,
   ]
@@ -131,7 +131,7 @@ POSLO ONE &middot; ${escapeHtml(ctx.address)} &middot; <a href="mailto:info@posl
   return { subject, html, text };
 }
 
-// Poruka za "Piši lično" (otvara se u mejl programu admina, šalje je on sam).
+// Poruka za "Piši lično" (otvara se u e-mail programu admina, šalje je on sam).
 export function personalPitch(r: EmailRecipient & { category?: string | null }): { subject: string; body: string } {
   const first = (r.owner_name || '').trim().split(/\s+/)[0];
   const firma = (r.company_name || '').trim();

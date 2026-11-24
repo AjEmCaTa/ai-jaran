@@ -72,7 +72,7 @@ export default function ContactsPage() {
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
       <PageHeader
         title="Kontakti"
-        text="Baza firmi kojima se obraćamo. Svaki kontakt ima pravni osnov, a mejlovi kasnije idu samo onima koji ga imaju."
+        text="Baza firmi kojima se obraćamo. Svaki kontakt ima pravni osnov, a e-mailovi kasnije idu samo onima koji ga imaju."
         actions={
           <>
             <button onClick={() => setImporting(true)} className={btnGhost}>
@@ -89,7 +89,7 @@ export default function ContactsPage() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard label="Svi kontakti" value={s?.total ?? "–"} active={quick === ""} onClick={() => pick("")} />
-        <StatCard label="Mogu primati mejlove" value={s?.sendable ?? "–"} tone="green" active={quick === "sendable"} onClick={() => pick("sendable")} />
+        <StatCard label="Mogu primati e-mailove" value={s?.sendable ?? "–"} tone="green" active={quick === "sendable"} onClick={() => pick("sendable")} />
         <StatCard label="Hladni kontakti" value={s?.cold ?? "–"} tone="gray" hint="Samo evidencija" active={quick === "cold"} onClick={() => pick("cold")} />
         <StatCard label="Odjavljeni" value={s?.unsubscribed ?? "–"} tone="amber" active={quick === "unsubscribed"} onClick={() => pick("unsubscribed")} />
         <StatCard label="Neispravni ili spam" value={s?.problematic ?? "–"} tone="red" active={quick === "problematic"} onClick={() => pick("problematic")} />

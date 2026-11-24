@@ -1,9 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { DEFAULT_SEQUENCES, AUDIENCE_INFO, type SequenceAudience } from './marketingSequences';
+import { DEFAULT_SEQUENCES, AUDIENCE_INFO, isPaymentReminder, type SequenceAudience } from './marketingSequences';
 import { renderEmail, type EmailContent, type EmailRecipient } from './marketingEmail';
 import { planNext, recentlyMailed, startOfLocalDay } from './marketingPlan';
 import { normalizeCategory, isSendable, normalizeEmail, isValidEmail } from './marketingContacts';
 import { categoryOf } from './catalog';
+import { hasPaidAccess } from './billingAccess';
 
 // Marketing: sinhronizacija kontakata, upis u nizove i slanje. Odvojeno od rezervacija:
 // čita businesses/profiles samo za čitanje, a piše isključivo u marketing_* tabele.
@@ -54,7 +55,7 @@ export const unsubscribeUrl = (token: string) => `${SITE_URL}/odjava?t=${token}`
 
 type SendInput = { to: string; content: EmailContent; recipient: EmailRecipient; audience: SequenceAudience; token: string | null; address: string; idempotencyKey: string };
 
-// Jedan mejl preko Resend REST API-ja (ključ ostaje na serveru).
+// Jedan e-mail preko Resend REST API-ja (ključ ostaje na serveru).
 export async function deliver(input: SendInput): Promise<{ status: 'sent' | 'simulated' | 'failed'; providerId?: string; error?: string; subject: string; html: string }> {
   const unsub = input.token ? unsubscribeUrl(input.token) : `${SITE_URL}/odjava`;
   const { subject, html, text } = renderEmail(input.content, input.recipient, {
@@ -140,20 +141,20 @@ export async function syncContacts(admin: SupabaseClient) {
     if (!contactId) continue;
 
     const trialSeq = seqByAudience.get('trial');
-    const paid = b.billing_status === 'active';
     const age = now - Date.parse(b.created_at);
-    if (trialSeq && !paid && age < TRIAL_DAYS * DAY) {
+    // Savjeti idu svakoj novoj firmi (i onoj koja je odmah unijela karticu); podsjetnike za plaćanje preskačemo pri slanju.
+    if (trialSeq && age < TRIAL_DAYS * DAY) {
       const { data: ins } = await admin
         .from('marketing_enrollments')
         .upsert({ contact_id: contactId, sequence_id: trialSeq, started_at: b.created_at }, { onConflict: 'contact_id,sequence_id', ignoreDuplicates: true })
         .select('id');
       enrolled += ins?.length || 0;
     }
-    if (trialSeq && (paid || age >= (TRIAL_DAYS + 1) * DAY)) {
-      await admin.from('marketing_enrollments').update({ status: paid ? 'stopped' : 'completed', stop_reason: paid ? 'platio paket' : 'kraj besplatnog perioda' })
+    if (trialSeq && age >= (TRIAL_DAYS + 1) * DAY) {
+      await admin.from('marketing_enrollments').update({ status: 'completed', stop_reason: 'kraj besplatnog perioda' })
         .eq('contact_id', contactId).eq('sequence_id', trialSeq).eq('status', 'active');
     }
-    // Firma koja je bila upit prestaje dobijati mejlove za upite.
+    // Firma koja je bila upit prestaje dobijati e-mailove za upite.
     const leadSeq = seqByAudience.get('lead');
     if (leadSeq) {
       await admin.from('marketing_enrollments').update({ status: 'stopped', stop_reason: 'registrovao firmu' })
@@ -222,15 +223,27 @@ export async function runMarketing(admin: SupabaseClient, opts: { actor: string 
     const stepRows = (steps || []) as StepRow[];
     const { data: enrollments } = await admin
       .from('marketing_enrollments')
-      .select('id, contact_id, started_at, marketing_contacts!inner(id, email, owner_name, company_name, city, status, legal_basis, unsubscribe_token)')
+      .select('id, contact_id, started_at, marketing_contacts!inner(id, business_id, email, owner_name, company_name, city, status, legal_basis, unsubscribe_token)')
       .eq('sequence_id', seq.id)
       .eq('status', 'active')
       .limit(500);
 
+    // Firme koje već imaju plaćen paket ne dobijaju podsjetnike za plaćanje.
+    const paidIds = new Set<string>();
+    if (seq.audience === 'trial') {
+      const ids = (enrollments || [])
+        .map((e) => ((Array.isArray(e.marketing_contacts) ? e.marketing_contacts[0] : e.marketing_contacts) as { business_id?: string | null } | null)?.business_id)
+        .filter((id): id is string => Boolean(id));
+      if (ids.length) {
+        const { data: bills } = await admin.from('businesses').select('id, billing_status, billing_provider, plan_until').in('id', ids);
+        for (const b of bills || []) if (hasPaidAccess(b, now)) paidIds.add(b.id);
+      }
+    }
+
     for (const e of enrollments || []) {
       if (budget <= 0) break;
       const c = (Array.isArray(e.marketing_contacts) ? e.marketing_contacts[0] : e.marketing_contacts) as {
-        id: string; email: string; owner_name: string | null; company_name: string | null; city: string | null; status: string; legal_basis: string; unsubscribe_token: string;
+        id: string; business_id: string | null; email: string; owner_name: string | null; company_name: string | null; city: string | null; status: string; legal_basis: string; unsubscribe_token: string;
       };
       if (!c) continue;
       if (!isSendable(c)) {
@@ -249,8 +262,13 @@ export async function runMarketing(admin: SupabaseClient, opts: { actor: string 
       if (!plan.send) continue;
       if (recentlyMailed(lastMail?.sent_at || lastMail?.created_at, now)) continue;
       const step = stepRows.find((x) => x.id === plan.send!.id)!;
+      if (seq.audience === 'trial' && isPaymentReminder(step) && c.business_id && paidIds.has(c.business_id)) {
+        const { error } = await admin.from('marketing_sends').insert({ kind: 'sequence', contact_id: c.id, sequence_id: seq.id, step_id: step.id, to_email: c.email, subject: step.subject, status: 'skipped', error: 'već izabrao paket' });
+        if (!error) result.skipped++;
+        continue;
+      }
 
-      // Zauzmi slanje: jedinstveni indeks (kontakt, korak) sprečava dupli mejl i kod istovremenih pokretanja.
+      // Zauzmi slanje: jedinstveni indeks (kontakt, korak) sprečava dupli e-mail i kod istovremenih pokretanja.
       const { data: claim, error: claimErr } = await admin
         .from('marketing_sends')
         .insert({ kind: 'sequence', contact_id: c.id, sequence_id: seq.id, step_id: step.id, to_email: c.email, subject: step.subject, status: 'sending', created_by: opts.actor })

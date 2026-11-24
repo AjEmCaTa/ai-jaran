@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
                     // mali razmak zbog Resend rate limita (2 zahtjeva u sekundi)
                     await new Promise((resolve) => setTimeout(resolve, 600));
 
-                    // Gost dobija mejl na jeziku na kojem je zakazao (bosanski ili engleski).
+                    // Gost dobija e-mail na jeziku na kojem je zakazao (bosanski ili engleski).
                     const en = body.lang === 'en';
                     const whenHtml = stayPlan
                         ? '<p style="font-size:14px;margin:0 0 16px 0;"><b>' + (en ? 'Stay' : 'Boravak') + ':</b> ' + h(en
@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
                         '<h2 style="color:#2563eb;margin:0 0 10px 0;font-size:20px;">' + (en ? 'Hello ' : 'Pozdrav ') + h(clientName) + '</h2>' +
                         '<p style="font-size:14px;margin:0 0 16px 0;">' + (en
                             ? (autoConfirm ? 'Thank you! Your booking is confirmed.' : 'Thank you! Your request has been sent and ' + h(partnerName) + ' will confirm it shortly. We will let you know by email.')
-                            : (autoConfirm ? 'Hvala ti na povjerenju! Termin je potvrđen.' : 'Hvala ti! Zahtjev za termin je poslan, a ' + h(partnerName) + ' će ga uskoro potvrditi. Javit ćemo ti mejlom.')) + '</p>' +
+                            : (autoConfirm ? 'Hvala ti na povjerenju! Termin je potvrđen.' : 'Hvala ti! Zahtjev za termin je poslan, a ' + h(partnerName) + ' će ga uskoro potvrditi. Javit ćemo ti e-mailom.')) + '</p>' +
                         '<p style="font-size:14px;margin:0 0 4px 0;"><b>' + (en ? 'Service' : 'Usluga') + ':</b> ' + h(partnerName) + ' - ' + h(packageName) + ' (' + h(en && price === 'Na upit' ? 'On request' : price) + ')</p>' +
                         whenHtml +
                         '<p style="font-size:14px;margin:0 0 16px 0;">' + (en

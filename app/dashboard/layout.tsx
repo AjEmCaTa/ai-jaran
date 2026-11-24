@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const drawerRef = useRef<HTMLElement>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Administrator (samo dozvoljeni mejlovi) dobije prečicu do Master panela; server to ponovo provjerava.
+  // Administrator (samo dozvoljeni e-mailovi) dobije prečicu do Master panela; server to ponovo provjerava.
   useEffect(() => {
     let alive = true;
     void (async () => {

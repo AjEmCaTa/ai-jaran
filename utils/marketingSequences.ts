@@ -20,12 +20,12 @@ export type DefaultSequence = { key: string; name: string; description: string; 
 export const AUDIENCE_INFO: Record<SequenceAudience, { label: string; who: string; reason: string }> = {
   trial: {
     label: 'Nove firme (30 dana besplatno)',
-    who: 'Svaka firma koja se registruje na POSLO ONE. Niz staje kad firma plati paket ili kad prođe 30 dana.',
+    who: 'Svaka firma koja se registruje na POSLO ONE. Savjeti idu svima prvih 30 dana; podsjetnike za plaćanje dobija samo firma koja još nije izabrala paket.',
     reason: 'ste registrovali firmu na POSLO ONE',
   },
   lead: {
     label: 'Upiti sa sajta',
-    who: 'Svako ko ostavi email u formi za upit na poslo.one. Niz staje čim registruje firmu.',
+    who: 'Svako ko ostavi e-mail u formi za upit na poslo.one. Niz staje čim registruje firmu.',
     reason: 'ste nam poslali upit na poslo.one',
   },
 };
@@ -88,7 +88,7 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         preheader: 'Izaberite paket da sve nastavi raditi bez prekida.',
         heading: 'Besplatni period se bliži kraju',
         body:
-          'Pozdrav {{ime}},\n\nza 5 dana ističe vaših 30 dana besplatnog korištenja.\n\nDa vam link, rezervacije i podsjetnici nastave raditi, izaberite paket:\n- **Starter 15 KM mjesečno:** online zakazivanje, obavijesti i panel za termine\n- **Pro 50 KM mjesečno:** sve iz Startera, plus sami uređujete usluge, cijene, radno vrijeme i godišnji odmor\n\nPlaćanje je karticom, a otkazati možete u bilo kojem trenutku.',
+          'Pozdrav {{ime}},\n\nza 5 dana ističe vaših 30 dana besplatnog korištenja.\n\nDa vam link, rezervacije i podsjetnici nastave raditi, izaberite paket:\n- **Starter 15 KM mjesečno:** online zakazivanje, obavijesti i panel za termine\n- **Pro 50 KM mjesečno:** sve iz Startera, plus sami uređujete usluge, cijene, radno vrijeme i godišnji odmor\n\nPlaćate karticom, Apple Payom ili Google Payom, a otkazati možete u bilo kojem trenutku. Ako vam plaćanje karticom ne odgovara, javite nam se na 060 30 50 153 ili info@poslo.one i naći ćemo rješenje.',
         cta_label: 'Izaberi paket',
         cta_url: 'https://poslo.one/dashboard/paket',
         note: 'Uključite tek kad plaćanje karticom pređe na pravi (Live) način.',
@@ -117,7 +117,7 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         delay_days: 1,
         enabled: true,
         subject: 'Pogledajte kako POSLO ONE izgleda u praksi',
-        preheader: 'Kratak demo: od linka do potvrđenog termina.',
+        preheader: 'Kratak demo: kako klijent sam zakaže termin.',
         heading: 'Hvala na upitu',
         body:
           'Pozdrav {{ime}},\n\nhvala što ste se javili. Dok vam se ne javimo lično, pogledajte kako izgleda kad klijent zakazuje sam:\n- Otvori vaš link i vidi slobodne termine\n- Izabere uslugu i vrijeme\n- Vi dobijete obavijest, a klijent podsjetnik dan prije\n\nBez poziva, bez poruka i bez sveske.',
@@ -127,11 +127,11 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
       {
         delay_days: 3,
         enabled: true,
-        subject: 'Probajte 30 dana besplatno, bez kartice',
+        subject: 'Probajte 30 dana besplatno',
         preheader: 'Registracija traje minut i panel se odmah otvori.',
         heading: 'Panel za jedan minut',
         body:
-          'Pozdrav {{ime}},\n\nnajbrže ćete vidjeti da li vam POSLO ONE odgovara ako ga probate:\n- Registracija traje jedan minut\n- Panel se otvori odmah\n- Prvih 30 dana je besplatno, bez kartice\n\nAko negdje zapne, nazovite 060 30 50 153 i pomoći ćemo vam.',
+          'Pozdrav {{ime}},\n\nnajbrže ćete vidjeti da li vam POSLO ONE odgovara ako ga probate:\n- Registracija traje jedan minut\n- Panel se otvori odmah\n- Prvih 30 dana je besplatno\n\nAko vam plaćanje karticom ne odgovara, javite nam se na 060 30 50 153 ili info@poslo.one i naći ćemo rješenje.',
         cta_label: 'Registruj firmu',
         cta_url: 'https://poslo.one/registracija',
       },
@@ -142,7 +142,7 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
         preheader: 'Odgovorite na ovaj e-mail, javljamo se isti dan.',
         heading: 'Tu smo ako treba pomoć',
         body:
-          'Pozdrav {{ime}},\n\nsamo da provjerim da li vam je nešto ostalo nejasno. Najčešća pitanja su:\n- Koliko košta? Starter je 15 KM, a Pro 50 KM mjesečno, uz 30 dana besplatno.\n- Moraju li klijenti instalirati aplikaciju? Ne, zakazuju preko obične stranice.\n- Ko postavlja sve? Možete sami za par minuta, ili mi umjesto vas.\n\nOdgovorite na ovaj e-mail ili nazovite 060 30 50 153.',
+          'Pozdrav {{ime}},\n\nsamo da provjerim da li vam je nešto ostalo nejasno. Najčešća pitanja su:\n- Koliko košta? Starter je 15 KM, a Pro 50 KM mjesečno, uz 30 dana besplatno.\n- Moraju li klijenti instalirati aplikaciju? Ne, zakazuju preko obične stranice.\n- Ko postavlja sve? Vi sami, za par minuta: upišete usluge, cijene i radno vrijeme.\n\nOdgovorite na ovaj e-mail ili nazovite 060 30 50 153.',
         cta_label: 'Registruj firmu',
         cta_url: 'https://poslo.one/registracija',
       },
@@ -160,3 +160,6 @@ export const DEFAULT_SEQUENCES: DefaultSequence[] = [
     ],
   },
 ];
+
+// Koraci niza za nove firme od 20. dana su podsjetnici za plaćanje (dan 25 i 29).
+export const isPaymentReminder = (step: { delay_days: number }) => step.delay_days >= 20;

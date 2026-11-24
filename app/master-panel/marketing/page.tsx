@@ -13,7 +13,7 @@ type Import = { id: string; file_name: string | null; legal_basis: string; sourc
 
 const STEPS: { title: string; text: string; icon: IconName; href?: string; done?: boolean }[] = [
   { title: "Kontakti i baza", text: "Uvoz iz CSV-a, pravni osnov, segmenti po djelatnosti i gradu.", icon: "users", href: "/master-panel/marketing/kontakti", done: true },
-  { title: "Editor mejlova", text: "Mejlovi u POSLO ONE stilu, personalizacija i test slanje.", icon: "mail" },
+  { title: "Editor e-mailova", text: "E-mailovi u POSLO ONE stilu, personalizacija i test slanje.", icon: "mail" },
   { title: "Kampanje", text: "Odobravanje, zakazivanje, dnevni limit i zaštita od duplog slanja.", icon: "calendar" },
   { title: "Analitika", text: "Isporuka, otvaranja, klikovi, odjave i neispravne adrese.", icon: "trending" },
 ];
@@ -46,7 +46,7 @@ export default function MarketingOverview() {
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
       <PageHeader
         title="Marketing"
-        text="Kontakti potencijalnih i postojećih klijenata na jednom mjestu. Mejlovi idu samo kontaktima koji imaju osnov za to, a hladni kontakti su samo evidencija."
+        text="Kontakti potencijalnih i postojećih klijenata na jednom mjestu. E-mailovi idu samo kontaktima koji imaju osnov za to, a hladni kontakti su samo evidencija."
         actions={
           <Link href="/master-panel/marketing/kontakti" className={btnPrimary}>
             <Icon name="users" className="h-4 w-4" />
@@ -58,7 +58,7 @@ export default function MarketingOverview() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard label="Ukupno kontakata" value={stats?.total ?? "–"} />
-        <StatCard label="Mogu primati mejlove" value={stats?.sendable ?? "–"} tone="green" hint="Aktivni, s pristankom, korisnici ili upiti" />
+        <StatCard label="Mogu primati e-mailove" value={stats?.sendable ?? "–"} tone="green" hint="Aktivni, s pristankom, korisnici ili upiti" />
         <StatCard label="Hladni kontakti" value={stats?.cold ?? "–"} tone="gray" hint="Samo evidencija, bez slanja" />
         <StatCard label="Odjavljeni" value={stats?.unsubscribed ?? "–"} tone="amber" />
         <StatCard label="Neispravni ili spam" value={stats?.problematic ?? "–"} tone="red" />

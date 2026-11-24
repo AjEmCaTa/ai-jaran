@@ -1,14 +1,14 @@
 // Marketing kontakti: čiste funkcije (bez baze), koriste ih i server i preglednik.
-// Odvojeno od rezervacija; ovdje nema slanja mejlova.
+// Odvojeno od rezervacija; ovdje nema slanja e-mailova.
 
 export type LegalBasis = 'consent' | 'customer' | 'inquiry' | 'cold';
 export type ContactStatus = 'active' | 'unsubscribed' | 'bounced' | 'complained';
 
 export const LEGAL_BASES: { id: LegalBasis; label: string; hint: string; sendable: boolean }[] = [
-  { id: 'consent', label: 'Pristanak', hint: 'Kontakt je izričito pristao na mejlove (forma, lično, pismeno).', sendable: true },
+  { id: 'consent', label: 'Pristanak', hint: 'Kontakt je izričito pristao na e-mailove (forma, lično, pismeno).', sendable: true },
   { id: 'customer', label: 'Korisnik POSLO ONE', hint: 'Firma već koristi POSLO ONE.', sendable: true },
   { id: 'inquiry', label: 'Poslao upit', hint: 'Sam se javio i tražio informacije.', sendable: true },
-  { id: 'cold', label: 'Hladni kontakt', hint: 'Samo evidencija. Ovim kontaktima se ne šalju mejlovi.', sendable: false },
+  { id: 'cold', label: 'Hladni kontakt', hint: 'Samo evidencija. Ovim kontaktima se ne šalju e-mailovi.', sendable: false },
 ];
 
 export const CONTACT_STATUSES: { id: ContactStatus; label: string }[] = [

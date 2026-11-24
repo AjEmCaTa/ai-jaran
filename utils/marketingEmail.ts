@@ -57,18 +57,24 @@ export function safeUrl(url: string | null | undefined, siteUrl: string): string
 
 // Jednostavan zapis teksta: prazni red = novi pasus, "- " = stavka liste, **riječ** = podebljano.
 export function bodyToHtml(body: string): string {
-  const inline = (s: string) => escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong style="color:#0b0f1a">$1</strong>');
+  const inline = (s: string) => escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong style="color:#ffffff">$1</strong>');
   const blocks = body.replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
   return blocks
     .map((block) => {
-      const lines = block.split('\n');
+      const all = block.split('\n');
+      // Pasus koji počinje rečenicom pa nastavlja listom ("uradite ova tri koraka:\n- ...") dijelimo na tekst i listu.
+      const firstItem = all.findIndex((l) => /^\s*[-•]\s+/.test(l));
+      if (firstItem > 0 && all.slice(firstItem).every((l) => /^\s*[-•]\s+/.test(l))) {
+        return bodyToHtml(all.slice(0, firstItem).join('\n')).replace('margin:0 0 18px', 'margin:0 0 10px') + bodyToHtml(all.slice(firstItem).join('\n'));
+      }
+      const lines = all;
       if (lines.every((l) => /^\s*[-•]\s+/.test(l))) {
         const items = lines
-          .map((l) => `<tr><td style="padding:0 10px 8px 0;vertical-align:top;color:#2563eb;font-size:16px;line-height:24px">&#8226;</td><td style="padding:0 0 8px;font-size:16px;line-height:24px;color:#374151">${inline(l.replace(/^\s*[-•]\s+/, ''))}</td></tr>`)
+          .map((l) => `<tr><td style="padding:0 10px 8px 0;vertical-align:top;color:#60a5fa;font-size:16px;line-height:24px">&#8226;</td><td style="padding:0 0 8px;font-size:16px;line-height:24px;color:#cbd5e1">${inline(l.replace(/^\s*[-•]\s+/, ''))}</td></tr>`)
           .join('');
         return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 18px">${items}</table>`;
       }
-      return `<p style="margin:0 0 18px;font-size:16px;line-height:26px;color:#374151">${lines.map(inline).join('<br>')}</p>`;
+      return `<p style="margin:0 0 18px;font-size:16px;line-height:26px;color:#cbd5e1">${lines.map(inline).join('<br>')}</p>`;
     })
     .join('');
 }
@@ -87,25 +93,26 @@ export function renderEmail(content: EmailContent, recipient: EmailRecipient, ct
   const ctaLabel = p(content.cta_label);
   const site = ctx.siteUrl.replace(/\/$/, '');
 
+  // Isti izgled kao poslo.one: tamna pozadina, plavo-ljubičasti akcenti, logo kao u meniju sajta.
   const html = `<!doctype html>
-<html lang="bs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${escapeHtml(subject)}</title></head>
-<body style="margin:0;padding:0;background:#f3f5f9;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<html lang="bs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${escapeHtml(subject)}</title></head>
+<body style="margin:0;padding:0;background:#030712;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(preheader)}&#8203;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f5f9"><tr><td align="center" style="padding:28px 14px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#030712" style="background:#030712;background-image:radial-gradient(ellipse at top left,rgba(59,130,246,0.18),transparent 55%),radial-gradient(ellipse at top right,rgba(139,92,246,0.16),transparent 55%)"><tr><td align="center" style="padding:30px 14px 36px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td style="padding:0 6px 18px"><a href="${site}" style="text-decoration:none"><img src="${site}/poslo.one.png" width="40" height="40" alt="POSLO ONE" style="display:inline-block;vertical-align:middle;border-radius:10px"><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:15px;font-weight:800;letter-spacing:1.5px;color:#0b0f1a">POSLO ONE</span></a></td></tr>
-<tr><td style="background:#ffffff;border-radius:18px;border:1px solid #e6e9f0;overflow:hidden">
-<div style="height:5px;background:linear-gradient(90deg,#3b82f6,#8b5cf6)"></div>
-<div style="padding:34px 32px 30px">
-${heading ? `<h1 style="margin:0 0 20px;font-size:26px;line-height:32px;font-weight:800;color:#0b0f1a;letter-spacing:-0.4px">${escapeHtml(heading)}</h1>` : ''}
+<tr><td style="padding:0 4px 20px"><a href="${site}" style="text-decoration:none"><img src="${site}/poslo.one.png" width="44" height="44" alt="POSLO ONE" style="display:inline-block;vertical-align:middle;border:0"><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:20px;font-weight:800;letter-spacing:-0.3px;color:#ffffff">POSLO ONE</span></a></td></tr>
+<tr><td bgcolor="#0b1120" style="background:#0b1120;border-radius:20px;border:1px solid #1e2638;overflow:hidden">
+<div style="height:4px;background:#3b82f6;background-image:linear-gradient(90deg,#3b82f6,#8b5cf6)"></div>
+<div style="padding:34px 30px 30px">
+${heading ? `<h1 style="margin:0 0 20px;font-size:26px;line-height:32px;font-weight:800;color:#ffffff;letter-spacing:-0.4px">${escapeHtml(heading)}</h1>` : ''}
 ${bodyToHtml(body)}
-${ctaUrl && ctaLabel ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 6px"><tr><td style="border-radius:12px;background:#2563eb"><a href="${escapeHtml(ctaUrl)}" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px">${escapeHtml(ctaLabel)}</a></td></tr></table>` : ''}
-<p style="margin:26px 0 0;font-size:15px;line-height:22px;color:#374151">Pozdrav,<br><strong style="color:#0b0f1a">POSLO ONE tim</strong></p>
+${ctaUrl && ctaLabel ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:10px 0 6px"><tr><td bgcolor="#2563eb" style="border-radius:12px;background:#2563eb"><a href="${escapeHtml(ctaUrl)}" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px">${escapeHtml(ctaLabel)} &rarr;</a></td></tr></table>` : ''}
+<p style="margin:28px 0 0;font-size:15px;line-height:22px;color:#cbd5e1">Pozdrav,<br><strong style="color:#ffffff">POSLO ONE tim</strong></p>
 </div></td></tr>
-<tr><td style="padding:20px 10px 0;font-size:12px;line-height:19px;color:#8a93a6;text-align:center">
+<tr><td style="padding:22px 10px 0;font-size:12px;line-height:19px;color:#64748b;text-align:center">
 Ovaj e-mail ste dobili jer ${escapeHtml(ctx.reason)}.<br>
-POSLO ONE &middot; ${escapeHtml(ctx.address)} &middot; <a href="mailto:info@poslo.one" style="color:#8a93a6">info@poslo.one</a><br>
-<a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:#6b7280;text-decoration:underline">Odjavi se od ovih e-mailova</a>
+POSLO ONE &middot; ${escapeHtml(ctx.address)} &middot; <a href="mailto:info@poslo.one" style="color:#94a3b8">info@poslo.one</a><br>
+<a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:#94a3b8;text-decoration:underline">Odjavi se od ovih e-mailova</a>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;
@@ -143,7 +150,7 @@ export function personalPitch(r: EmailRecipient & { category?: string | null }):
     '',
     `Ideja je jednostavna: ${firma || 'vaši klijenti'} ${firma ? 'dobije' : 'dobiju'} link (i QR kod za vrata) preko kojeg klijenti sami vide slobodne termine i zakažu, a vi dobijete obavijest. Manje poziva i poruka, nema zaboravljenih termina jer klijent dobije podsjetnik dan prije.`,
     '',
-    'Prvih 30 dana je besplatno, a ako želite, postavim vam sve za 10 minuta preko telefona.',
+    'Prvih 30 dana je besplatno, a sve postavite sami za par minuta. Ako negdje zapne, tu sam na telefonu.',
     '',
     'Možete pogledati ovdje: https://poslo.one',
     '',

@@ -27,7 +27,7 @@ test('HTML: lista, podebljano, dugme, podnožje s razlogom, adresom i odjavom', 
     { owner_name: 'Ana' },
     ctx
   );
-  assert.ok(html.includes('<strong style="color:#0b0f1a">važno</strong>'));
+  assert.ok(html.includes('<strong style="color:#ffffff">važno</strong>'));
   assert.ok(html.includes('jedan') && html.includes('dva'));
   assert.ok(html.includes('href="https://poslo.one/dashboard"'));
   assert.ok(html.includes('ste registrovali firmu na POSLO ONE'));

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_SEQUENCES, AUDIENCE_INFO, isPaymentReminder, type SequenceAudience } from './marketingSequences';
 import { renderEmail, type EmailContent, type EmailRecipient } from './marketingEmail';
-import { planNext, recentlyMailed, startOfLocalDay } from './marketingPlan';
+import { planNext, recentlyMailed, startOfLocalDay, isSendingHour, SEND_FROM_HOUR, SEND_TO_HOUR } from './marketingPlan';
 import { normalizeCategory, isSendable, normalizeEmail, isValidEmail } from './marketingContacts';
 import { categoryOf } from './catalog';
 import { hasPaidAccess } from './billingAccess';
@@ -211,6 +211,10 @@ export async function runMarketing(admin: SupabaseClient, opts: { actor: string 
   }
   if (left === 0) {
     result.note = 'Dnevni limit je potrošen.';
+    return result;
+  }
+  if (!isSendingHour(now)) {
+    result.note = `E-mailovi se šalju između ${SEND_FROM_HOUR} i ${SEND_TO_HOUR} h; nastavlja se ujutro.`;
     return result;
   }
 

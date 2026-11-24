@@ -163,7 +163,7 @@ export default function SequencesPage() {
           <div>
             <p className="text-sm font-semibold text-white">{s.sending_enabled ? "Slanje je uključeno" : "Slanje je isključeno"}</p>
             <p className="mt-1 text-xs leading-relaxed text-slate-400">
-              {s.sending_enabled ? "Odobreni nizovi se šalju automatski, nekoliko puta dnevno." : "Dok je isključeno, sistem samo priprema kontakte i nizove, a e-mailovi se ne šalju."}
+              {s.sending_enabled ? "Odobreni nizovi se šalju automatski, nekoliko puta dnevno, samo između 9 i 20 h." : "Dok je isključeno, sistem samo priprema kontakte i nizove, a e-mailovi se ne šalju."}
             </p>
             <p className="mt-2 text-xs text-slate-500">Danas: {data.sentToday} od {s.daily_limit}</p>
           </div>

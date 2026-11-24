@@ -15,3 +15,10 @@ test('tekstovi e-mailova ne obećavaju nešto što ne radimo', () => {
   assert.doesNotMatch(all, /\bmejl/i);
   assert.doesNotMatch(all, /potvrđen/i);
 });
+
+import { isSendingHour } from '../utils/marketingPlan.ts';
+test('marketing e-mailovi idu samo od 9 do 20 h po bosanskom vremenu', () => {
+  assert.equal(isSendingHour(Date.parse('2026-11-24T00:30:00Z')), false); // 01:30 kod nas
+  assert.equal(isSendingHour(Date.parse('2026-11-24T09:00:00Z')), true); // 10:00
+  assert.equal(isSendingHour(Date.parse('2026-11-24T19:30:00Z')), false); // 20:30
+});

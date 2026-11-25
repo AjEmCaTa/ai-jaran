@@ -61,12 +61,12 @@ export async function POST(request: NextRequest) {
 
   let businessId: string | null = null;
   try {
-    for (let attempt = 0; attempt < 3 && !businessId; attempt += 1) {
+    for (let attempt = 0; attempt < 20 && !businessId; attempt += 1) {
       const { data, error } = await admin
         .from('businesses')
         .insert({
           name: input.businessName,
-          slug: buildSlug(input.businessName),
+          slug: buildSlug(input.businessName, attempt),
           category: input.category,
           city: input.city,
           phone: input.phone,

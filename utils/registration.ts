@@ -65,8 +65,16 @@ export function parseRegistration(body: unknown): RegistrationResult {
   return { ok: true, value: { ownerName, businessName, email, password, phone, city, category } };
 }
 
-// Jedinstveni slug: osnova + nasumični sufiks (kao i ranije), s ponovnim pokušajem kod kolizije.
-export function buildSlug(businessName: string, random: () => number = Math.random) {
-  const base = slugify(businessName).slice(0, 60) || 'biznis';
-  return base + '-' + Math.floor(random() * 10000);
+// Link firme je čisti naziv (npr. "apartman-stone-mostar"), bez nasumičnih brojeva.
+// Samo ako je isti naziv već zauzet, dodaje se redni broj: "-2", "-3"...
+// Linkovi koji već pripadaju djelatnostima (utils/catalog.ts) ili stranicama ne smiju pripasti firmi.
+export const RESERVED_SLUGS = new Set([
+  'beauty-saloni', 'dubinsko-ciscenje', 'solarni-sistemi', 'agencije-za-ciscenje', 'vile-apartmani', 'ostale-usluge',
+  'biznis', 'katalog',
+]);
+
+export function buildSlug(businessName: string, attempt = 0) {
+  const base = slugify(businessName).slice(0, 60).replace(/-$/, '') || 'biznis';
+  const step = RESERVED_SLUGS.has(base) ? attempt + 1 : attempt;
+  return step > 0 ? `${base}-${step + 1}` : base;
 }

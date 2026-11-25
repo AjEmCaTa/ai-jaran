@@ -16,6 +16,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false, // ne otkriva da je sajt rađen u Next.js
+  // Stari linkovi firmi (prije skraćivanja) i dalje vode na istu firmu.
+  async redirects() {
+    return [
+      { source: "/katalog/apartman-stone-mostar-2629", destination: "/katalog/apartman-stone-mostar", permanent: true },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

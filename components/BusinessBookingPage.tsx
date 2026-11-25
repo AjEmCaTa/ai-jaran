@@ -147,7 +147,7 @@ const EMPTY_PROFILE: BusinessProfile = {
   work_start: '', work_end: '', work_days: [], closed_dates: [], logo_url: '', cover_url: '',
 };
 
-export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { slug: string; backHref?: string }) {
+export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }: { slug: string; backHref?: string }) {
   const BUSINESS_SLUG = slug;
   const storageKey = slug === 'dubinsko-catic' ? 'poslo_one_catic_reservations' : `poslo_one_reservations_${slug}`;
   const router = useRouter();

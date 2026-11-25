@@ -409,7 +409,7 @@ export default function DashboardPage() {
 
   // Pozdrav koristi profiles.name, a ako ga nema naziv firme; nikad e-mail.
   const greetingName = ownerName && !ownerName.includes('@') ? ownerName.split(/\s+/)[0] : business.name;
-  const defaultLink = business.slug && typeof window !== 'undefined' ? `${window.location.origin}/katalog/${business.slug}` : '';
+  const defaultLink = business.slug ? `https://poslo.one/katalog/${business.slug}` : '';
   const effectiveLink = bookingLink || defaultLink;
   const next = data.upcoming[0];
   const chartValues = data.days.map((d) => (chartMode === 'bookings' ? d.count : d.revenue));

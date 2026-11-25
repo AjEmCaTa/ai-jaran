@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSlug, parseRegistration, slugify } from '../utils/registration.ts';
+import { buildSlug, parseRegistration, slugify, RESERVED_SLUGS } from '../utils/registration.ts';
+import { CATALOG_CATEGORIES } from '../utils/catalog.ts';
 
 const valid = {
   ownerName: 'Ana Anić',
@@ -52,7 +53,15 @@ test('opcionalna polja mogu biti prazna', () => {
   if (r.ok) assert.deepEqual([r.value.phone, r.value.city, r.value.category], [null, null, null]);
 });
 
-test('slug: dijakritici i sufiks', () => {
+test('slug: dijakritici, bez nasumičnog broja', () => {
   assert.equal(slugify('Čišćenje & Šišanje Đuro'), 'ciscenje-sisanje-djuro');
-  assert.equal(buildSlug('Salon Ana', () => 0.5), 'salon-ana-5000');
+  assert.equal(buildSlug('Salon Ana'), 'salon-ana');
+  assert.equal(buildSlug('Apartman Stone Mostar'), 'apartman-stone-mostar');
+  assert.equal(buildSlug('Salon Ana', 1), 'salon-ana-2');
+  assert.equal(buildSlug('!!!'), 'biznis-2');
+  assert.equal(buildSlug('Ostale usluge'), 'ostale-usluge-2');
+});
+
+test('slug: firma nikad ne dobije link djelatnosti', () => {
+  for (const c of CATALOG_CATEGORIES) assert.ok(RESERVED_SLUGS.has(c.slug), c.slug);
 });

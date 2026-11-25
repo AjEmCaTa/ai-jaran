@@ -37,7 +37,7 @@ const TEXT = {
     qTitle: 'Imate pitanje?', qText: 'Klijenti mogu poslati i upit, bez rezervacije termina.', qSent: 'Upit je poslan. U pravoj stranici bi ga firma odmah vidjela u svom panelu.',
     qMessage: 'Kako vam možemo pomoći?', qSend: 'Pošalji upit',
     ctaTitle: 'Ovakva stranica za vašu firmu', ctaText: '30 dana besplatno. Upišite usluge i cijene i stranica je spremna za par minuta.', ctaStart: 'Probaj 30 dana besplatno', ctaMore: 'Saznaj više',
-    doneTitle: 'Termin je zakazan', doneText: 'U pravoj stranici firma bi odmah dobila obavijest, a klijent potvrdu na email.', service: 'Usluga', slot: 'Termin', at: 'u',
+    doneTitle: 'Termin je zakazan', doneText: 'U pravoj stranici firma bi odmah dobila obavijest, a klijent potvrdu na e-mail.', service: 'Usluga', slot: 'Termin', at: 'u',
     again: 'Probaj ponovo', wantForMine: 'Želim ovakvu stranicu za svoju firmu',
   },
   en: {

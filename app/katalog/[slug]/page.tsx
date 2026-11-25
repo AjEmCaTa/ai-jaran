@@ -57,7 +57,7 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
 
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-32">
         <Link
-          href="/katalog"
+          href="/#djelatnosti"
           className="mb-8 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0f19] px-4 py-2.5 text-xs font-semibold text-gray-400 shadow-sm transition-colors hover:text-blue-400"
         >
           {t.back}
@@ -154,7 +154,7 @@ function EmptyCategory() {
         <Link href="/registracija" className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-500">
           {t.add}
         </Link>
-        <Link href="/katalog" className="rounded-xl border border-white/10 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5">
+        <Link href="/#djelatnosti" className="rounded-xl border border-white/10 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5">
           {t.backCatalog}
         </Link>
       </div>

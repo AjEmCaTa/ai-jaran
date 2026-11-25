@@ -12,7 +12,7 @@ const icons: IconName[] = ["link", "calendar", "bell", "clock"];
 const ITEMS_EN: FeatureItem[] = [
   {
     title: "You get your own booking page",
-    desc: "We add your services, prices and working hours. You get a link and a QR code to put on Instagram, WhatsApp, Google or your shop door.",
+    desc: "Enter your services, prices and working hours in a few minutes. You get a link and a QR code to put on Instagram, WhatsApp, Google or your shop door.",
   },
   {
     title: "The client picks a time",
@@ -20,7 +20,7 @@ const ITEMS_EN: FeatureItem[] = [
   },
   {
     title: "You get notified right away",
-    desc: "A new request arrives by email and on your phone. Confirm it or suggest another time with one tap, and the client gets an email automatically.",
+    desc: "A new booking arrives by email and on your phone and is saved right away. The client gets a confirmation email automatically.",
   },
   {
     title: "Reminders and fair cancellation",
@@ -31,7 +31,7 @@ const ITEMS_EN: FeatureItem[] = [
 const ITEMS_BS: FeatureItem[] = [
   {
     title: "Dobiješ svoju stranicu za zakazivanje",
-    desc: "Unesemo tvoje usluge, cijene i radno vrijeme. Dobiješ link i QR kod koji staviš na Instagram, WhatsApp, Google ili vrata radnje.",
+    desc: "Upišeš svoje usluge, cijene i radno vrijeme za par minuta. Dobiješ link i QR kod koji staviš na Instagram, WhatsApp, Google ili vrata radnje.",
   },
   {
     title: "Klijent sam izabere termin",
@@ -39,7 +39,7 @@ const ITEMS_BS: FeatureItem[] = [
   },
   {
     title: "Ti odmah dobiješ obavijest",
-    desc: "Novi zahtjev stiže na email i telefon. Potvrdiš ili predložiš drugi termin jednim klikom, a klijent automatski dobije mail.",
+    desc: "Nova rezervacija stiže na e-mail i telefon i odmah je upisana. Klijent automatski dobije e-mail s potvrdom.",
   },
   {
     title: "Podsjetnik i pošteno otkazivanje",
@@ -48,8 +48,8 @@ const ITEMS_BS: FeatureItem[] = [
 ];
 
 const TEXT = {
-  bs: { items: ITEMS_BS, how: "Kako", works: "radi?", sub: "Četiri koraka, a prvi za tebe uradimo mi." },
-  en: { items: ITEMS_EN, how: "How does it", works: "work?", sub: "Four steps, and we do the first one for you." },
+  bs: { items: ITEMS_BS, how: "Kako", works: "radi?", sub: "Četiri koraka, i sve radi samo." },
+  en: { items: ITEMS_EN, how: "How does it", works: "work?", sub: "Four steps, and everything runs on its own." },
 };
 
 export default function Features() {

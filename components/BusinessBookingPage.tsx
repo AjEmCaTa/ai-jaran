@@ -33,6 +33,7 @@ function isUpcomingActive(res: { status?: string; reservation_date: string; dura
 const DAY_EN: Record<string, string> = { pon: 'Mon', uto: 'Tue', sri: 'Wed', cet: 'Thu', čet: 'Thu', pet: 'Fri', sub: 'Sat', ned: 'Sun' };
 const dayLabel = (day: string, en: boolean) => (en ? DAY_EN[day.trim().toLocaleLowerCase('bs').slice(0, 3)] || day : day);
 import { PARTNER_LOGOS } from '../utils/partnerLogos';
+import InstallButton from './InstallButton';
 
 interface ServicePackage {
   id: string;
@@ -931,6 +932,10 @@ export default function BusinessBookingPage({ slug, backHref = '/katalog' }: { s
                 <span className="font-bold text-amber-400">{statusText(successModalData.status, lang)}</span>
               </div>
             </div>
+
+            <InstallButton
+              hint={lang === 'en' ? 'Add POSLO ONE to your home screen and book next time with one tap.' : 'Dodajte POSLO ONE na početni ekran i sljedeći put zakažite jednim dodirom.'}
+            />
 
             <button
               type="button"

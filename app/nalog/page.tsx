@@ -20,6 +20,7 @@ const TEXT = {
     createAccount: 'Kreiraj korisnički račun', login: 'Prijavi se', why: 'Vaš račun čuva rezervacije, pokazuje vaše zakazane termine i omogućava brže ponovno zakazivanje.',
     fullName: 'Ime i prezime', password: 'Lozinka', wait: 'Molimo sačekajte...', register: 'Registruj se', or: 'ili', google: 'Nastavi s Googleom',
     haveAccount: 'Već imate račun? Prijavite se', noAccount: 'Nemate račun? Registrujte se',
+    news: 'Želim primati novosti i ponude od POSLO ONE na e-mail. Odjava je moguća bilo kada.',
   },
   en: {
     loadError: 'Could not load your bookings.', confirmEmail: 'Check your email and confirm your account, then log in.', loginFailed: 'Login failed. Please try again.',
@@ -31,8 +32,11 @@ const TEXT = {
     createAccount: 'Create an account', login: 'Log in', why: 'Your account keeps your bookings, shows your appointments and makes booking again faster.',
     fullName: 'Full name', password: 'Password', wait: 'Please wait...', register: 'Sign up', or: 'or', google: 'Continue with Google',
     haveAccount: 'Already have an account? Log in', noAccount: "Don't have an account? Sign up",
+    news: 'I want to receive news and offers from POSLO ONE by email. You can unsubscribe anytime.',
   },
 };
+
+const NEWS_KEY = 'poslo_news_opt_in';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -80,6 +84,7 @@ export default function CustomerAuthPage() {
   const [loadingRes, setLoadingRes] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [newsOptIn, setNewsOptIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -103,6 +108,7 @@ export default function CustomerAuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) syncNewsOptIn(session);
       const next = getNextParam();
       if (session && next) {
         router.replace(next);
@@ -114,7 +120,21 @@ export default function CustomerAuthPage() {
     });
   }, [router]);
 
+  // Pristanak za novosti spremamo tek kad postoji sesija (i nakon Google prijave ili potvrde e-maila).
+  const syncNewsOptIn = (session: { access_token: string; user: { user_metadata?: Record<string, unknown> } }) => {
+    try {
+      const meta = session.user.user_metadata || {};
+      const wants = meta.news_opt_in === true || localStorage.getItem(NEWS_KEY) === '1';
+      if (wants && !meta.news_opt_in_saved) {
+        fetch('/api/nalog/novosti', { method: 'POST', headers: { Authorization: 'Bearer ' + session.access_token }, keepalive: true }).catch(() => {});
+      }
+      localStorage.removeItem(NEWS_KEY);
+    } catch {}
+  };
+
   const completeAuth = async () => {
+    const { data: { session: fresh } } = await supabase.auth.getSession();
+    if (fresh) syncNewsOptIn(fresh);
     const next = getNextParam();
     if (next) {
       router.replace(next);
@@ -136,7 +156,7 @@ export default function CustomerAuthPage() {
           email: email.trim(),
           password,
           options: {
-            data: { full_name: name.trim() },
+            data: { full_name: name.trim(), ...(newsOptIn ? { news_opt_in: true } : {}) },
             // Link za potvrdu e-maila vraća na ovu stranicu (i na termin koji je klijent zakazivao).
             emailRedirectTo: (() => {
               const u = new URL('/nalog', window.location.origin);
@@ -169,6 +189,9 @@ export default function CustomerAuthPage() {
     const redirectTo = new URL('/nalog', window.location.origin);
     const next = getNextParam();
     if (next) redirectTo.searchParams.set('next', next);
+    try {
+      if (isRegistering && newsOptIn) localStorage.setItem(NEWS_KEY, '1');
+    } catch {}
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: redirectTo.toString() },
@@ -335,6 +358,12 @@ export default function CustomerAuthPage() {
             <Link href="/zaboravljena-lozinka?nazad=/nalog" className="-mt-1 inline-block text-xs font-medium text-blue-400 hover:text-blue-300">
               {lang === 'en' ? 'Forgot password?' : 'Zaboravili ste lozinku?'}
             </Link>
+          )}
+          {isRegistering && (
+            <label className="flex cursor-pointer items-start gap-3 text-xs leading-relaxed text-slate-400">
+              <input type="checkbox" checked={newsOptIn} onChange={(e) => setNewsOptIn(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-blue-500" />
+              <span>{t.news}</span>
+            </label>
           )}
           <button disabled={loading} className={primaryBtn}>
             {loading ? t.wait : isRegistering ? t.register : t.login}

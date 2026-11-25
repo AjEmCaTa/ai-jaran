@@ -17,7 +17,8 @@ const TEXT = {
 };
 
 // U dashboardu je uvijek bosanski (alwaysBs).
-export default function InstallButton({ mobileOnly = true, alwaysBs = false }: { mobileOnly?: boolean; alwaysBs?: boolean }) {
+// hint: kratka rečenica iznad dugmeta; prikazuje se samo kad se prikazuje i dugme.
+export default function InstallButton({ mobileOnly = true, alwaysBs = false, hint }: { mobileOnly?: boolean; alwaysBs?: boolean; hint?: string }) {
   const { lang } = useLang();
   const en = !alwaysBs && lang === "en";
   const t = TEXT[en ? "en" : "bs"];
@@ -68,6 +69,7 @@ export default function InstallButton({ mobileOnly = true, alwaysBs = false }: {
   return (
     <>
       <div className={mobileOnly ? "md:hidden w-full" : "w-full"}>
+        {hint && <p className="mb-2 text-center text-xs leading-relaxed text-slate-400">{hint}</p>}
         <button
           onClick={handleClick}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-transparent px-4 text-sm font-semibold text-blue-300 transition-all hover:bg-blue-500/10 active:scale-95"

@@ -167,6 +167,12 @@ const PATHS = {
     </>
   ),
   download: <path d="M12 3v12M7 10l5 5 5-5M4 21h16" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </>
+  ),
   pointer: <path d="M12 19V5M5 12l7-7 7 7" />,
   party: <path d="M4 20l4.5-12L16 15.5zM14 4l.5 2M19 9l-2 .5M18 4l-2.5 2.5" />,
 } satisfies Record<string, ReactNode>;

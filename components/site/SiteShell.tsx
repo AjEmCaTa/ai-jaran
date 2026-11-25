@@ -14,7 +14,7 @@ import { GENERAL_SUBJECT, SiteContext } from './siteContext';
 // Meni, pozadina i kontakt žive ovdje, iznad stranica, pa se ne učitavaju ponovo pri svakom prelazu.
 
 const hasChrome = (path: string) =>
-  path === '/' || path === '/cjenovnik' || path === '/demo' || path === '/katalog' || path.startsWith('/katalog/');
+  path === '/' || path === '/cjenovnik' || path === '/demo' || path === '/za-firme' || path === '/o-nama' || path === '/faq' || path === '/katalog' || path.startsWith('/katalog/');
 
 export default function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/';

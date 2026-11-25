@@ -17,8 +17,8 @@ interface NavbarProps {
 }
 
 const TEXT = {
-  bs: { home: "Početna", about: "O nama", faq: "FAQ", pricing: "Cjenovnik", businesses: "Biznisi", panel: "Moj Panel", contact: "Kontakt", menu: "Otvori meni", close: "Zatvori meni" },
-  en: { home: "Home", about: "About", faq: "FAQ", pricing: "Pricing", businesses: "Businesses", panel: "My Panel", contact: "Contact", menu: "Open menu", close: "Close menu" },
+  bs: { home: "Početna", business: "Za firme", about: "O nama", faq: "FAQ", pricing: "Cjenovnik", businesses: "Biznisi", panel: "Moj Panel", contact: "Kontakt", menu: "Otvori meni", close: "Zatvori meni" },
+  en: { home: "Home", business: "For businesses", about: "About", faq: "FAQ", pricing: "Pricing", businesses: "Businesses", panel: "My Panel", contact: "Contact", menu: "Open menu", close: "Close menu" },
 };
 
 export function LangSwitch({ compact = false }: { compact?: boolean }) {
@@ -82,17 +82,6 @@ export default function Navbar(_props: NavbarProps) {
   const isPricing = pathname === "/cjenovnik";
   const isCatalog = pathname === "/katalog";
 
-  const handleSmoothScroll = (e: React.MouseEvent, targetId: string) => {
-    e.preventDefault();
-    if (!isHome) {
-      closeSoon();
-      router.push(`/${targetId}`);
-      return;
-    }
-    setIsOpen(false);
-    document.querySelector(targetId)?.scrollIntoView({ behavior: "smooth" });
-  };
-
   const handleLogoOrHomeClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!isHome) {
@@ -115,9 +104,10 @@ export default function Navbar(_props: NavbarProps) {
 
   const mobileItems = [
     { key: "home", href: "/", label: t.home, onClick: handleLogoOrHomeClick, show: true, accent: false },
-    { key: "about", href: "/#osnivac", label: t.about, onClick: (e: React.MouseEvent) => handleSmoothScroll(e, "#osnivac"), show: true, accent: false },
-    { key: "faq", href: "/#faq", label: t.faq, onClick: (e: React.MouseEvent) => handleSmoothScroll(e, "#faq"), show: true, accent: false },
+    { key: "business", href: "/za-firme", label: t.business, onClick: closeSoon, show: pathname !== "/za-firme", accent: false },
     { key: "pricing", href: "/cjenovnik", label: t.pricing, onClick: closeSoon, show: !isPricing, accent: false },
+    { key: "about", href: "/o-nama", label: t.about, onClick: closeSoon, show: pathname !== "/o-nama", accent: false },
+    { key: "faq", href: "/faq", label: t.faq, onClick: closeSoon, show: pathname !== "/faq", accent: false },
     { key: "biz", href: "/katalog", label: t.businesses, onClick: closeSoon, show: !isCatalog, accent: true },
   ].filter((i) => i.show);
 
@@ -141,18 +131,24 @@ export default function Navbar(_props: NavbarProps) {
         </Link>
 
         {/* DESKTOP NAVIGACIJA */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-5 lg:flex">
           <Link href="/" onClick={handleLogoOrHomeClick} className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white">
             {t.home}
           </Link>
-          <Link href="/#faq" onClick={(e) => handleSmoothScroll(e, "#faq")} className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white">
-            {t.faq}
+          <Link href="/za-firme" className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white">
+            {t.business}
           </Link>
           {!isPricing && (
             <Link href="/cjenovnik" className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white">
               {t.pricing}
             </Link>
           )}
+          <Link href="/o-nama" className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white">
+            {t.about}
+          </Link>
+          <Link href="/faq" className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white">
+            {t.faq}
+          </Link>
           {!isCatalog && (
             <Link href="/katalog" className="cursor-pointer rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-[14px] font-semibold leading-none text-emerald-400 transition-all duration-300 hover:border-emerald-400/40 hover:bg-emerald-500/10">
               {t.businesses}
@@ -172,7 +168,7 @@ export default function Navbar(_props: NavbarProps) {
         </div>
 
         {/* MOBILNO: jezik + meni */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
           <LangSwitch compact />
           <button
             onClick={() => setIsOpen((v) => !v)}
@@ -192,7 +188,7 @@ export default function Navbar(_props: NavbarProps) {
       {/* MOBILNI MENI (uvijek postoji, samo se glatko pojavi i nestane) */}
       <div
         aria-hidden={!isOpen}
-        className={`fixed inset-x-0 bottom-0 top-[82px] flex flex-col overflow-y-auto overscroll-contain bg-[#030712] px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 transition-[opacity,visibility] duration-300 ease-out md:hidden ${isOpen ? "visible opacity-100" : "pointer-events-none invisible opacity-0"}`}
+        className={`fixed inset-x-0 bottom-0 top-[82px] flex flex-col overflow-y-auto overscroll-contain bg-[#030712] px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 transition-[opacity,visibility] duration-300 ease-out lg:hidden ${isOpen ? "visible opacity-100" : "pointer-events-none invisible opacity-0"}`}
       >
         <div className="flex flex-col divide-y divide-white/[0.05]">
           {mobileItems.map((item, i) => (

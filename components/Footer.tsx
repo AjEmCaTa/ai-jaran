@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { useT } from "./site/LangProvider";
 
 const TEXT = {
-  bs: { rights: "Sva prava zadržana.", pricing: "Cjenovnik", businesses: "Biznisi", terms: "Uslovi korištenja", privacy: "Politika privatnosti", refund: "Povrat novca" },
-  en: { rights: "All rights reserved.", pricing: "Pricing", businesses: "Businesses", terms: "Terms of use", privacy: "Privacy policy", refund: "Refunds" },
+  bs: { rights: "Sva prava zadržana.", forBusiness: 'Za firme', about: 'O nama', faq: 'FAQ', pricing: "Cjenovnik", businesses: "Biznisi", terms: "Uslovi korištenja", privacy: "Politika privatnosti", refund: "Povrat novca" },
+  en: { rights: "All rights reserved.", forBusiness: 'For businesses', about: 'About', faq: 'FAQ', pricing: "Pricing", businesses: "Businesses", terms: "Terms of use", privacy: "Privacy policy", refund: "Refunds" },
 };
 
 interface FooterProps {
@@ -59,6 +59,16 @@ export default function Footer(_props: FooterProps) {
 
         {/* NAVIGACIONI LINKOVI */}
         <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
+
+          <Link href="/za-firme" className="py-2 transition-colors hover:text-white">
+            {t.forBusiness}
+          </Link>
+          <Link href="/o-nama" className="py-2 transition-colors hover:text-white">
+            {t.about}
+          </Link>
+          <Link href="/faq" className="py-2 transition-colors hover:text-white">
+            {t.faq}
+          </Link>
 
           {/* CJENOVNIK - sakrij na stranici cjenovnika */}
           {!isPricing && (

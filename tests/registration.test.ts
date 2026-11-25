@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSlug, parseRegistration, slugify, RESERVED_SLUGS } from '../utils/registration.ts';
-import { CATALOG_CATEGORIES } from '../utils/catalog.ts';
+import { CATALOG_CATEGORIES, categoryOf } from '../utils/catalog.ts';
 
 const valid = {
   ownerName: 'Ana Anić',
@@ -64,4 +64,15 @@ test('slug: dijakritici, bez nasumičnog broja', () => {
 
 test('slug: firma nikad ne dobije link djelatnosti', () => {
   for (const c of CATALOG_CATEGORIES) assert.ok(RESERVED_SLUGS.has(c.slug), c.slug);
+});
+
+test('djelatnosti: postojeće firme ostaju gdje su, nove se prepoznaju', () => {
+  assert.equal(categoryOf('dubinsko-ciscenje'), 'dubinsko-ciscenje');
+  assert.equal(categoryOf('vile-apartmani'), 'vile-apartmani');
+  assert.equal(categoryOf('Solarni sistemi i elektroinstalacije'), 'solarni-sistemi');
+  assert.equal(categoryOf('Teren za mali fudbal'), 'sport-i-rekreacija');
+  assert.equal(categoryOf('Fizioterapija'), 'zdravlje-i-terapije');
+  assert.equal(categoryOf('Transport i prevoz'), 'ostale-usluge');
+  assert.equal(categoryOf('Studentski servis'), 'ostale-usluge');
+  assert.equal(CATALOG_CATEGORIES.at(-1)?.slug, 'ostale-usluge');
 });

@@ -6,7 +6,7 @@ export type CatalogCategory = {
   title: string;
   short: string;
   description: string;
-  icon: 'car' | 'sun' | 'home' | 'sparkles' | 'scissors' | 'building';
+  icon: 'car' | 'sun' | 'home' | 'sparkles' | 'scissors' | 'building' | 'ball' | 'heart';
   image: string;
   keywords: string[];
   en: { title: string; short: string; description: string };
@@ -62,6 +62,26 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
     keywords: ['apartman', 'vila', 'smještaj', 'smjestaj', 'noćenj', 'nocenj', 'hostel', 'hotel'],
     en: { title: 'Villas & Apartments', short: 'Apartments / accommodation', description: 'Overnight stays and guest inquiries in one place.' },
+  },
+  {
+    slug: 'sport-i-rekreacija',
+    title: 'Sport i rekreacija',
+    short: 'Sportski tereni / rekreacija',
+    description: 'Mali fudbal, padel, tenis i drugi tereni: izaberi slobodan termin i rezerviši bez poziva.',
+    icon: 'ball',
+    image: 'https://images.unsplash.com/photo-1630420598913-44208d36f9af?auto=format&fit=crop&w=800&q=80',
+    keywords: ['teren', 'fudbal', 'futsal', 'padel', 'tenis', 'sportsk', 'rekreac', 'balon', 'kuglan', 'bowling', 'squash', 'košark', 'kosark'],
+    en: { title: 'Sports & Recreation', short: 'Sports courts / recreation', description: 'Five-a-side football, padel, tennis and other courts: pick a free slot and book without calling.' },
+  },
+  {
+    slug: 'zdravlje-i-terapije',
+    title: 'Zdravlje i terapije',
+    short: 'Fizioterapija / zdravlje',
+    description: 'Fizioterapija, stomatolozi, psiholozi, nutricionisti i terapije: zakazivanje pregleda i tretmana.',
+    icon: 'heart',
+    image: 'https://images.unsplash.com/photo-1768507423533-b87b62769758?auto=format&fit=crop&w=800&q=80',
+    keywords: ['fizio', 'terap', 'stomatol', 'zubar', 'dental', 'dentist', 'ordinac', 'klinik', 'psiholog', 'nutricion', 'logoped', 'ortoped', 'kiropr', 'rehabil'],
+    en: { title: 'Health & Therapy', short: 'Physiotherapy / health', description: 'Physiotherapy, dentists, psychologists, nutritionists and therapies: book check-ups and treatments.' },
   },
   {
     slug: 'ostale-usluge',

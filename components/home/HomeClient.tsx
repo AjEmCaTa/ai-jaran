@@ -16,6 +16,7 @@ const TEXT = {
     title2: "bez poziva i poruka",
     lead: "Pronađi firmu, izaberi uslugu i slobodan termin. Dobiješ potvrdu odmah i podsjetnik dan prije.",
     howTitle: "Kako radi",
+    video: "Kako klijent zakaže termin preko POSLO ONE",
     steps: [
       { icon: "search", title: "Pronađi firmu", text: "Frizer, salon, auto, apartman: sve na jednom mjestu." },
       { icon: "calendar", title: "Izaberi termin", text: "Vidiš slobodne termine i cijene, i zakažeš za par sekundi." },
@@ -33,6 +34,7 @@ const TEXT = {
     title2: "without calls or messages",
     lead: "Find a business, pick a service and a free slot. You get a confirmation right away and a reminder the day before.",
     howTitle: "How it works",
+    video: "How a client books through POSLO ONE",
     steps: [
       { icon: "search", title: "Find a business", text: "Hairdresser, salon, car care, apartment: all in one place." },
       { icon: "calendar", title: "Pick a time", text: "See free slots and prices, and book in seconds." },
@@ -83,27 +85,53 @@ export default function HomeClient({ businesses, retry }: { businesses: CatalogB
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-400 md:text-base">{t.lead}</p>
         </div>
 
-        {/* Firme i djelatnosti: isti katalog kao na stranici Biznisi */}
-        <CatalogBrowser businesses={businesses} retry={retry} homeLayout />
-
-        {/* Kako radi (za klijente) */}
-        <section className="mt-20">
-          <h2 className="mb-6 text-2xl font-bold tracking-tight text-white">{t.howTitle}</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {t.steps.map((s, i) => (
-              <div key={s.title} className="rounded-3xl border border-slate-800/80 bg-gray-900/40 p-6 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-300">
-                    <Icon name={s.icon as IconName} className="h-5 w-5" />
-                  </span>
-                  <span className="text-xs font-bold text-slate-500">0{i + 1}</span>
+        {/* Djelatnosti, pa video i kako radi, pa firme: isti katalog kao na stranici Biznisi */}
+        <CatalogBrowser
+          businesses={businesses}
+          retry={retry}
+          homeLayout
+          middle={
+            <section className="mt-20 grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+              <div className="order-2 lg:order-1">
+                <h2 className="mb-6 text-2xl font-bold tracking-tight text-white">{t.howTitle}</h2>
+                <div className="space-y-4">
+                  {t.steps.map((s, i) => (
+                    <div key={s.title} className="flex gap-4 rounded-3xl border border-slate-800/80 bg-gray-900/40 p-5 backdrop-blur-md">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-300">
+                        <Icon name={s.icon as IconName} className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <h3 className="text-base font-bold text-white">
+                          <span className="mr-2 text-xs font-bold text-slate-500">0{i + 1}</span>
+                          {s.title}
+                        </h3>
+                        <p className="mt-1 text-sm leading-relaxed text-slate-400">{s.text}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="mt-4 text-lg font-bold text-white">{s.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-400">{s.text}</p>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="order-1 flex justify-center lg:order-2">
+                <div className="relative w-full max-w-[300px] sm:max-w-[340px]">
+                  <div className="pointer-events-none absolute left-1/2 top-1/2 h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/[0.14] blur-[100px]" />
+                  <div className="relative overflow-hidden rounded-[30px] border border-blue-400/25 bg-[#020617] p-1.5 shadow-[0_0_80px_rgba(37,99,235,0.18)]">
+                    <video
+                      className="block aspect-[780/1220] w-full rounded-[24px] object-cover"
+                      src="/video/poslo-one-demo-v3.mp4"
+                      poster="/video/poslo-one-demo-v3-poster.jpg"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      aria-label={t.video}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          }
+        />
 
         {/* Za vlasnike firmi */}
         <section className="relative mt-16 overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-br from-blue-600/15 via-gray-900/60 to-violet-600/15 p-8 text-center shadow-2xl backdrop-blur-md md:p-12">

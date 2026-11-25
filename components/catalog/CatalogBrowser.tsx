@@ -15,25 +15,27 @@ const TEXT = {
   bs: {
     filter: 'Filtriraj lokaciju:', allCities: 'Svi gradovi', soon: 'Uskoro', one: '1 firma', many: (n: number) => `${n} firmi`,
     city: 'Grad:', view: 'Pregledaj →', firms: 'Firme', inCity: (c: string) => ` u gradu ${c}`, services: 'Usluge', book: 'Zakaži →',
-    search: 'Traži firmu, uslugu ili grad', noResults: 'Nema firme za tu pretragu. Pogledaj djelatnosti ispod.', categories: 'Djelatnosti',
+    search: 'Traži firmu, uslugu ili grad', noResults: 'Nema firme za tu pretragu. Pogledaj djelatnosti iznad.', categories: 'Djelatnosti',
   },
   en: {
     filter: 'Filter by location:', allCities: 'All cities', soon: 'Coming soon', one: '1 business', many: (n: number) => `${n} businesses`,
     city: 'City:', view: 'View →', firms: 'Businesses', inCity: (c: string) => ` in ${c}`, services: 'Services', book: 'Book →',
-    search: 'Search a business, service or city', noResults: 'No business matches that search. See the categories below.', categories: 'Categories',
+    search: 'Search a business, service or city', noResults: 'No business matches that search. See the categories above.', categories: 'Categories',
   },
 };
 
 // Isti katalog na stranici Biznisi i na početnoj: isti podaci, iste kategorije, isti linkovi.
-// homeLayout: firme (s pretragom) idu prve, pa djelatnosti; na /katalog ostaje stari raspored.
+// homeLayout: djelatnosti prve, zatim `middle` (npr. video), a firme s pretragom na kraju; na /katalog ostaje stari raspored.
 export default function CatalogBrowser({
   businesses: initial,
   retry = false,
   homeLayout = false,
+  middle,
 }: {
   businesses: CatalogBusiness[];
   retry?: boolean;
   homeLayout?: boolean;
+  middle?: React.ReactNode;
 }) {
   const [businesses, setBusinesses] = useState(initial);
   useEffect(() => {
@@ -176,8 +178,17 @@ export default function CatalogBrowser({
   if (homeLayout) {
     return (
       <div>
-        <div className="mx-auto max-w-2xl">
-          <label className="relative block">
+        {cities.length > 2 && <div className="mb-6">{cityFilter}</div>}
+        <h2 className="mb-6 text-2xl font-bold tracking-tight text-white">{t.categories}</h2>
+        {categoryCards}
+
+        {middle}
+
+        <div id="firme" className="scroll-mt-28 mt-16">
+          <h2 className="text-2xl font-bold tracking-tight text-white">
+            {t.firms}{selectedCity !== ALL ? t.inCity(selectedCity) : ''}
+          </h2>
+          <label className="relative mt-5 block max-w-xl">
             <span className="sr-only">{t.search}</span>
             <Icon name="search" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
             <input
@@ -185,22 +196,10 @@ export default function CatalogBrowser({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.search}
-              className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.04] pl-12 pr-4 text-base text-white placeholder-slate-500 shadow-xl backdrop-blur transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] pl-12 pr-4 text-base text-white placeholder-slate-500 backdrop-blur transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </label>
-          {cities.length > 2 && <div className="mt-4">{cityFilter}</div>}
-        </div>
-
-        <div id="firme" className="scroll-mt-28 mt-10">
-          <h2 className="text-2xl font-bold tracking-tight text-white">
-            {t.firms}{selectedCity !== ALL ? t.inCity(selectedCity) : ''}
-          </h2>
           {searched.length > 0 ? firmList(searched) : <p className="mt-4 text-sm text-slate-400">{t.noResults}</p>}
-        </div>
-
-        <div className="mt-16">
-          <h2 className="mb-6 text-2xl font-bold tracking-tight text-white">{t.categories}</h2>
-          {categoryCards}
         </div>
       </div>
     );

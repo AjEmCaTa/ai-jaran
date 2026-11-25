@@ -80,7 +80,6 @@ export default function Navbar(_props: NavbarProps) {
 
   const isHome = pathname === "/";
   const isPricing = pathname === "/cjenovnik";
-  const isCatalog = pathname === "/katalog";
 
   const handleLogoOrHomeClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -108,7 +107,6 @@ export default function Navbar(_props: NavbarProps) {
     { key: "pricing", href: "/cjenovnik", label: t.pricing, onClick: closeSoon, show: !isPricing, accent: false },
     { key: "about", href: "/o-nama", label: t.about, onClick: closeSoon, show: pathname !== "/o-nama", accent: false },
     { key: "faq", href: "/faq", label: t.faq, onClick: closeSoon, show: pathname !== "/faq", accent: false },
-    { key: "biz", href: "/katalog", label: t.businesses, onClick: closeSoon, show: !isCatalog, accent: true },
   ].filter((i) => i.show);
 
   return (
@@ -149,11 +147,6 @@ export default function Navbar(_props: NavbarProps) {
           <Link href="/faq" className="cursor-pointer text-[14px] font-medium leading-none text-slate-400 transition-colors duration-200 hover:text-white">
             {t.faq}
           </Link>
-          {!isCatalog && (
-            <Link href="/katalog" className="cursor-pointer rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-2 text-[14px] font-semibold leading-none text-emerald-400 transition-all duration-300 hover:border-emerald-400/40 hover:bg-emerald-500/10">
-              {t.businesses}
-            </Link>
-          )}
           <Link href="/dashboard" className="cursor-pointer rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-[14px] font-semibold leading-none text-blue-400 transition-all duration-300 hover:bg-blue-500/20">
             {t.panel}
           </Link>

@@ -179,7 +179,7 @@ export default function CatalogBrowser({
     return (
       <div>
         {cities.length > 2 && <div className="mb-6">{cityFilter}</div>}
-        <h2 className="mb-6 text-2xl font-bold tracking-tight text-white">{t.categories}</h2>
+        <h2 id="djelatnosti" className="mb-6 scroll-mt-28 text-2xl font-bold tracking-tight text-white">{t.categories}</h2>
         {categoryCards}
 
         {middle}

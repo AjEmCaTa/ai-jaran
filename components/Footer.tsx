@@ -22,7 +22,6 @@ export default function Footer(_props: FooterProps) {
   const pathname = usePathname();
   const t = useT(TEXT);
 
-  const isCatalog = pathname.startsWith("/katalog");
   const isPricing = pathname === "/cjenovnik";
 
   const brandName = "POSLO ONE";
@@ -80,15 +79,6 @@ export default function Footer(_props: FooterProps) {
             </Link>
           )}
 
-          {/* BIZNISI - sakrij na katalog stranicama */}
-          {!isCatalog && (
-            <Link
-              href="/katalog"
-              className="py-2 transition-colors hover:text-white"
-            >
-              {t.businesses}
-            </Link>
-          )}
 
           {/* PRAVNE STRANICE */}
           <Link href="/uslovi" className="py-2 transition-colors hover:text-white">

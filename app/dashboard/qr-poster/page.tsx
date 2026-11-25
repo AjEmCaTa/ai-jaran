@@ -39,7 +39,8 @@ export default function QrPosterPage() {
     } catch {
       /* privatni mod */
     }
-    setLink(saved || (business.slug ? `${window.location.origin}/katalog/${business.slug}` : ''));
+    // QR uvijek vodi na pravu adresu firme na poslo.one (i kad se panel otvori s druge adrese).
+    setLink(saved || (business.slug ? `https://poslo.one/katalog/${business.slug}` : ''));
   }, [business.id, business.slug]);
 
   const dark = variant === 'dark';

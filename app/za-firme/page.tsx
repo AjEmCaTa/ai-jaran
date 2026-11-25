@@ -24,7 +24,7 @@ export default function ZaFirmePage() {
       <Hero
         animationKey={heroKey}
         onStartFree={() => router.push("/cjenovnik")}
-        onCatalogJoin={() => router.push("/katalog")}
+        onCatalogJoin={() => router.push("/#djelatnosti")}
         onHowItWorks={() => {
           document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
         }}

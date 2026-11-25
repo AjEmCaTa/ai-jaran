@@ -24,8 +24,8 @@ const TEXT = {
   },
 };
 
-// Isti katalog na stranici Biznisi i na početnoj: isti podaci, iste kategorije, isti linkovi.
-// homeLayout: djelatnosti prve, zatim `middle` (npr. video), a firme s pretragom na kraju; na /katalog ostaje stari raspored.
+// Katalog na početnoj: djelatnosti i firme iz baze; linkovi vode na /katalog/<djelatnost> i /katalog/<firma>.
+// homeLayout: djelatnosti prve, zatim `middle` (npr. video), a firme s pretragom na kraju.
 export default function CatalogBrowser({
   businesses: initial,
   retry = false,

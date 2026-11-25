@@ -43,7 +43,7 @@ const TEXT = {
     feature: 'Mogućnost',
     rows: [
       ['Cijena', '15 KM / mj', '50 KM / mj'],
-      ['Katalog biznisa', '✓', '✓'],
+      ['Firma vidljiva na poslo.one', '✓', '✓'],
       ['Rezervacije i kalendar', '✓', '✓'],
       ['Vlastiti dashboard', '—', '✓'],
       ['Uređivanje cijena i usluga', '—', '✓'],
@@ -92,7 +92,7 @@ const TEXT = {
     feature: 'Feature',
     rows: [
       ['Price', '15 KM / mo', '50 KM / mo'],
-      ['Business catalog', '✓', '✓'],
+      ['Business listed on poslo.one', '✓', '✓'],
       ['Bookings and calendar', '✓', '✓'],
       ['Your own dashboard', '—', '✓'],
       ['Edit prices and services', '—', '✓'],

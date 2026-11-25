@@ -17,8 +17,8 @@ interface NavbarProps {
 }
 
 const TEXT = {
-  bs: { home: "Početna", business: "Za firme", about: "O nama", faq: "FAQ", pricing: "Cjenovnik", businesses: "Biznisi", panel: "Moj Panel", contact: "Kontakt", menu: "Otvori meni", close: "Zatvori meni" },
-  en: { home: "Home", business: "For businesses", about: "About", faq: "FAQ", pricing: "Pricing", businesses: "Businesses", panel: "My Panel", contact: "Contact", menu: "Open menu", close: "Close menu" },
+  bs: { home: "Početna", business: "Za firme", about: "O nama", faq: "FAQ", pricing: "Cjenovnik", panel: "Moj Panel", contact: "Kontakt", menu: "Otvori meni", close: "Zatvori meni" },
+  en: { home: "Home", business: "For businesses", about: "About", faq: "FAQ", pricing: "Pricing", panel: "My Panel", contact: "Contact", menu: "Open menu", close: "Close menu" },
 };
 
 export function LangSwitch({ compact = false }: { compact?: boolean }) {

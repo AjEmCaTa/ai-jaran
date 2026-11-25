@@ -53,7 +53,7 @@ type Reservation = {
 };
 
 function safeReturnPath(value: string | null) {
-  return value?.startsWith('/') && !value.startsWith('//') ? value : '/katalog';
+  return value?.startsWith('/') && !value.startsWith('//') ? value : '/';
 }
 
 // Vraca putanju iz ?next=... ili null ako je nema

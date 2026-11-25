@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { useT } from "./site/LangProvider";
 
 const TEXT = {
-  bs: { rights: "Sva prava zadržana.", forBusiness: 'Za firme', about: 'O nama', faq: 'FAQ', pricing: "Cjenovnik", businesses: "Biznisi", terms: "Uslovi korištenja", privacy: "Politika privatnosti", refund: "Povrat novca" },
-  en: { rights: "All rights reserved.", forBusiness: 'For businesses', about: 'About', faq: 'FAQ', pricing: "Pricing", businesses: "Businesses", terms: "Terms of use", privacy: "Privacy policy", refund: "Refunds" },
+  bs: { rights: "Sva prava zadržana.", forBusiness: 'Za firme', about: 'O nama', faq: 'FAQ', pricing: "Cjenovnik", terms: "Uslovi korištenja", privacy: "Politika privatnosti", refund: "Povrat novca" },
+  en: { rights: "All rights reserved.", forBusiness: 'For businesses', about: 'About', faq: 'FAQ', pricing: "Pricing", terms: "Terms of use", privacy: "Privacy policy", refund: "Refunds" },
 };
 
 interface FooterProps {

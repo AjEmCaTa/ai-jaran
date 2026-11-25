@@ -85,7 +85,7 @@ export default function HomeClient({ businesses, retry }: { businesses: CatalogB
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-400 md:text-base">{t.lead}</p>
         </div>
 
-        {/* Djelatnosti, pa video i kako radi, pa firme: isti katalog kao na stranici Biznisi */}
+        {/* Djelatnosti, pa video i kako radi, pa firme: isti podaci i linkovi kao ranije */}
         <CatalogBrowser
           businesses={businesses}
           retry={retry}

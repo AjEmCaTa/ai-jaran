@@ -70,6 +70,7 @@ export function parseRegistration(body: unknown): RegistrationResult {
 // Linkovi koji već pripadaju djelatnostima (utils/catalog.ts) ili stranicama ne smiju pripasti firmi.
 export const RESERVED_SLUGS = new Set([
   'beauty-saloni', 'dubinsko-ciscenje', 'solarni-sistemi', 'agencije-za-ciscenje', 'vile-apartmani', 'ostale-usluge',
+  'sport-i-rekreacija', 'zdravlje-i-terapije',
   'biznis', 'katalog',
 ]);
 

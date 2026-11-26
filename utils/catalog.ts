@@ -6,7 +6,7 @@ export type CatalogCategory = {
   title: string;
   short: string;
   description: string;
-  icon: 'car' | 'sun' | 'home' | 'sparkles' | 'scissors' | 'building' | 'ball' | 'heart';
+  icon: 'car' | 'sun' | 'home' | 'sparkles' | 'scissors' | 'building' | 'ball' | 'heart' | 'hammer';
   image: string;
   keywords: string[];
   en: { title: string; short: string; description: string };
@@ -82,6 +82,16 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
     image: 'https://images.unsplash.com/photo-1768507423533-b87b62769758?auto=format&fit=crop&w=800&q=80',
     keywords: ['fizio', 'terap', 'stomatol', 'zubar', 'dental', 'dentist', 'ordinac', 'klinik', 'psiholog', 'nutricion', 'logoped', 'ortoped', 'kiropr', 'rehabil'],
     en: { title: 'Health & Therapy', short: 'Physiotherapy / health', description: 'Physiotherapy, dentists, psychologists, nutritionists and therapies: book check-ups and treatments.' },
+  },
+  {
+    slug: 'gradjevina-i-radovi',
+    title: 'Građevina i radovi',
+    short: 'Gradnja / iskopi / adaptacije',
+    description: 'Iskopi, gradnja kuća, adaptacije i građevinski radovi: opiši posao i dobij ponudu, ili zakaži izlazak na teren.',
+    icon: 'hammer',
+    image: 'https://images.unsplash.com/photo-1580901369227-308f6f40bdeb?auto=format&fit=crop&w=800&q=80',
+    keywords: ['građevin', 'gradjevin', 'gradevin', 'gradnj', 'iskop', 'adaptac', 'fasad', 'zidar', 'keramič', 'keramic', 'krovop', 'rušenj', 'rusenj', 'bager', 'tesar', 'armirač', 'betonir'],
+    en: { title: 'Construction & Works', short: 'Building / excavation / renovation', description: 'Excavation, house building, renovations and construction works: describe the job and get a quote, or book a site visit.' },
   },
   {
     slug: 'ostale-usluge',

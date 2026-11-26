@@ -72,6 +72,9 @@ test('djelatnosti: postojeće firme ostaju gdje su, nove se prepoznaju', () => {
   assert.equal(categoryOf('Solarni sistemi i elektroinstalacije'), 'solarni-sistemi');
   assert.equal(categoryOf('Teren za mali fudbal'), 'sport-i-rekreacija');
   assert.equal(categoryOf('Fizioterapija'), 'zdravlje-i-terapije');
+  assert.equal(categoryOf('Građevinski radovi i iskopi'), 'gradjevina-i-radovi');
+  assert.equal(categoryOf('Gradnja Mostar'), 'gradjevina-i-radovi');
+  assert.equal(categoryOf('Gradska apoteka'), 'ostale-usluge');
   assert.equal(categoryOf('Transport i prevoz'), 'ostale-usluge');
   assert.equal(categoryOf('Studentski servis'), 'ostale-usluge');
   assert.equal(CATALOG_CATEGORIES.at(-1)?.slug, 'ostale-usluge');

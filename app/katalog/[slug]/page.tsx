@@ -58,7 +58,7 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-32">
         <Link
           href="/#djelatnosti"
-          className="mb-8 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0f19] px-4 py-2.5 text-xs font-semibold text-gray-400 shadow-sm transition-colors hover:text-blue-400"
+          className="web-only mb-8 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0f19] px-4 py-2.5 text-xs font-semibold text-gray-400 shadow-sm transition-colors hover:text-blue-400"
         >
           {t.back}
         </Link>

@@ -259,7 +259,7 @@ export default function CustomerAuthPage() {
     return (
       <main className="min-h-screen bg-[#050a18] px-4 py-10 text-white">
         <div className="fade-in mx-auto w-full max-w-2xl">
-          <Link href="/#djelatnosti" className="text-sm font-semibold text-blue-400 hover:text-blue-300">{t.back}</Link>
+          <Link href="/#djelatnosti" className="web-only text-sm font-semibold text-blue-400 hover:text-blue-300">{t.back}</Link>
 
           <section className="mt-6 rounded-2xl border border-[#16264a] bg-gradient-to-br from-[#0a1226] to-[#0b1d45] p-7 shadow-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-400">{t.myAccount}</p>
@@ -336,7 +336,7 @@ export default function CustomerAuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#050a18] px-4 py-10 text-white">
       <section className="fade-in w-full max-w-md rounded-2xl border border-[#16264a] bg-gradient-to-br from-[#0a1226] to-[#0b1d45] p-7 shadow-2xl sm:p-9">
-        <Link href="/#djelatnosti" className="text-xs font-semibold text-blue-400 hover:text-blue-300">{t.back}</Link>
+        <Link href="/#djelatnosti" className="web-only text-xs font-semibold text-blue-400 hover:text-blue-300">{t.back}</Link>
         <p className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-blue-400">{t.bookings}</p>
         <h1 className="mt-3 text-3xl font-black">{isRegistering ? t.createAccount : t.login}</h1>
         <p className="mt-2 text-sm text-slate-400">{t.why}</p>

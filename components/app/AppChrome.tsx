@@ -75,7 +75,7 @@ export default function AppChrome() {
               <button onClick={goBack} aria-label={t.back} className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/5">
                 <Icon name="back" className="h-6 w-6" />
               </button>
-              <Image src="/poslo.one.png" alt="" width={26} height={26} className="h-[26px] w-[26px]" />
+              <Image src="/poslo.one.png" alt="" width={26} height={26} className="h-[26px] w-[26px]" priority />
               <span className="text-[16px] font-extrabold tracking-tight text-white">POSLO ONE</span>
             </>
           )}

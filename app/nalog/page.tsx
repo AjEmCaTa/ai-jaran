@@ -110,7 +110,9 @@ export default function CustomerAuthPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) syncNewsOptIn(session);
       const next = getNextParam();
-      if (session && next) {
+      // Skretanje samo kad je ?next zaista u adresi ove stranice (povratak s prijave), nikad pri običnom otvaranju.
+      if (session && next && window.location.pathname === '/nalog') {
+        window.history.replaceState(null, '', '/nalog');
         router.replace(next);
         return;
       }

@@ -36,9 +36,10 @@ export async function GET(request: NextRequest) {
         const rows = (result.data || []).filter((r: any) => !['cancelled', 'expired'].includes(statusKind(r.status)));
         const businessIds = Array.from(new Set(rows.map((r: any) => r.business_id).filter(Boolean)));
         const names: Record<string, string> = {};
+        const meta: Record<string, { slug: string; logo: string }> = {};
         if (businessIds.length > 0) {
-            const biz = await supabase.from('businesses').select('id, name').in('id', businessIds);
-            (biz.data || []).forEach((b: any) => { names[b.id] = b.name; });
+            const biz = await supabase.from('businesses').select('id, name, slug, logo_url').in('id', businessIds);
+            (biz.data || []).forEach((b: any) => { names[b.id] = b.name; meta[b.id] = { slug: b.slug || '', logo: b.logo_url || '' }; });
         }
 
         const data = rows.map((r: any) => ({
@@ -47,7 +48,9 @@ export async function GET(request: NextRequest) {
             price: r.price,
             reservation_date: r.reservation_date,
             status: r.status,
-            business_name: names[r.business_id] || ''
+            business_name: names[r.business_id] || '',
+            business_slug: meta[r.business_id]?.slug || '',
+            business_logo: meta[r.business_id]?.logo || ''
         }));
 
         return NextResponse.json({ success: true, data });

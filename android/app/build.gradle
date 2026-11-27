@@ -1,0 +1,48 @@
+// POSLO ONE Android aplikacija: Trusted Web Activity (pun ekran, bez adresne trake) koja otvara poslo.one/app.
+plugins {
+    id 'com.android.application'
+}
+
+def runNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as Integer
+
+android {
+    namespace 'one.poslo.app'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'one.poslo.app'
+        minSdk 23
+        targetSdk 36
+        versionCode runNumber
+        versionName "1.0.${runNumber}"
+    }
+
+    def ks = file('upload.jks')
+    signingConfigs {
+        release {
+            if (ks.exists()) {
+                storeFile ks
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias 'poslo-upload'
+                keyPassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Bez ključa (provjera izmjena) pravi se nepotpisan paket, samo da se vidi da se sve složi.
+            if (ks.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}

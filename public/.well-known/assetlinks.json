@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "one.poslo.app",
+      "sha256_cert_fingerprints": [
+        "B6:F9:3B:4F:60:DB:1F:5E:0A:01:6F:C5:67:AC:FE:B8:B7:83:5A:DD:23:89:06:BA:98:27:05:C6:5E:4F:88:46"
+      ]
+    }
+  }
+]

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appName">POSLO ONE</string>
+    <string name="launcherName">POSLO ONE</string>
+    <string name="launchUrl">https://poslo.one/app?source=twa</string>
+    <string name="providerAuthority">one.poslo.app.fileprovider</string>
+    <string name="assetStatements" translatable="false">
+        [{ \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+           \"target\": { \"namespace\": \"web\", \"site\": \"https://poslo.one\" } }]
+    </string>
+</resources>

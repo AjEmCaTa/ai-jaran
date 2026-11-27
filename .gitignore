@@ -43,3 +43,11 @@ next-env.d.ts
 # lokalne SQLite baze se ne verzioniraju
 *.db
 *.sqlite
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/app/upload.jks
+*.jks
+android/local.properties

@@ -167,7 +167,13 @@ export default function MasterBillingPage() {
                       <Badge tone="blue">{f.plan === "starter" ? "Starter" : "Pro"}</Badge>
                       {f.billing_provider && <Badge tone="gray">{PROVIDER[f.billing_provider] || f.billing_provider}</Badge>}
                       {st && <Badge tone={st.tone}>{st.label}</Badge>}
-                      <span className="text-[11px] text-slate-500">Vrijedi do {fmt(f.plan_until)}</span>
+                      {f.plan_until ? (
+                        <span className={`text-[11px] ${new Date(f.plan_until).getTime() < Date.now() + 7 * 86400000 ? "font-semibold text-amber-400" : "text-slate-400"}`}>Ističe {fmt(f.plan_until)}</span>
+                      ) : f.billing_provider === "free" ? (
+                        <span className="text-[11px] text-slate-400">Ne ističe</span>
+                      ) : (
+                        <Badge tone="amber">Bez pretplate (ne ističe)</Badge>
+                      )}
                     </div>
                   </div>
                   {f.billing_provider !== "dodo" && f.billing_provider !== "free" && (

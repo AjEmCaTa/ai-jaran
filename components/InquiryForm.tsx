@@ -4,7 +4,19 @@ import { useState, type FormEvent } from 'react';
 import { BOOKING_TEXT, type BookingText } from '../utils/bookingText';
 
 // Univerzalni upit firmi (šalje na /api/business-inquiry; server određuje primaoca po slug-u).
-export default function InquiryForm({ businessSlug, accent = 'blue', t = BOOKING_TEXT.bs }: { businessSlug: string; accent?: 'blue' | 'amber'; t?: BookingText }) {
+export default function InquiryForm({
+  businessSlug,
+  accent = 'blue',
+  t = BOOKING_TEXT.bs,
+  service,
+  messagePlaceholder,
+}: {
+  businessSlug: string;
+  accent?: 'blue' | 'amber';
+  t?: BookingText;
+  service?: string;
+  messagePlaceholder?: string;
+}) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -30,7 +42,7 @@ export default function InquiryForm({ businessSlug, accent = 'blue', t = BOOKING
       const response = await fetch('/api/business-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ business_slug: businessSlug, name, phone, email, message, website }),
+        body: JSON.stringify({ business_slug: businessSlug, name, phone, email, message, website, ...(service ? { service } : {}) }),
       });
       const result = await response.json().catch(() => null);
       if (response.ok && result?.success) setSent(true);
@@ -51,7 +63,7 @@ export default function InquiryForm({ businessSlug, accent = 'blue', t = BOOKING
       <input className={input} placeholder={t.qName} value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
       <input className={input} placeholder={t.qPhone} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={40} />
       <input className={input} placeholder={t.qEmail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} />
-      <textarea className={input} placeholder={t.qMessage} rows={4} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} />
+      <textarea className={input} placeholder={messagePlaceholder || t.qMessage} rows={4} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} />
       <input
         type="text"
         name="website"

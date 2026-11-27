@@ -193,6 +193,10 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
   const [takenRows, setTakenRows] = useState<{ reservation_date?: string; duration_minutes?: number; status?: string; service_name?: string }[]>([]);
   // Vile i apartmani: rezervacija od datuma do datuma; svaka usluga je posebna jedinica.
   const isStay = isStayCategory(categoryOf(businessProfile.category));
+  // Firme koje rade po ponudi (građevina ili sve usluge "na upit"): nema kalendara, klijent šalje upit.
+  const inquiryOnly =
+    !isStay &&
+    (categoryOf(businessProfile.category) === 'gradjevina-i-radovi' || (packages.length > 0 && packages.every((p) => p.price === 'Na upit')));
   const stayCheckInAt = checkInTime(businessProfile.work_start);
   const occupied = useMemo(
     () => (selectedPackage ? occupiedNights(takenRows, selectedPackage.name) : new Set<string>()),
@@ -645,6 +649,21 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
           </div>
         </div>
 
+        {inquiryOnly ? (
+          <div className="space-y-4 pt-4">
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">2</span>
+              <h2 className="text-xl font-bold text-white">{t.step2Inquiry}</h2>
+            </div>
+            <div className="bg-[#0b0f19] border border-white/10 p-6 rounded-3xl space-y-4">
+              <p className="text-sm text-gray-400">
+                {t.inquiryHint}
+                {selectedPackage && <span className="mt-1 block font-semibold text-blue-300">{selectedPackage.name}</span>}
+              </p>
+              <InquiryForm businessSlug={BUSINESS_SLUG} t={t} service={selectedPackage?.name} messagePlaceholder={t.inquiryMessage} />
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleBooking} className="space-y-10">
 
           <div className="space-y-4 pt-4">
@@ -731,7 +750,7 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
                     const freeSlotsCount = timeSlots.filter((t) => {
                       const slotStart = new Date(`${fullDateStr}T${t}:00`).getTime();
                       const slotEnd = slotStart + activeDurationMinutes * 60000;
-                      return !rangesOverlap(slotStart, slotEnd, busyRanges);
+                      return slotStart > Date.now() && !rangesOverlap(slotStart, slotEnd, busyRanges);
                     }).length;
 
                     const isFullyBooked = timeSlots.length > 0 && freeSlotsCount === 0;
@@ -775,7 +794,7 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
                     {selectedPackage && <span className="text-gray-500"> ({t.durationLower}: {selectedPackage.duration})</span>}:
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                    {timeSlots.map((time) => {
+                    {timeSlots.filter((time) => new Date(`${resDate}T${time}:00`).getTime() > Date.now()).map((time) => {
                       const slotStart = new Date(`${resDate}T${time}:00`).getTime();
                       const slotEnd = slotStart + activeDurationMinutes * 60000;
                       const isTaken = rangesOverlap(slotStart, slotEnd, busyRanges);
@@ -887,6 +906,7 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
           </div>
 
         </form>
+        )}
 
       </div>
 
@@ -1037,6 +1057,7 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
         </div>
       )}
 
+      {!inquiryOnly && (
       <section className="mx-auto max-w-2xl px-4 pb-16">
         <div className="rounded-3xl border border-white/10 bg-[#0b0f19] p-6">
           <h2 className="mb-1 text-xl font-bold text-white">{t.questionTitle}</h2>
@@ -1044,6 +1065,7 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
           <InquiryForm businessSlug={BUSINESS_SLUG} t={t} />
         </div>
       </section>
+      )}
 
       <Footer onOpenPrivacy={() => {}} />
     </main>

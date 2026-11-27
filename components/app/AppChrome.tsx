@@ -115,6 +115,12 @@ export default function AppChrome() {
               <span className="text-[16px] font-extrabold tracking-tight text-white">POSLO ONE</span>
             </>
           )}
+
+          <div className="ml-auto flex rounded-xl border border-white/10 bg-white/[0.04] p-1 text-[11px] font-bold">
+            {(['bs', 'en'] as const).map((l) => (
+              <button key={l} onClick={() => setLang(l)} aria-pressed={lang === l} className={`h-7 w-9 rounded-lg transition-colors ${lang === l ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>{l.toUpperCase()}</button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -170,14 +176,6 @@ export default function AppChrome() {
               </button>
             </div>
             <div className="mt-3"><InstallButton /></div>
-            <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-              <span className="text-sm font-semibold text-slate-300">{t.language}</span>
-              <div className="flex rounded-xl bg-white/[0.05] p-1 text-xs font-bold">
-                {(['bs', 'en'] as const).map((l) => (
-                  <button key={l} onClick={() => setLang(l)} className={`h-8 w-11 rounded-lg ${lang === l ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>{l.toUpperCase()}</button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       )}

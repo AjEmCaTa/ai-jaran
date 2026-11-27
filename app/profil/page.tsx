@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { createClient, type User } from '@supabase/supabase-js';
 import Icon, { type IconName } from '../../components/Icon';
 import { useLang, useT } from '../../components/site/LangProvider';
@@ -31,6 +31,7 @@ const TEXT = {
     deleteText: 'Vaš račun se trajno briše i više se nećete moći prijaviti. Termini koje ste zakazali ostaju zabilježeni kod firmi.',
     deleteConfirm: 'Da, obriši račun', deleting: 'Brišem...', cancel: 'Odustani',
     logout: 'Odjavi se', failed: 'Nije uspjelo. Pokušajte ponovo.', guest: 'Korisnik',
+    changePhoto: 'Promijeni sliku', removePhoto: 'Ukloni sliku', uploading: 'Šaljem sliku...',
   },
   en: {
     title: 'My profile', total: 'Total bookings', done: 'Completed', cancelled: 'Cancelled',
@@ -47,6 +48,7 @@ const TEXT = {
     deleteText: 'Your account is permanently deleted and you will not be able to sign in again. Bookings you made stay recorded with the businesses.',
     deleteConfirm: 'Yes, delete account', deleting: 'Deleting...', cancel: 'Cancel',
     logout: 'Log out', failed: 'Something went wrong. Please try again.', guest: 'User',
+    changePhoto: 'Change photo', removePhoto: 'Remove photo', uploading: 'Uploading...',
   },
 };
 
@@ -90,8 +92,66 @@ export default function ProfilPage() {
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [busy, setBusy] = useState('');
-  const [note, setNote] = useState<{ tone: 'ok' | 'err'; text: string; at: Panel | 'delete' } | null>(null);
+  const [note, setNote] = useState<{ tone: 'ok' | 'err'; text: string; at: Panel | 'delete' | 'photo' } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Slika se smanji na 320x320 (kvadrat iz sredine) prije slanja.
+  const shrink = (file: File) =>
+    new Promise<Blob>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 320;
+        const c = document.createElement('canvas');
+        c.width = size;
+        c.height = size;
+        const side = Math.min(img.width, img.height);
+        c.getContext('2d')?.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+        URL.revokeObjectURL(img.src);
+        c.toBlob((b) => (b ? resolve(b) : reject(new Error('image'))), 'image/jpeg', 0.86);
+      };
+      img.onerror = () => reject(new Error('image'));
+      img.src = URL.createObjectURL(file);
+    });
+
+  const uploadPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setBusy('photo');
+    setNote(null);
+    try {
+      const blob = await shrink(file);
+      const form = new FormData();
+      form.append('avatar', blob, 'avatar.jpg');
+      const res = await fetch('/api/nalog/avatar', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || t.failed);
+      const { data } = await supabase.auth.refreshSession();
+      if (data.user) setUser(data.user);
+      if (data.session) setToken(data.session.access_token);
+    } catch (err) {
+      setNote({ tone: 'err', text: err instanceof Error && err.message !== 'image' ? err.message : t.failed, at: 'photo' });
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const removePhoto = async () => {
+    setBusy('photo');
+    try {
+      const res = await fetch('/api/nalog/avatar', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || t.failed);
+      const { data } = await supabase.auth.refreshSession();
+      if (data.user) setUser(data.user);
+      if (data.session) setToken(data.session.access_token);
+    } catch (err) {
+      setNote({ tone: 'err', text: err instanceof Error ? err.message : t.failed, at: 'photo' });
+    } finally {
+      setBusy('');
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -185,8 +245,10 @@ export default function ProfilPage() {
   }
 
   const displayName = name || user.email?.split('@')[0] || t.guest;
+  const ownPhoto = String(user.user_metadata?.poslo_avatar || '');
+  const photo = ownPhoto || String(user.user_metadata?.avatar_url || user.user_metadata?.picture || '');
   const initials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'P';
-  const Note = ({ at }: { at: Panel | 'delete' }) =>
+  const Note = ({ at }: { at: Panel | 'delete' | 'photo' }) =>
     note && note.at === at ? (
       <p className={`app-fade text-sm ${note.tone === 'ok' ? 'text-emerald-300' : 'text-red-300'}`}>{note.text}</p>
     ) : null;
@@ -195,11 +257,25 @@ export default function ProfilPage() {
     <main className="min-h-screen bg-[#030712] px-4 pb-10 pt-28 text-white lg:pt-32">
       <div className="mx-auto max-w-lg space-y-4">
         <section className="app-rise flex flex-col items-center pb-2 text-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-3xl font-black shadow-[0_18px_50px_rgba(37,99,235,0.35)]">
-            {initials}
-          </div>
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={busy !== ''} aria-label={t.changePhoto} className="app-press group relative h-24 w-24 rounded-full">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo} alt="" referrerPolicy="no-referrer" className="h-24 w-24 rounded-full object-cover shadow-[0_18px_50px_rgba(37,99,235,0.35)] ring-2 ring-white/10" />
+            ) : (
+              <span className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-3xl font-black shadow-[0_18px_50px_rgba(37,99,235,0.35)]">{initials}</span>
+            )}
+            <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#030712] bg-blue-600 text-white">
+              {busy === 'photo' ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <Icon name="plus" className="h-4 w-4" />}
+            </span>
+          </button>
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={uploadPhoto} />
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight">{displayName}</h1>
           <p className="mt-1 text-sm text-slate-400">{user.email}</p>
+          <div className="mt-2 flex items-center gap-3 text-xs font-semibold">
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={busy !== ''} className="text-blue-300">{busy === 'photo' ? t.uploading : t.changePhoto}</button>
+            {ownPhoto && <><span className="text-slate-600">·</span><button type="button" onClick={removePhoto} disabled={busy !== ''} className="text-slate-400">{t.removePhoto}</button></>}
+          </div>
+          <div className="mt-2"><Note at="photo" /></div>
         </section>
 
         <section className="app-rise grid grid-cols-3 overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0b1020] text-center" style={{ animationDelay: '0.06s' }}>

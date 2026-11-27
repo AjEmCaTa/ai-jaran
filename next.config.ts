@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
     return [
       ...toMainDomain,
       { source: "/katalog/apartman-stone-mostar-2629", destination: "/katalog/apartman-stone-mostar", permanent: true },
+      { source: "/katalog/gradnja-mostar", destination: "/katalog/binor-gradnja", permanent: true },
     ];
   },
   async headers() {

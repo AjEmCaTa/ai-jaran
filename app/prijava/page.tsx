@@ -11,13 +11,13 @@ import { authErrorText } from '../../utils/authErrors';
 const TEXT = {
   bs: {
     noConfig: 'Supabase postavke nisu pronađene. Provjeri .env.local fajl.', failed: 'Prijava nije uspjela. Pokušaj ponovo.', invalid: 'Neispravni podaci za prijavu. Pokušaj ponovo.',
-    back: 'Nazad na početnu', title: 'Moj Panel', sub: 'Prijavite se sa podacima koje vam je dodijelio POSLO ONE tim.', password: 'Lozinka',
-    loading: 'Prijava u toku...', submit: 'Prijavi se u panel', emailPh: 'vas@email.com',
+    back: 'Nazad na početnu', title: 'Moj Panel', sub: 'Prijavite se e-mailom i lozinkom ili Google računom s kojim ste registrovali firmu.', password: 'Lozinka',
+    loading: 'Prijava u toku...', submit: 'Prijavi se u panel', emailPh: 'vas@email.com', or: 'ili', google: 'Nastavi s Googleom',
   },
   en: {
     noConfig: 'Supabase settings not found. Check the .env.local file.', failed: 'Login failed. Please try again.', invalid: 'Invalid login details. Please try again.',
-    back: 'Back to home', title: 'My Panel', sub: 'Log in with the details the POSLO ONE team gave you.', password: 'Password',
-    loading: 'Logging in...', submit: 'Log in to the panel', emailPh: 'you@email.com',
+    back: 'Back to home', title: 'My Panel', sub: 'Log in with the email and password or the Google account you registered your business with.', password: 'Password',
+    loading: 'Logging in...', submit: 'Log in to the panel', emailPh: 'you@email.com', or: 'or', google: 'Continue with Google',
   },
 };
 
@@ -35,6 +35,21 @@ export default function AuthPage() {
   const router = useRouter();
   const t = useT(TEXT);
   const { lang } = useLang();
+
+  // Vlasnici registrovani preko Googlea: ista Google prijava kao na /nalog, pa nazad u panel (ili na traženu stranicu).
+  const continueWithGoogle = async () => {
+    setLoading(true);
+    setErrorMsg('');
+    const requested = new URLSearchParams(window.location.search).get('next');
+    const next = requested?.startsWith('/') && !requested.startsWith('//') ? requested : '/dashboard';
+    const redirectTo = new URL('/nalog', window.location.origin);
+    redirectTo.searchParams.set('next', next);
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectTo.toString() } });
+    if (error) {
+      setErrorMsg(authErrorText(error, lang, t.failed));
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -193,6 +208,11 @@ export default function AuthPage() {
             {loading ? t.loading : t.submit}
           </button>
         </form>
+
+        <div className="my-5 flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-white/10" />{t.or}<span className="h-px flex-1 bg-white/10" /></div>
+        <button type="button" onClick={continueWithGoogle} disabled={loading} className="flex h-12 w-full items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-50">
+          {t.google}
+        </button>
       </div>
     </main>
   );

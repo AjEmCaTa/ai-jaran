@@ -5,7 +5,7 @@
   "description": "POSLO ONE – vaš digitalni radnik za svakodnevno poslovanje.",
   "lang": "bs",
   "dir": "ltr",
-  "start_url": "/?source=pwa",
+  "start_url": "/app?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

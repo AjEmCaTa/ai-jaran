@@ -50,6 +50,12 @@ export default function RootLayout({
             __html: `try{var l=localStorage.getItem('poslo_one_lang');if(l!=='bs'&&l!=='en'){var n=((navigator.languages&&navigator.languages[0])||navigator.language||'').slice(0,2).toLowerCase();l=(n===''||['bs','hr','sr','sh','sl','mk','me','cn'].indexOf(n)>=0)?'bs':'en'}if(l==='en'){var d=document.documentElement;d.classList.add('lang-pending');d.lang='en';setTimeout(function(){d.classList.remove('lang-pending')},1500)}}catch(e){}`,
           }}
         />
+        {/* Prije prvog prikaza: html.app-ui = izgled aplikacije (telefon ili instalirana), html.app-mode = instalirana aplikacija (obavezna prijava, bez kupovine). Računar ostaje stara stranica. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var d=document.documentElement,ss=window.sessionStorage,a=ss.getItem('poslo_app')==='1'||/[?&]source=(pwa|twa)/.test(location.search)||location.pathname==='/app'||document.referrer.indexOf('android-app://')===0||(window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches));if(a){ss.setItem('poslo_app','1');d.classList.add('app-mode','app-ui')}else if(window.matchMedia){var m=matchMedia('(max-width: 1023px)'),f=function(){d.classList.toggle('app-ui',m.matches)};f();m.addEventListener&&m.addEventListener('change',f)}}catch(e){}`,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-[#030712] text-white">
         <SiteShell>{children}</SiteShell>

@@ -485,7 +485,7 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-blue-400 bg-[#0b0f19] px-4 py-2.5 rounded-xl border border-white/10 transition-all hover:border-blue-500/40"
+            className="web-only inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-blue-400 bg-[#0b0f19] px-4 py-2.5 rounded-xl border border-white/10 transition-all hover:border-blue-500/40"
           >
             {t.back}
           </Link>

@@ -27,7 +27,7 @@ export default function Footer(_props: FooterProps) {
   const brandName = "POSLO ONE";
 
   return (
-    <footer className="relative z-20 border-t border-white/5 bg-[#030712] py-12 pb-20 sm:py-16">
+    <footer className="web-only relative z-20 border-t border-white/5 bg-[#030712] py-12 pb-20 sm:py-16">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col items-center justify-between gap-6 px-6 sm:px-8 md:flex-row lg:px-12 xl:px-16">
 
         {/* LOGO I NAZIV - Vraća na početnu */}

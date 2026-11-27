@@ -18,7 +18,14 @@ const nextConfig: NextConfig = {
   poweredByHeader: false, // ne otkriva da je sajt rađen u Next.js
   // Stari linkovi firmi (prije skraćivanja) i dalje vode na istu firmu.
   async redirects() {
+    // Produkcija ima i automatske *.vercel.app adrese (npr. posloone-git-main-...). Sve takve posjete
+    // šaljemo na glavnu domenu poslo.one, da prijava, Google i kolačići uvijek rade na jednom mjestu.
+    // Preview verzije (VERCEL_ENV=preview) i /api (cron, webhookovi) se NE preusmjeravaju.
+    const toMainDomain = process.env.VERCEL_ENV === 'production'
+      ? [{ source: '/:path((?!api/|_next/).*)', has: [{ type: 'host' as const, value: '(?<host>.+\\.vercel\\.app)' }], destination: 'https://poslo.one/:path*', permanent: false }]
+      : [];
     return [
+      ...toMainDomain,
       { source: "/katalog/apartman-stone-mostar-2629", destination: "/katalog/apartman-stone-mostar", permanent: true },
     ];
   },

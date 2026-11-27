@@ -151,9 +151,9 @@ export default function AppChrome() {
 
       {/* Meni "Više" odozdo */}
       {sheet && (
-        <div className="fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40" role="dialog" aria-modal="true" aria-label={t.more}>
+        <div className="fixed inset-x-0 top-[calc(3.5rem+env(safe-area-inset-top))] bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40" role="dialog" aria-modal="true" aria-label={t.more}>
           <button aria-label={t.close} onClick={() => setSheet(false)} className={`${closing ? 'app-fade-out' : 'app-fade'} absolute inset-0 bg-black/60 backdrop-blur-sm`} />
-          <div className={`${closing ? 'app-sheet-out' : 'app-sheet'} absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-[28px] border-t border-white/10 bg-[#0a0f1e] px-4 pb-4 pt-3`}>
+          <div className={`${closing ? 'app-sheet-out' : 'app-sheet'} absolute inset-x-0 bottom-0 max-h-[calc(100%-0.75rem)] overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#0a0f1e] px-4 pb-4 pt-3`}>
             <div className="mb-3 flex items-center justify-between pl-2">
               <span className="text-lg font-extrabold text-white">{t.more}</span>
               <button onClick={() => setSheet(false)} aria-label={t.close} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-slate-300 hover:bg-white/10">

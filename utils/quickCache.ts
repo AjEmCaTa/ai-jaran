@@ -21,3 +21,23 @@ export function writeQuick(key: string, value: unknown) {
     /* pun ili zabranjen storage: samo bez keša */
   }
 }
+
+// Trajni keš na ovom uređaju (localStorage): za podatke koji se trebaju pokazati odmah i nakon ponovnog
+// otvaranja aplikacije (npr. kartica firme, brojevi na profilu), da ekran ne "poskoči" kad stignu svježi.
+export function readKeep<T>(key: string): T | null {
+  try {
+    const raw = window.localStorage.getItem(PREFIX + key);
+    return raw ? ((JSON.parse(raw) as { v: T }).v ?? null) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeKeep(key: string, value: unknown) {
+  try {
+    if (value === null || value === undefined) window.localStorage.removeItem(PREFIX + key);
+    else window.localStorage.setItem(PREFIX + key, JSON.stringify({ at: Date.now(), v: value }));
+  } catch {
+    /* bez keša */
+  }
+}

@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Icon from '../Icon';
 import { useT } from '../site/LangProvider';
-import { readQuick, writeQuick } from '../../utils/quickCache';
+import { readKeep, writeKeep } from '../../utils/quickCache';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -13,6 +13,7 @@ const supabase = createClient(
 );
 
 type Summary = { name: string; logo: string | null; slug: string; today: number; newInquiries: number };
+type Kept = { uid: string; owner: boolean; data?: Summary };
 
 const TEXT = {
   bs: {
@@ -34,19 +35,30 @@ export default function OwnerCard() {
   const t = useT(TEXT);
   const [data, setData] = useState<Summary | null>(null);
 
+  // Zadnji poznati podaci se pokažu prije prvog iscrtavanja, pa Početna ne poskoči kad kartica stigne.
+  useLayoutEffect(() => {
+    const kept = readKeep<Kept>('owner-card');
+    if (kept?.owner && kept.data) setData(kept.data);
+  }, []);
+
   useEffect(() => {
     let stop = false;
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const key = `owner-sum:${session.user.id}`;
-      const cached = readQuick<Summary | false>(key, 5 * 60_000);
-      if (cached === false) return; // nije vlasnik
-      if (cached) setData(cached);
+      if (!session) {
+        writeKeep('owner-card', null);
+        if (!stop) setData(null);
+        return;
+      }
+      const kept = readKeep<Kept>('owner-card');
+      if (kept && kept.uid !== session.user.id) {
+        writeKeep('owner-card', null);
+        if (!stop) setData(null);
+      }
       const res = await fetch('/api/dashboard/summary', { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store' }).catch(() => null);
       if (stop || !res) return;
       if (res.status === 401 || res.status === 403) {
-        writeQuick(key, false);
+        writeKeep('owner-card', { uid: session.user.id, owner: false });
         setData(null);
         return;
       }
@@ -54,7 +66,7 @@ export default function OwnerCard() {
       const json = (await res.json().catch(() => null)) as Summary | null;
       if (!json || stop) return;
       setData(json);
-      writeQuick(key, json);
+      writeKeep('owner-card', { uid: session.user.id, owner: true, data: json });
     })();
     return () => {
       stop = true;

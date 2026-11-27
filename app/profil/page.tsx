@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
-import { readQuick, writeQuick } from '../../utils/quickCache';
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { readKeep, writeKeep } from '../../utils/quickCache';
 import { createClient, type User } from '@supabase/supabase-js';
 import Icon, { type IconName } from '../../components/Icon';
 import { useLang, useT } from '../../components/site/LangProvider';
@@ -154,6 +154,12 @@ export default function ProfilPage() {
     }
   };
 
+  // Zadnji poznati brojevi i "Moj panel" odmah, prije prvog iscrtavanja (bez crtica i bez skakanja).
+  useLayoutEffect(() => {
+    const kept = readKeep<{ uid: string; stats: Stats }>('profile-stats');
+    if (kept?.stats) setStats(kept.stats);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
@@ -164,15 +170,17 @@ export default function ProfilPage() {
       setToken(session.access_token);
       setName(String(session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''));
       setPhone(String(session.user.user_metadata?.phone || ''));
-      const statsKey = `stats:${session.user.id}`;
-      const cachedStats = readQuick<Stats>(statsKey);
-      if (cachedStats) setStats(cachedStats);
+      const kept = readKeep<{ uid: string; stats: Stats }>('profile-stats');
+      if (kept && kept.uid !== session.user.id) {
+        writeKeep('profile-stats', null);
+        setStats(null);
+      }
       try {
         const res = await fetch('/api/nalog/profil', { headers: { Authorization: `Bearer ${session.access_token}` } });
         const json = await res.json();
         if (json.success) {
           setStats(json.data);
-          writeQuick(statsKey, json.data);
+          writeKeep('profile-stats', { uid: session.user.id, stats: json.data });
         }
       } catch {}
     });

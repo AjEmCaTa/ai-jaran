@@ -113,7 +113,7 @@ export default function AppChrome() {
 
   const tabs: { key: string; href?: string; label: string; icon: IconName; active: boolean; onClick?: () => void }[] = [
     { key: 'home', href: '/', label: t.home, icon: 'home', active: pathname === '/' || pathname.startsWith('/katalog') },
-    { key: 'bookings', href: '/termini', label: t.bookings, icon: 'calendar', active: pathname === '/termini' || pathname === '/nalog' },
+    { key: 'bookings', href: '/termini', label: t.bookings, icon: 'calendar', active: pathname === '/termini' },
     { key: 'profile', href: '/profil', label: t.profile, icon: 'user', active: pathname === '/profil' },
     { key: 'more', label: t.more, icon: 'grid', active: sheet && !closing, onClick: () => setSheet((v) => !v) },
   ];

@@ -202,8 +202,8 @@ export default function AppStart() {
     <main className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-[#030712] text-white">
       {/* Sjaj u pozadini se pojavi tek kad logo krene gore, da prvi trenutak bude isti kao Android ekran. */}
       <div aria-hidden className={`pointer-events-none absolute inset-0 transition-opacity duration-1000 ${stage === 'logo' ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="absolute -left-32 top-[12%] h-[420px] w-[420px] rounded-full bg-blue-600/25 blur-[120px]" />
-        <div className="absolute -right-40 top-[45%] h-[420px] w-[420px] rounded-full bg-violet-600/20 blur-[120px]" />
+        {/* Sjaj je obični prelaz boja (bez blur filtera): iPhone je pri animacijama iza blura crtao crne pravougaonike. */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_22%,rgba(37,99,235,0.28),transparent_45%),radial-gradient(circle_at_95%_58%,rgba(124,58,237,0.22),transparent_45%)]" />
       </div>
 
       <div
@@ -265,7 +265,7 @@ export default function AppStart() {
         <div className="relative z-10 flex min-h-[100dvh] flex-col px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]">
           {/* Logo je ovdje u toku stranice (ne prikovan), pa ga ništa ne može prekriti kad se ekran smanji. */}
           <div className="flex flex-1 flex-col items-center justify-center pb-6">
-            <Image src="/poslo.one.png" alt="POSLO ONE" width={132} height={132} priority className="app-fade mb-8 h-[132px] w-[132px]" />
+            <Image src="/poslo.one.png" alt="POSLO ONE" width={132} height={132} priority className="mb-8 h-[132px] w-[132px]" />
             <h1 className="app-rise text-[34px] font-black tracking-tight" style={{ animationDelay: '0.25s' }}>{t.welcome}</h1>
             <p className="app-rise mt-2 text-center text-[15px] text-slate-400" style={{ animationDelay: '0.32s' }}>{t.welcomeSub}</p>
           </div>

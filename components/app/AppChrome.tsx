@@ -48,7 +48,7 @@ export default function AppChrome() {
   const tabs: { key: string; href?: string; label: string; icon: IconName; active: boolean; onClick?: () => void }[] = [
     { key: 'home', href: '/', label: t.home, icon: 'home', active: pathname === '/' || pathname.startsWith('/katalog') },
     { key: 'bookings', href: '/nalog', label: t.bookings, icon: 'calendar', active: pathname === '/nalog' },
-    { key: 'more', label: t.more, icon: 'grid', active: sheet, onClick: () => setSheet(true) },
+    { key: 'more', label: t.more, icon: 'grid', active: sheet, onClick: () => setSheet((v) => !v) },
   ];
 
   const links: { href: string; label: string; icon: IconName; sub?: string }[] = [
@@ -109,10 +109,15 @@ export default function AppChrome() {
 
       {/* Meni "Više" odozdo */}
       {sheet && (
-        <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={t.more}>
+        <div className="fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40" role="dialog" aria-modal="true" aria-label={t.more}>
           <button aria-label={t.close} onClick={() => setSheet(false)} className="app-fade absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="app-sheet absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-[28px] border-t border-white/10 bg-[#0a0f1e] px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3">
-            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/15" />
+          <div className="app-sheet absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-[28px] border-t border-white/10 bg-[#0a0f1e] px-4 pb-4 pt-3">
+            <div className="mb-3 flex items-center justify-between pl-2">
+              <span className="text-lg font-extrabold text-white">{t.more}</span>
+              <button onClick={() => setSheet(false)} aria-label={t.close} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-slate-300 hover:bg-white/10">
+                <Icon name="close" className="h-5 w-5" />
+              </button>
+            </div>
             <div className="space-y-1.5">
               {links.map((l) => (
                 <Link key={l.href} href={l.href} className="app-press flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/[0.04]">

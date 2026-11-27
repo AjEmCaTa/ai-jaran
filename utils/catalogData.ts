@@ -7,6 +7,9 @@ export type CatalogBusiness = { slug: string; name: string; city: string; catego
 
 // Javni katalog: samo aktivne firme s bar jednom uslugom i samo podaci koji su ionako javni.
 // Koriste ga i API (/api/catalog) i stranica /katalog (na serveru, pa se stranica odmah prikaže cijela).
+// Firme koje rade, ali se ne prikazuju u katalogu, pretrazi ni sitemapu (npr. probna firma za Googleov pregled aplikacije).
+export const HIDDEN_SLUGS = new Set(['demo-google-pregled']);
+
 export async function getCatalogBusinesses(): Promise<CatalogBusiness[] | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -23,7 +26,7 @@ export async function getCatalogBusinesses(): Promise<CatalogBusiness[] | null> 
   }
   const withServices = new Set((services || []).map((s) => s.business_id));
   return (data || [])
-    .filter((b) => b.slug && b.name && withServices.has(b.id))
+    .filter((b) => b.slug && b.name && withServices.has(b.id) && !HIDDEN_SLUGS.has(b.slug))
     .map((b) => ({
       slug: b.slug,
       name: b.name,

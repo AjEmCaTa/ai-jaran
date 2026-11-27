@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { categoryBySlug, categoryLabel } from '../../../utils/catalog';
 import { PARTNER_LOGOS } from '../../../utils/partnerLogos';
 import { retryFetch } from '../../../utils/supabaseRetryFetch';
+import { HIDDEN_SLUGS } from '../../../utils/catalogData';
 
 const SITE = 'https://poslo.one';
 
@@ -45,6 +46,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     alternates: { canonical: url },
     openGraph: { title, description, url, siteName: 'POSLO ONE', type: 'website', locale: 'bs_BA', images: [{ url: image }] },
     twitter: { card: 'summary', title, description, images: [image] },
+    ...(HIDDEN_SLUGS.has(slug) ? { robots: { index: false, follow: false } } : {}),
   };
 }
 

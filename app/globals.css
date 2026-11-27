@@ -283,6 +283,10 @@ h1, h2 {
   to { opacity: 1; }
 }
 .page-enter { animation: pageEnter 0.28s ease-out both; }
+/* Telefon: bez blijeđenja pri promjeni stranice (iPhone ima svoju animaciju povlačenja nazad, pa bi
+   stranica inače bljesnula). Nazad/naprijed na računaru isto bez blijeđenja. */
+html.app-ui .page-enter, html.nav-back .page-enter { animation: none; }
+html.nav-back .img-reveal { transition: none; }
 
 /* Dok se ne odredi engleski, sadržaj je skriven (najviše 1,5 s). */
 html.lang-pending body { opacity: 0; }

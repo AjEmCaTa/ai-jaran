@@ -1,13 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
 import PartnerLogo from "../../../components/PartnerLogo";
 import Icon from "../../../components/Icon";
 import BusinessBookingPage from "../../../components/BusinessBookingPage";
-import { loadBusinessProfile } from "../../../utils/profileCache";
+import { knownIsFirm, loadBusinessProfile } from "../../../utils/profileCache";
+import { readQuick, writeQuick } from "../../../utils/quickCache";
 import { CATALOG_CATEGORIES, categoryBySlug, categoryOf, categoryText } from "../../../utils/catalog";
 import { useLang, useT } from "../../../components/site/LangProvider";
 
@@ -38,12 +39,28 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
   const [loaded, setLoaded] = useState(false);
   const [city, setCity] = useState("");
 
+  // Odmah prikaži zadnju poznatu listu firmi (s početne ili ranije posjete), pa osvježi u pozadini.
+  useLayoutEffect(() => {
+    const cached = readQuick<CatalogBusiness[]>("catalog");
+    if (cached) {
+      setBusinesses(cached);
+      setLoaded(true);
+    }
+  }, []);
+
   useEffect(() => {
     setCity(new URLSearchParams(window.location.search).get("grad") || "");
     fetch("/api/catalog")
-      .then((r) => (r.ok ? r.json() : { businesses: [] }))
-      .then((json) => setBusinesses(Array.isArray(json.businesses) ? json.businesses : []))
-      .catch(() => setBusinesses([]))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (json && Array.isArray(json.businesses)) {
+          setBusinesses(json.businesses);
+          writeQuick("catalog", json.businesses);
+        } else if (!readQuick("catalog")) setBusinesses([]);
+      })
+      .catch(() => {
+        if (!readQuick("catalog")) setBusinesses([]);
+      })
       .finally(() => setLoaded(true));
   }, []);
 
@@ -96,6 +113,7 @@ function CategoryPartnersPage({ categorySlug }: { categorySlug: string }) {
                   <Link
                     key={b.slug}
                     href={`/katalog/${b.slug}`}
+                    onPointerDown={() => void loadBusinessProfile(b.slug)}
                     className="group flex flex-col justify-between rounded-3xl border border-white/10 bg-[#0b0f19] p-6 shadow-2xl transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/80"
                   >
                     <div>
@@ -169,6 +187,13 @@ export default function KatalogSlugPage() {
   const slug = (params?.slug as string) || "";
   const isCategory = CATEGORY_SLUGS.has(slug);
   const [mode, setMode] = useState<"checking" | "business" | "category">(isCategory ? "category" : "checking");
+
+  // Ako već znamo da je ovo firma (ranije posjećena), prikaži je odmah, bez sivog kostura.
+  useLayoutEffect(() => {
+    if (isCategory) return;
+    const known = knownIsFirm(slug);
+    if (known !== null) setMode(known ? "business" : "category");
+  }, [slug, isCategory]);
 
   useEffect(() => {
     if (isCategory) return;

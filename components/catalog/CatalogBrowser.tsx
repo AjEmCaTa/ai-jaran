@@ -8,6 +8,8 @@ import RevealImg from '../site/RevealImg';
 import { useLang } from '../site/LangProvider';
 import { CATALOG_CATEGORIES, categoryBySlug, categoryText } from '../../utils/catalog';
 import type { CatalogBusiness } from '../../utils/catalogData';
+import { writeQuick } from '../../utils/quickCache';
+import { prefetchBusinessProfile } from '../../utils/profileCache';
 
 const ALL = '__all__';
 
@@ -38,6 +40,10 @@ export default function CatalogBrowser({
   middle?: React.ReactNode;
 }) {
   const [businesses, setBusinesses] = useState(initial);
+  // Lista firmi se zapamti, pa stranica djelatnosti odmah ima podatke.
+  useEffect(() => {
+    if (businesses.length) writeQuick('catalog', businesses);
+  }, [businesses]);
   useEffect(() => {
     if (!retry) return;
     let stop = false;
@@ -156,6 +162,7 @@ export default function CatalogBrowser({
         <Link
           key={b.slug}
           href={`/katalog/${b.slug}`}
+          onPointerDown={() => prefetchBusinessProfile(b.slug)}
           className="group flex items-center gap-4 rounded-2xl border border-slate-800/80 bg-gray-900/40 p-4 transition hover:border-blue-500/50"
         >
           <PartnerLogo slug={b.slug} name={b.name} src={b.logo_url} className="h-14 w-14" />

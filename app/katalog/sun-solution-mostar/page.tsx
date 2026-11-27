@@ -19,7 +19,7 @@ const TEXT = {
     duration: 'Trajanje', price: 'Cijena', askService: 'Pošalji upit za ovu uslugu', formTitle: 'Pošaljite upit',
     formText: 'Procjena solarnog sistema i elektroinstalacija najčešće zahtijeva pregled na terenu, pa se ovdje ne zakazuje termin. Pošaljite upit i partner će vas kontaktirati radi dogovora.',
     thanks: (n: string) => `Hvala! Vaš upit je poslan firmi ${n}. Javit će vam se uskoro.`,
-    name: 'Ime i prezime', phone: 'Telefon', email: 'E-mail (nije obavezno)', service: 'Usluga (npr. solarni sistem, elektroinstalacije)',
+    name: 'Ime i prezime', phone: 'Telefon', email: 'E-mail (nije obavezno)', service: 'Usluga (npr. solarni sistem, elektroinstalacije)', pickService: 'Izaberite uslugu (nije obavezno)',
     message: 'Opišite šta vam treba (lokacija, objekat, okvirna potrošnja…)', sending: 'Slanje…', send: 'Pošalji upit', call: 'Nazovite',
   },
   en: {
@@ -29,7 +29,7 @@ const TEXT = {
     duration: 'Duration', price: 'Price', askService: 'Ask about this service', formTitle: 'Send an inquiry',
     formText: 'Assessing a solar system or electrical installation usually requires an on-site visit, so appointments are not booked here. Send an inquiry and the partner will contact you to arrange the details.',
     thanks: (n: string) => `Thank you! Your inquiry was sent to ${n}. They will get back to you soon.`,
-    name: 'Full name', phone: 'Phone', email: 'Email (optional)', service: 'Service (e.g. solar system, electrical installation)',
+    name: 'Full name', phone: 'Phone', email: 'Email (optional)', service: 'Service (e.g. solar system, electrical installation)', pickService: 'Choose a service (optional)',
     message: 'Describe what you need (location, building, approximate consumption…)', sending: 'Sending…', send: 'Send inquiry', call: 'Call',
   },
 };
@@ -205,7 +205,10 @@ export default function SunSolutionPage() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setService(item.name)}
+                    onClick={() => {
+                      setService(item.name);
+                      requestAnimationFrame(() => document.getElementById('posalji-upit')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                    }}
                     className="mt-auto self-start rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold text-amber-400 transition-colors hover:bg-amber-500/10"
                   >
                     {t.askService}
@@ -216,7 +219,7 @@ export default function SunSolutionPage() {
           )}
         </section>
 
-        <section className="mt-10 rounded-3xl border border-white/10 bg-[#0b0f19] p-6 md:p-8">
+        <section id="posalji-upit" className="mt-10 scroll-mt-24 rounded-3xl border border-white/10 bg-[#0b0f19] p-6 md:p-8">
           <h2 className="text-xl font-extrabold">{t.formTitle}</h2>
           <p className="mt-2 mb-5 text-xs leading-relaxed text-gray-400">
             {t.formText}
@@ -231,13 +234,16 @@ export default function SunSolutionPage() {
                 <input className={inputClass} placeholder={t.name} maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
                 <input className={inputClass} placeholder={t.phone} maxLength={40} value={phone} onChange={(e) => setPhone(e.target.value)} />
                 <input className={inputClass} type="email" placeholder={t.email} maxLength={120} value={email} onChange={(e) => setEmail(e.target.value)} />
-                <input
-                  className={inputClass}
-                  placeholder={t.service}
-                  maxLength={150}
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                />
+                {services.length > 0 ? (
+                  <select className={`${inputClass} appearance-none`} value={service} onChange={(e) => setService(e.target.value)} aria-label={t.service}>
+                    <option value="">{t.pickService}</option>
+                    {services.map((item) => (
+                      <option key={item.id} value={item.name}>{item.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input className={inputClass} placeholder={t.service} maxLength={150} value={service} onChange={(e) => setService(e.target.value)} />
+                )}
                 <textarea
                   className={`${inputClass} md:col-span-2`}
                   rows={4}

@@ -9,18 +9,21 @@ export default function InquiryForm({
   accent = 'blue',
   t = BOOKING_TEXT.bs,
   service,
+  services,
   messagePlaceholder,
 }: {
   businessSlug: string;
   accent?: 'blue' | 'amber';
   t?: BookingText;
   service?: string;
+  services?: string[];
   messagePlaceholder?: string;
 }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [chosen, setChosen] = useState(service || '');
   const [website, setWebsite] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -42,7 +45,7 @@ export default function InquiryForm({
       const response = await fetch('/api/business-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ business_slug: businessSlug, name, phone, email, message, website, ...(service ? { service } : {}) }),
+        body: JSON.stringify({ business_slug: businessSlug, name, phone, email, message, website, ...(chosen ? { service: chosen } : {}) }),
       });
       const result = await response.json().catch(() => null);
       if (response.ok && result?.success) setSent(true);
@@ -63,6 +66,14 @@ export default function InquiryForm({
       <input className={input} placeholder={t.qName} value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
       <input className={input} placeholder={t.qPhone} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={40} />
       <input className={input} placeholder={t.qEmail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} />
+      {services && services.length > 0 && (
+        <select className={`${input} appearance-none`} value={chosen} onChange={(e) => setChosen(e.target.value)} aria-label={t.qService}>
+          <option value="">{t.qService}</option>
+          {services.map((name) => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
+      )}
       <textarea className={input} placeholder={messagePlaceholder || t.qMessage} rows={4} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} />
       <input
         type="text"

@@ -94,7 +94,7 @@ export default function AppStart() {
           </Link>
           <p className="app-rise pt-3 text-center text-[13px] text-slate-400" style={{ animationDelay: '0.16s' }}>
             {t.owner}{' '}
-            <Link href="/prijava?next=/app" className="font-semibold text-blue-300">{t.ownerLogin}</Link>
+            <Link href="/nalog?next=/app" className="font-semibold text-blue-300">{t.ownerLogin}</Link>
             {' · '}
             <Link href="/registracija" className="font-semibold text-blue-300">{t.register}</Link>
           </p>

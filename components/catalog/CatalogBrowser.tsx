@@ -117,7 +117,7 @@ export default function CatalogBrowser({
 
   const categoryCards = (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-      {categories.map((cat) => {
+      {categories.map((cat, index) => {
         const ct = categoryText(cat, lang);
         return (
           <Link
@@ -128,9 +128,12 @@ export default function CatalogBrowser({
             <div>
               <div className="relative h-48 overflow-hidden bg-[#030712]">
                 <RevealImg
-                  src={cat.image.replace('w=800', 'w=640')}
+                  // Slika je prigušena (50%), pa manja kvaliteta ne vidi se, a učitava se 3-4x brže na mobitelu.
+                  src={cat.image.replace('w=800', 'w=560').replace('q=80', 'q=55')}
                   alt={ct.title}
                   decoding="async"
+                  loading={index < 2 ? 'eager' : 'lazy'}
+                  fetchPriority={index < 2 ? 'high' : 'low'}
                   className="h-full w-full object-cover contrast-125 [&.is-loaded]:opacity-50"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/50 to-transparent"></div>

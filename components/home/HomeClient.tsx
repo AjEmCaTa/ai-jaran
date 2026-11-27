@@ -5,6 +5,7 @@ import Link from "next/link";
 import Footer from "../Footer";
 import Icon, { type IconName } from "../Icon";
 import CatalogBrowser from "../catalog/CatalogBrowser";
+import OwnerCard from "../app/OwnerCard";
 import { useT } from "../site/LangProvider";
 import { GENERAL_SUBJECT, useSite } from "../site/siteContext";
 import type { CatalogBusiness } from "../../utils/catalogData";
@@ -72,6 +73,9 @@ export default function HomeClient({ businesses, retry }: { businesses: CatalogB
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#030712] font-sans text-white">
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-28 sm:pt-36">
+        {/* Vlasnik firme u aplikaciji: brz pregled i ulaz u panel */}
+        <OwnerCard />
+
         {/* Vrh: odmah jasno da se ovdje zakazuje */}
         <div className="mx-auto mb-8 max-w-3xl space-y-4 text-center">
           <span className="inline-block rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-blue-400">
@@ -91,7 +95,7 @@ export default function HomeClient({ businesses, retry }: { businesses: CatalogB
           retry={retry}
           homeLayout
           middle={
-            <section className="mt-20 grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <section className="store-hidden mt-20 grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
               <div className="order-2 lg:order-1">
                 <h2 className="mb-6 text-2xl font-bold tracking-tight text-white">{t.howTitle}</h2>
                 <div className="space-y-4">
@@ -134,7 +138,7 @@ export default function HomeClient({ businesses, retry }: { businesses: CatalogB
         />
 
         {/* Za vlasnike firmi */}
-        <section className="relative mt-16 overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-br from-blue-600/15 via-gray-900/60 to-violet-600/15 p-8 text-center shadow-2xl backdrop-blur-md md:p-12">
+        <section className="store-hidden relative mt-16 overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-br from-blue-600/15 via-gray-900/60 to-violet-600/15 p-8 text-center shadow-2xl backdrop-blur-md md:p-12">
           <div className="relative z-10 mx-auto max-w-2xl space-y-4">
             <span className="inline-block rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-blue-400">
               {t.ownerKicker}

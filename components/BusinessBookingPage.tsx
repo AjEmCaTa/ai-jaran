@@ -593,6 +593,8 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
                     setSelectedPackage(pkg);
                     setResTime('');
                     if (isStay && selectedPackage?.id !== pkg.id) { setResDate(''); setCheckOut(''); }
+                    // Odmah dole na sljedeći korak (upit ili datum), kao u aplikaciji.
+                    requestAnimationFrame(() => document.getElementById('korak-2')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
                   }}
                   className={`relative p-6 rounded-3xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                     isSelected
@@ -650,7 +652,7 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
         </div>
 
         {inquiryOnly ? (
-          <div className="space-y-4 pt-4">
+          <div id="korak-2" className="scroll-mt-24 space-y-4 pt-4">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">2</span>
               <h2 className="text-xl font-bold text-white">{t.step2Inquiry}</h2>
@@ -660,13 +662,20 @@ export default function BusinessBookingPage({ slug, backHref = '/#djelatnosti' }
                 {t.inquiryHint}
                 {selectedPackage && <span className="mt-1 block font-semibold text-blue-300">{selectedPackage.name}</span>}
               </p>
-              <InquiryForm businessSlug={BUSINESS_SLUG} t={t} service={selectedPackage?.name} messagePlaceholder={t.inquiryMessage} />
+              <InquiryForm
+                key={selectedPackage?.id || 'none'}
+                businessSlug={BUSINESS_SLUG}
+                t={t}
+                service={selectedPackage?.name}
+                services={packages.map((p) => p.name)}
+                messagePlaceholder={t.inquiryMessage}
+              />
             </div>
           </div>
         ) : (
         <form onSubmit={handleBooking} className="space-y-10">
 
-          <div className="space-y-4 pt-4">
+          <div id="korak-2" className="scroll-mt-24 space-y-4 pt-4">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-600/30">2</span>
               <h2 className="text-xl font-bold text-white">{isStay ? t.step2Stay : t.step2}</h2>

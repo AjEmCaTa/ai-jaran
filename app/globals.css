@@ -328,3 +328,8 @@ html.app-ui .cookie-banner { bottom: calc(5rem + env(safe-area-inset-bottom)); z
 .app-loader { animation: appLoader 1.1s ease-in-out infinite; }
 /* U aplikaciji je zaglavlje niže od web menija, pa manje praznog prostora gore. */
 html.app-ui .pt-32 { padding-top: calc(5rem + env(safe-area-inset-top)); }
+/* Prijava u izgledu aplikacije: sve na jednom ekranu, bez skrolanja. */
+html.app-ui .auth-main { min-height: calc(100dvh - 7.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 0.75rem 1rem; background: transparent; }
+html.app-ui .auth-card { background: transparent; border: 0; box-shadow: none; padding: 0 0.25rem; }
+html.app-ui .auth-extra { display: none; }
+html.app-ui .auth-title { margin-top: 0; font-size: 1.875rem; }

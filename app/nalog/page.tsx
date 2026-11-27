@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useState, type FormEvent } from 'react';
 import { createClient, type User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -80,6 +80,11 @@ export default function CustomerAuthPage() {
   const t = TEXT[lang];
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
+  // Povratak s prijave (?next ili token u adresi): prije prvog iscrtavanja, da se ne vidi kostur stranice.
+  const [returning, setReturning] = useState(false);
+  useLayoutEffect(() => {
+    setReturning(new URLSearchParams(window.location.search).has('next') || window.location.hash.includes('access_token'));
+  }, []);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loadingRes, setLoadingRes] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -236,6 +241,16 @@ export default function CustomerAuthPage() {
   const inputClass = 'mt-2 w-full rounded-xl border border-[#16264a] bg-[#050a18] px-4 py-3 text-white outline-none focus:border-[#1d5bff]';
   const primaryBtn = 'w-full rounded-xl bg-[#1d5bff] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-[#3b74ff] disabled:opacity-60';
   const secondaryBtn = 'w-full rounded-xl border border-[#16264a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:opacity-60';
+
+  if (checking && returning) {
+    // Povratak s prijave (npr. Google): isti tamni ekran s logom kao na početku aplikacije, bez treptanja.
+    return (
+      <main className="fixed inset-0 z-[70] flex items-center justify-center bg-[#030712]" aria-busy="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/poslo.one.png" alt="" width={120} height={120} className="app-logo-breathe h-[120px] w-[120px]" />
+      </main>
+    );
+  }
 
   if (checking) {
     // Kostur stranice dok se provjerava prijava, umjesto praznog ekrana.

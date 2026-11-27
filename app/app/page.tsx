@@ -135,7 +135,7 @@ export default function AppStart() {
     setBusy(true);
     setError('');
     const redirectTo = new URL('/nalog', window.location.origin);
-    redirectTo.searchParams.set('next', '/app');
+    redirectTo.searchParams.set('next', '/');
     const { error: authError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectTo.toString() } });
     if (authError) {
       setError(t.googleError);
@@ -149,7 +149,7 @@ export default function AppStart() {
       ? { top: '50%', transform: 'translate(-50%, -50%) scale(1)' }
       : stage === 'intro'
         ? { top: 'calc(env(safe-area-inset-top) + 2.75rem)', transform: 'translate(-50%, -50%) scale(0.42)' }
-        : { top: '27%', transform: 'translate(-50%, -50%) scale(1.1)' };
+        : { top: '30%', transform: 'translate(-50%, -50%) scale(1.1)', opacity: 0 };
 
   const illustrations: ReactNode[] = [
     <div key="a" className="w-full max-w-[300px]">
@@ -207,7 +207,7 @@ export default function AppStart() {
       </div>
 
       <div
-        className="pointer-events-none fixed left-1/2 z-20 transition-[top,transform] duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+        className="pointer-events-none fixed left-1/2 z-20 transition-[top,transform,opacity] duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
         style={logoStyle}
       >
         <Image src="/poslo.one.png" alt="POSLO ONE" width={120} height={120} priority className={`h-[120px] w-[120px] ${stage === 'logo' ? 'app-logo-breathe' : ''}`} />
@@ -263,7 +263,9 @@ export default function AppStart() {
 
       {stage === 'login' && (
         <div className="relative z-10 flex min-h-[100dvh] flex-col px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]">
-          <div className="flex flex-1 flex-col items-center justify-end pb-[18vh]">
+          {/* Logo je ovdje u toku stranice (ne prikovan), pa ga ništa ne može prekriti kad se ekran smanji. */}
+          <div className="flex flex-1 flex-col items-center justify-center pb-6">
+            <Image src="/poslo.one.png" alt="POSLO ONE" width={132} height={132} priority className="app-fade mb-8 h-[132px] w-[132px]" />
             <h1 className="app-rise text-[34px] font-black tracking-tight" style={{ animationDelay: '0.25s' }}>{t.welcome}</h1>
             <p className="app-rise mt-2 text-center text-[15px] text-slate-400" style={{ animationDelay: '0.32s' }}>{t.welcomeSub}</p>
           </div>
@@ -279,7 +281,7 @@ export default function AppStart() {
               <GoogleMark /> {t.google}
             </button>
             <Link
-              href="/nalog?next=/app"
+              href="/nalog?next=/"
               className="app-press app-rise flex h-14 w-full items-center justify-center rounded-2xl border border-white/15 bg-white/[0.06] text-[16px] font-bold"
               style={{ animationDelay: '0.44s' }}
             >

@@ -79,6 +79,15 @@ export default function AppChrome() {
   const isRoot = ROOT_TABS.includes(pathname);
   const goBack = () => (window.history.length > 1 ? router.back() : router.push('/'));
 
+  // Kao u pravim aplikacijama: dodir na tab/logo stranice na kojoj već jesi vraća na vrh.
+  const toTopIfHere = (href: string) => (e: { preventDefault: () => void }) => {
+    if (sheet) setSheet(false);
+    if (href === pathname) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const tabs: { key: string; href?: string; label: string; icon: IconName; active: boolean; onClick?: () => void }[] = [
     { key: 'home', href: '/', label: t.home, icon: 'home', active: pathname === '/' || pathname.startsWith('/katalog') },
     { key: 'bookings', href: '/nalog', label: t.bookings, icon: 'calendar', active: pathname === '/nalog' },
@@ -102,7 +111,7 @@ export default function AppChrome() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[#030712]/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="flex h-14 items-center gap-2 px-3">
           {isRoot ? (
-            <Link href="/" className="flex items-center gap-2 pl-1">
+            <Link href="/" onClick={toTopIfHere('/')} className="flex items-center gap-2 pl-1">
               <Image src="/poslo.one.png" alt="" width={30} height={30} className="h-[30px] w-[30px]" priority />
               <span className="text-[17px] font-extrabold tracking-tight text-white">POSLO ONE</span>
             </Link>
@@ -141,7 +150,7 @@ export default function AppChrome() {
             );
             const cls = 'app-press flex flex-col items-center justify-center gap-0.5';
             return tab.href ? (
-              <Link key={tab.key} href={tab.href} className={cls} aria-current={tab.active ? 'page' : undefined}>{inner}</Link>
+              <Link key={tab.key} href={tab.href} onClick={toTopIfHere(tab.href)} className={cls} aria-current={tab.active ? 'page' : undefined}>{inner}</Link>
             ) : (
               <button key={tab.key} onClick={tab.onClick} className={cls} aria-expanded={sheet}>{inner}</button>
             );

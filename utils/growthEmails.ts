@@ -125,6 +125,58 @@ export async function sendReviewRequest(admin: SupabaseClient, row: Row): Promis
   }
 }
 
+// Poslovi (građevina i sl.): molba za recenziju tek kad vlasnik to izabere, jednom po poslu.
+export async function sendJobReviewRequest(
+  admin: SupabaseClient,
+  businessId: string,
+  inquiryId: string,
+  sender: typeof send = send,
+): Promise<'sent' | 'no_email' | 'no_link' | 'already' | 'failed'> {
+  try {
+    const { data: job } = await admin
+      .from('business_inquiries')
+      .select('id, name, email, service, review_sent_at')
+      .eq('id', inquiryId)
+      .eq('business_id', businessId)
+      .maybeSingle();
+    if (!job) return 'failed';
+    const to = typeof job.email === 'string' ? job.email.trim() : '';
+    if (!to.includes('@')) return 'no_email';
+    if (job.review_sent_at) return 'already';
+    const { data: business } = await admin.from('businesses').select('name, google_review_url').eq('id', businessId).maybeSingle();
+    const reviewUrl = safeHttpUrl(business?.google_review_url);
+    if (!reviewUrl) return 'no_link';
+    const { data: claimed } = await admin
+      .from('business_inquiries')
+      .update({ review_sent_at: new Date().toISOString() })
+      .eq('id', inquiryId)
+      .is('review_sent_at', null)
+      .select('id')
+      .maybeSingle();
+    if (!claimed) return 'already';
+    const partner = String(business?.name || 'POSLO ONE');
+    const name = escapeHtml(job.name || '');
+    const service = escapeHtml(job.service || 'posao');
+    const html = layout(
+      'Hvala na saradnji',
+      `<p style="font-size:14px;margin:0 0 12px 0;">Pozdrav${name ? ' ' + name : ''},</p>` +
+        `<p style="font-size:14px;margin:0 0 12px 0;">Hvala što ste nam povjerili posao (${service}). Ako ste zadovoljni, bili bismo jako zahvalni na kratkoj Google recenziji. Treba manje od minute, a nama puno znači.</p>`,
+      'Ostavi recenziju',
+      reviewUrl,
+      partner,
+    );
+    const ok = await sender(to, partner, `Hvala na saradnji - ${partner}`, html);
+    if (!ok) {
+      await admin.from('business_inquiries').update({ review_sent_at: null }).eq('id', inquiryId);
+      return 'failed';
+    }
+    return 'sent';
+  } catch (e) {
+    console.error('Molba za recenziju (posao) nije poslana:', e);
+    return 'failed';
+  }
+}
+
 const customerKey = (r: Row) =>
   String(r.customer_email || r.customer_phone || r.customer_name || '').trim().toLocaleLowerCase('bs');
 

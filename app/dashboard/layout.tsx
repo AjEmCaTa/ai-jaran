@@ -59,6 +59,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
 
   const [business, setBusiness] = useState<DashboardBusiness>(normalizeBusiness(null));
+  // Firme koje rade po upitima vide "Poslovi" umjesto "Upiti".
+  const labelOf = (item: NavItem) => (item.href === "/dashboard/inquiries" && business.jobs_enabled ? "Poslovi" : item.label);
   const [prefsVersion, setPrefsVersion] = useState(0);
   const [ownerName, setOwnerName] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -312,7 +314,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   >
                     <Icon name={item.icon} className="h-[17px] w-[17px]" />
                   </span>
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate">{labelOf(item)}</span>
                   {active && <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400 shadow-[0_0_10px_var(--color-blue-400)]" />}
                 </Link>
               );
@@ -499,7 +501,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }`}
               >
                 <Icon name={item.icon} className="h-[22px] w-[22px]" />
-                {item.label}
+                {labelOf(item)}
               </Link>
             );
           })}

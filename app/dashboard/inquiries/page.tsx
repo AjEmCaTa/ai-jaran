@@ -5,22 +5,14 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { useBusiness } from '../_lib/business-context';
 import PushToggle from '../_components/PushToggle';
+import JobsBoard, { type Job } from './JobsBoard';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
 );
 
-type Inquiry = {
-  id: string;
-  name: string;
-  phone: string;
-  email: string | null;
-  service: string | null;
-  message: string;
-  status: 'new' | 'handled';
-  created_at: string;
-};
+type Inquiry = Job;
 
 const panel = 'min-w-0 rounded-[var(--po-radius)] border border-white/[0.07] bg-gray-900/70 p-[var(--po-pad)] backdrop-blur';
 
@@ -31,7 +23,8 @@ async function authHeaders() {
 }
 
 function InquiriesContent() {
-  const { business } = useBusiness();
+  const { business, refresh } = useBusiness();
+  const [modeBusy, setModeBusy] = useState(false);
   const params = useSearchParams();
   const highlight = params.get('id');
   const [items, setItems] = useState<Inquiry[]>([]);
@@ -80,6 +73,73 @@ function InquiriesContent() {
       setUpdating('');
     }
   };
+
+  const api = async (url: string, init: { method?: string; body?: unknown } = {}) => {
+    const response = await fetch(url, {
+      method: init.method || 'GET',
+      headers: await authHeaders(),
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'Izmjena nije uspjela.');
+    return result as Record<string, unknown>;
+  };
+
+  // Firma sama bira: upiti kao jednostavna lista ili kao poslovi sa zaradom.
+  const setMode = async (mode: 'on' | 'off') => {
+    setModeBusy(true);
+    setError('');
+    try {
+      await api('/api/dashboard', { method: 'PATCH', body: { name: business.name, jobs_mode: mode } });
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Izmjena nije uspjela.');
+    } finally {
+      setModeBusy(false);
+    }
+  };
+
+  const modeCard = (
+    <div className={`${panel} flex flex-wrap items-center justify-between gap-3`}>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-white">{business.jobs_enabled ? 'Vodite upite kao poslove' : 'Radite po ponudama?'}</p>
+        <p className="mt-0.5 text-xs text-gray-400">
+          {business.jobs_enabled
+            ? 'Faze, ponuda, avans, naplata i zarada po poslu. Možete se vratiti na običnu listu upita.'
+            : 'Uključite „Poslove”: faze upita, ponuda, avans, naplata i čista zarada po poslu.'}
+        </p>
+      </div>
+      <button
+        type="button"
+        disabled={modeBusy}
+        onClick={() => setMode(business.jobs_enabled ? 'off' : 'on')}
+        className="min-h-11 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+      >
+        {modeBusy ? 'Spremam…' : business.jobs_enabled ? 'Obična lista upita' : 'Uključi Poslove'}
+      </button>
+    </div>
+  );
+
+  if (business.jobs_enabled) {
+    return (
+      <div className="space-y-5">
+        {loading ? (
+          <div className={`${panel} text-sm text-gray-400`}>Učitavanje poslova…</div>
+        ) : (
+          <JobsBoard
+            items={items}
+            setItems={(fn) => setItems((cur) => fn(cur))}
+            api={api}
+            highlight={highlight}
+            hasReviewLink={Boolean(business.google_review_url)}
+          />
+        )}
+        {error && <p className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
+        <PushToggle />
+        {modeCard}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -151,6 +211,7 @@ function InquiriesContent() {
           ))}
         </ul>
       )}
+      {modeCard}
     </div>
   );
 }

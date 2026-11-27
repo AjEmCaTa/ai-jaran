@@ -9,6 +9,8 @@ import Icon, { type IconName } from './_components/icons';
 import BookingLinkCard from './_components/BookingLinkCard';
 import SetupChecklist from './_components/SetupChecklist';
 import MonthlyGoal from './_components/MonthlyGoal';
+import JobsSummaryCard from './_components/JobsSummaryCard';
+import { useBusiness } from './_lib/business-context';
 import CountUp from './_components/CountUp';
 import { fullDate, longToday, monthShort, shortDateTime, timeOf, weekdayShort } from './_lib/dates';
 
@@ -222,6 +224,8 @@ export default function DashboardPage() {
   const [reservations, setReservations] = useState<DashboardReservation[]>([]);
   const [serviceCount, setServiceCount] = useState(0);
   const [chartMode, setChartMode] = useState<'bookings' | 'revenue'>('bookings');
+  const jobsEnabled = useBusiness().business.jobs_enabled;
+  const [jobsRevenue, setJobsRevenue] = useState(0);
   // Stubići grafikona rastu od nule kad se podaci učitaju.
   const [grown, setGrown] = useState(false);
   const [welcome, setWelcome] = useState(false);
@@ -442,6 +446,8 @@ export default function DashboardPage() {
           {errorMessage}
         </p>
       )}
+
+      {jobsEnabled && <JobsSummaryCard onRevenue={setJobsRevenue} />}
 
       {welcome && (
         <section className="rounded-[var(--po-radius)] border border-emerald-500/30 bg-emerald-500/10 p-[var(--po-pad)]">
@@ -793,7 +799,7 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <MonthlyGoal revenue={data.revenueMonth} loading={loading} businessId={business.id} />
+        <MonthlyGoal revenue={jobsEnabled ? data.revenueMonth + jobsRevenue : data.revenueMonth} loading={loading} businessId={business.id} />
       </div>
 
       {/* NEDAVNE REZERVACIJE */}

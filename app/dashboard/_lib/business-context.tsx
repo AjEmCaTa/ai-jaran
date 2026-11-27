@@ -20,6 +20,8 @@ export type DashboardBusiness = {
   logo_url: string;
   plan: "starter" | "pro";
   auto_confirm: boolean;
+  jobs_mode: "on" | "off" | null;
+  jobs_enabled: boolean;
   created_at: string;
 };
 
@@ -58,6 +60,8 @@ export function normalizeBusiness(b: Record<string, unknown> | null | undefined)
     logo_url: str(b?.logo_url),
     plan: b?.plan === "starter" ? "starter" : "pro",
     auto_confirm: b?.auto_confirm !== false,
+    jobs_mode: b?.jobs_mode === "on" || b?.jobs_mode === "off" ? b.jobs_mode : null,
+    jobs_enabled: b?.jobs_enabled === true,
     created_at: str(b?.created_at),
   };
 }

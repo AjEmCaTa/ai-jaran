@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import InstallButton from '../InstallButton';
 import Icon, { type IconName } from '../Icon';
 import { useLang, useT } from '../site/LangProvider';
 import { useSite } from '../site/siteContext';
@@ -13,18 +15,26 @@ import { useSite } from '../site/siteContext';
 
 const TEXT = {
   bs: {
-    home: 'Početna', bookings: 'Moji termini', more: 'Više', back: 'Nazad',
+    home: 'Početna', bookings: 'Termini', profile: 'Profil', more: 'Više', back: 'Nazad', pricing: 'Cjenovnik',
     panel: 'Moj panel', panelSub: 'Za vlasnike firmi', business: 'Za firme', about: 'O nama', faq: 'Česta pitanja',
     contact: 'Kontakt', privacy: 'Privatnost', terms: 'Uslovi korištenja', language: 'Jezik', close: 'Zatvori',
   },
   en: {
-    home: 'Home', bookings: 'My bookings', more: 'More', back: 'Back',
+    home: 'Home', bookings: 'Bookings', profile: 'Profile', more: 'More', back: 'Back', pricing: 'Pricing',
     panel: 'My panel', panelSub: 'For business owners', business: 'For businesses', about: 'About', faq: 'FAQ',
     contact: 'Contact', privacy: 'Privacy', terms: 'Terms of use', language: 'Language', close: 'Close',
   },
 };
 
-const ROOT_TABS = ['/', '/nalog'];
+const ROOT_TABS = ['/', '/nalog', '/profil'];
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
+);
+
+// U instaliranoj aplikaciji prijava je obavezna; ove stranice su dostupne i bez nje.
+const OPEN_IN_APP = ['/app', '/nalog', '/registracija', '/zaboravljena-lozinka', '/nova-lozinka', '/uslovi', '/privatnost', '/povrat-novca', '/kolacici'];
 
 export default function AppChrome() {
   const pathname = usePathname() || '/';
@@ -35,6 +45,15 @@ export default function AppChrome() {
   const [sheet, setSheet] = useState(false);
 
   useEffect(() => setSheet(false), [pathname]);
+
+  // Instalirana aplikacija: bez prijave samo početni ekran i stranice za prijavu.
+  useEffect(() => {
+    if (!document.documentElement.classList.contains('app-mode')) return;
+    if (OPEN_IN_APP.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.replace('/app');
+    });
+  }, [pathname, router]);
   useEffect(() => {
     if (!sheet) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheet(false);
@@ -48,12 +67,14 @@ export default function AppChrome() {
   const tabs: { key: string; href?: string; label: string; icon: IconName; active: boolean; onClick?: () => void }[] = [
     { key: 'home', href: '/', label: t.home, icon: 'home', active: pathname === '/' || pathname.startsWith('/katalog') },
     { key: 'bookings', href: '/nalog', label: t.bookings, icon: 'calendar', active: pathname === '/nalog' },
+    { key: 'profile', href: '/profil', label: t.profile, icon: 'user', active: pathname === '/profil' },
     { key: 'more', label: t.more, icon: 'grid', active: sheet, onClick: () => setSheet((v) => !v) },
   ];
 
-  const links: { href: string; label: string; icon: IconName; sub?: string }[] = [
+  const links: { href: string; label: string; icon: IconName; sub?: string; storeHidden?: boolean }[] = [
     { href: '/dashboard', label: t.panel, sub: t.panelSub, icon: 'dashboard' },
     { href: '/za-firme', label: t.business, icon: 'building' },
+    { href: '/cjenovnik', label: t.pricing, icon: 'tag', storeHidden: true },
     { href: '/o-nama', label: t.about, icon: 'users' },
     { href: '/faq', label: t.faq, icon: 'message' },
     { href: '/privatnost', label: t.privacy, icon: 'shield' },
@@ -87,7 +108,7 @@ export default function AppChrome() {
 
       {/* Donja traka */}
       <nav aria-label="Aplikacija" className="fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.07] bg-[#060a16]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
-        <div className="grid h-16 grid-cols-3">
+        <div className="grid h-16 grid-cols-4">
           {tabs.map((tab) => {
             const inner = (
               <>
@@ -120,7 +141,7 @@ export default function AppChrome() {
             </div>
             <div className="space-y-1.5">
               {links.map((l) => (
-                <Link key={l.href} href={l.href} className="app-press flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/[0.04]">
+                <Link key={l.href} href={l.href} className={`app-press flex items-center gap-3 ${l.storeHidden ? 'store-hidden' : ''} rounded-2xl px-3 py-3 hover:bg-white/[0.04]`}>
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-blue-300"><Icon name={l.icon} className="h-5 w-5" /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-semibold text-white">{l.label}</span>
@@ -133,6 +154,7 @@ export default function AppChrome() {
                 <span className="text-[15px] font-semibold text-white">{t.contact}</span>
               </button>
             </div>
+            <div className="mt-3"><InstallButton /></div>
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
               <span className="text-sm font-semibold text-slate-300">{t.language}</span>
               <div className="flex rounded-xl bg-white/[0.05] p-1 text-xs font-bold">

@@ -18,18 +18,14 @@ const supabase = createClient(
 const TEXT = {
   bs: {
     tagline: 'Zakaži termin bez poziva i poruka.',
-    login: 'Prijavi se',
-    guest: 'Nastavi bez prijave',
+    login: 'Prijavi se ili napravi račun',
     owner: 'Imaš firmu?',
-    ownerLogin: 'Prijava za vlasnike',
     register: 'Registruj firmu',
   },
   en: {
     tagline: 'Book appointments without calls or messages.',
-    login: 'Sign in',
-    guest: 'Continue without signing in',
+    login: 'Sign in or create an account',
     owner: 'Own a business?',
-    ownerLogin: 'Owner sign in',
     register: 'Register your business',
   },
 };
@@ -42,7 +38,7 @@ export default function AppStart() {
   useEffect(() => {
     try {
       sessionStorage.setItem('poslo_app', '1');
-      document.documentElement.classList.add('app-mode');
+      document.documentElement.classList.add('app-mode', 'app-ui');
     } catch {}
 
     let cancelled = false;
@@ -89,13 +85,8 @@ export default function AppStart() {
           <Link href="/nalog?next=/app" className="app-press app-rise flex h-14 w-full items-center justify-center rounded-2xl bg-blue-600 text-[16px] font-bold shadow-lg shadow-blue-600/30">
             {t.login}
           </Link>
-          <Link href="/" className="app-press app-rise flex h-14 w-full items-center justify-center rounded-2xl border border-white/12 bg-white/[0.04] text-[15px] font-semibold text-slate-200" style={{ animationDelay: '0.08s' }}>
-            {t.guest}
-          </Link>
           <p className="app-rise pt-3 text-center text-[13px] text-slate-400" style={{ animationDelay: '0.16s' }}>
             {t.owner}{' '}
-            <Link href="/nalog?next=/app" className="font-semibold text-blue-300">{t.ownerLogin}</Link>
-            {' · '}
             <Link href="/registracija" className="font-semibold text-blue-300">{t.register}</Link>
           </p>
         </div>

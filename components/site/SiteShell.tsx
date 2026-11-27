@@ -18,7 +18,7 @@ import { GENERAL_SUBJECT, SiteContext } from './siteContext';
 const hasAppChrome = (path: string) => !path.startsWith('/dashboard') && !path.startsWith('/master-panel') && path !== '/app';
 
 const hasChrome = (path: string) =>
-  path === '/' || path === '/cjenovnik' || path === '/demo' || path === '/za-firme' || path === '/o-nama' || path === '/faq' || path === '/katalog' || path.startsWith('/katalog/');
+  path === '/' || path === '/cjenovnik' || path === '/demo' || path === '/za-firme' || path === '/o-nama' || path === '/faq' || path === '/profil' || path === '/katalog' || path.startsWith('/katalog/');
 
 export default function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/';

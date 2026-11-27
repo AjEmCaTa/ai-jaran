@@ -298,19 +298,19 @@ body { transition: opacity 0.2s ease-out; }
 }
 
 /* ===== Aplikacija (Play Store / instalirana) =====
-   html.app-mode postavlja skripta u <head> samo kad je otvorena kao aplikacija.
+   html.app-ui postavlja skripta u <head> samo kad je otvorena kao aplikacija.
    Na običnoj web stranici ništa od ovoga se ne primjenjuje. */
 .app-only { display: none; }
-html.app-mode .app-only { display: block; }
-html.app-mode .web-only { display: none !important; }
-html.app-mode { -webkit-tap-highlight-color: transparent; }
-html.app-mode body { -webkit-user-select: none; user-select: none; overscroll-behavior-x: none; }
-html.app-mode input, html.app-mode textarea, html.app-mode select, html.app-mode [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
-html.app-mode * { scrollbar-width: none; }
-html.app-mode *::-webkit-scrollbar { display: none; }
-html.app-mode a, html.app-mode button { touch-action: manipulation; }
-html.app-mode button:not(:disabled):active, html.app-mode a.app-press:active { transform: scale(0.97); transition: transform 0.08s ease-out; }
-html.app-mode img { -webkit-user-drag: none; }
+html.app-ui .app-only { display: block; }
+html.app-ui .web-only { display: none !important; }
+html.app-ui { -webkit-tap-highlight-color: transparent; }
+html.app-ui body { -webkit-user-select: none; user-select: none; overscroll-behavior-x: none; }
+html.app-ui input, html.app-ui textarea, html.app-ui select, html.app-ui [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+html.app-ui * { scrollbar-width: none; }
+html.app-ui *::-webkit-scrollbar { display: none; }
+html.app-ui a, html.app-ui button { touch-action: manipulation; }
+html.app-ui button:not(:disabled):active, html.app-ui a.app-press:active { transform: scale(0.97); transition: transform 0.08s ease-out; }
+html.app-ui img { -webkit-user-drag: none; }
 
 @keyframes appSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes appFade { from { opacity: 0; } to { opacity: 1; } }
@@ -323,8 +323,8 @@ html.app-mode img { -webkit-user-drag: none; }
 @media (prefers-reduced-motion: reduce) {
   .app-sheet, .app-fade, .app-logo-in, .app-rise { animation: none; }
 }
-html.app-mode .cookie-banner { bottom: calc(5rem + env(safe-area-inset-bottom)); z-index: 55; }
+html.app-ui .cookie-banner { bottom: calc(5rem + env(safe-area-inset-bottom)); z-index: 55; }
 @keyframes appLoader { from { transform: translateX(-100%); } to { transform: translateX(200%); } }
 .app-loader { animation: appLoader 1.1s ease-in-out infinite; }
 /* U aplikaciji je zaglavlje niže od web menija, pa manje praznog prostora gore. */
-html.app-mode .pt-32 { padding-top: calc(5rem + env(safe-area-inset-top)); }
+html.app-ui .pt-32 { padding-top: calc(5rem + env(safe-area-inset-top)); }

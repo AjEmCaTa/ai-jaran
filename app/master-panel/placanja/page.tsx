@@ -170,9 +170,9 @@ export default function MasterBillingPage() {
                       {f.plan_until ? (
                         <span className={`text-[11px] ${new Date(f.plan_until).getTime() < Date.now() + 7 * 86400000 ? "font-semibold text-amber-400" : "text-slate-400"}`}>Ističe {fmt(f.plan_until)}</span>
                       ) : f.billing_provider === "free" ? (
-                        <span className="text-[11px] text-slate-400">Ne ističe</span>
+                        <span className="text-[11px] text-slate-400">Vlasnik platforme</span>
                       ) : (
-                        <Badge tone="amber">Bez pretplate (ne ističe)</Badge>
+                        <Badge tone="amber">Datum isteka nije postavljen</Badge>
                       )}
                     </div>
                   </div>

@@ -182,6 +182,9 @@ const PATHS = {
   ),
   heart: <path d="M12 20s-7-4.4-8.6-8.7C2.2 8 4.3 5 7.4 5c1.9 0 3.4 1 4.6 2.6C13.2 6 14.7 5 16.6 5c3.1 0 5.2 3 4 6.3C19 15.6 12 20 12 20zM8 12h2.5l1.5-2.5 2 4 1.5-1.5H17" />,
   hammer: <path d="M14.5 6.5l3 3M4 20l9-9M13 4l7 7-2.5 2.5-7-7zM9.5 7.5l3-3" />,
+  user: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" />,
+  back: <path d="M15 5l-7 7 7 7" />,
+  grid: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
   party: <path d="M4 20l4.5-12L16 15.5zM14 4l.5 2M19 9l-2 .5M18 4l-2.5 2.5" />,
 } satisfies Record<string, ReactNode>;
 

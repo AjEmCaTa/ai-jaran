@@ -240,7 +240,10 @@ export default function BillingPage() {
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-12">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-white">Paket i plaćanje</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="app-only mt-1 text-sm text-slate-400">
+          Ovdje vidite koji paket imate i do kada vrijedi. Promjene paketa i plaćanje nisu dostupni u aplikaciji.
+        </p>
+        <p className="web-only mt-1 text-sm text-slate-400">
           {dodo
             ? 'Prvih 30 dana besplatno. Plaćate mjesečno karticom, Apple Payom ili Google Payom, ili uplatnicom. Otkazivanje u bilo kojem trenutku.'
             : 'Izaberite paket i plaćajte mjesečno. Otkazivanje u bilo kojem trenutku.'}
@@ -248,12 +251,14 @@ export default function BillingPage() {
       </div>
 
       {welcome && s?.requiresPayment && (
+        <div className="web-only">
         <section className="rounded-[var(--po-radius)] border border-blue-500/30 bg-blue-500/10 p-[var(--po-pad)]">
           <p className="font-display text-lg font-bold text-white">Dobrodošli u POSLO ONE! 👋</p>
           <p className="mt-1 text-sm text-blue-100/90">
             Još jedan korak: izaberite paket. <b>Prvih 30 dana je besplatno</b>. Kartica se samo provjerava, a prva naplata je tek nakon 30 dana. Ako vam više odgovara, možete plaćati i uplatnicom.
           </p>
         </section>
+        </div>
       )}
 
       {s?.testMode && dodo && (
@@ -287,12 +292,12 @@ export default function BillingPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               {provider === 'dodo' && !active && (
-                <button type="button" onClick={check} disabled={busy !== ''} className="min-h-10 rounded-lg bg-blue-500 px-4 text-xs font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50">
+                <button type="button" onClick={check} disabled={busy !== ''} className="web-only min-h-10 rounded-lg bg-blue-500 px-4 text-xs font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50">
                   {busy === 'check' ? 'Provjeravam...' : 'Provjeri pretplatu'}
                 </button>
               )}
               {(dodoSub || lemonSub) && (
-                <button type="button" onClick={openPortal} disabled={busy !== ''} className={ghostBtn}>
+                <button type="button" onClick={openPortal} disabled={busy !== ''} className={`web-only ${ghostBtn}`}>
                   {busy === 'portal' ? 'Otvaram...' : 'Upravljaj pretplatom / kartica / otkaži'}
                 </button>
               )}
@@ -301,7 +306,7 @@ export default function BillingPage() {
         )}
       </section>
 
-      {!free && <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {!free && <div className="web-only grid grid-cols-1 gap-4 md:grid-cols-2">
         {PLANS.map((p) => {
           const current = s?.plan === p.id && (active || dodoLive || onBank);
           const canSwitch = dodoLive && !current;
@@ -364,7 +369,7 @@ export default function BillingPage() {
       </div>}
 
       {onBank && s?.bank && (
-        <section id="uplatnica" className={panel}>
+        <section id="uplatnica" className={`web-only ${panel}`}>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300">
               <Icon name="banknote" className="h-5 w-5" />
@@ -392,7 +397,7 @@ export default function BillingPage() {
       {s && !cardEnabled && !bankEnabled && (
         <p className="text-xs text-slate-500">Online plaćanje još nije uključeno. Za aktivaciju paketa nas kontaktirajte.</p>
       )}
-      <p className="text-[11px] leading-relaxed text-slate-500">
+      <p className="web-only text-[11px] leading-relaxed text-slate-500">
         Plaćanjem prihvatate <a className="text-blue-400 hover:text-blue-300" href="/uslovi">uslove korištenja</a> i{' '}
         <a className="text-blue-400 hover:text-blue-300" href="/povrat-novca">pravila povrata novca</a>.
       </p>

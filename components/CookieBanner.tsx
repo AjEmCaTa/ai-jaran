@@ -31,7 +31,7 @@ export default function CookieBanner({ onOpenPrivacy }: CookieBannerProps) {
   if (!showBanner) return null;
 
   return (
-    <div className="fade-in fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 bg-[#030712]/95 backdrop-blur-xl border border-white/10 p-4 md:p-5 rounded-2xl shadow-2xl flex flex-col gap-3 text-xs md:text-sm text-gray-300">
+    <div className="cookie-banner fade-in fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 bg-[#030712]/95 backdrop-blur-xl border border-white/10 p-4 md:p-5 rounded-2xl shadow-2xl flex flex-col gap-3 text-xs md:text-sm text-gray-300">
       <p className="leading-relaxed text-xs md:text-sm">
         {t.text}{" "}
         <button

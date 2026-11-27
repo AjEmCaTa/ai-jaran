@@ -68,7 +68,7 @@ export default function InstallButton({ mobileOnly = true, alwaysBs = false, hin
 
   return (
     <>
-      <div className={mobileOnly ? "md:hidden w-full" : "w-full"}>
+      <div className={mobileOnly ? "web-only md:hidden w-full" : "web-only w-full"}>
         {hint && <p className="mb-2 text-center text-xs leading-relaxed text-slate-400">{hint}</p>}
         <button
           onClick={handleClick}

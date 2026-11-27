@@ -333,3 +333,10 @@ html.app-ui .auth-main { min-height: calc(100dvh - 7.5rem - env(safe-area-inset-
 html.app-ui .auth-card { background: transparent; border: 0; box-shadow: none; padding: 0 0.25rem; }
 html.app-ui .auth-extra { display: none; }
 html.app-ui .auth-title { margin-top: 0; font-size: 1.875rem; }
+@keyframes appSheetDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@keyframes appFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes appItemIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.app-sheet-out { animation: appSheetDown 0.24s cubic-bezier(0.4, 0, 1, 1) both; }
+.app-fade-out { animation: appFadeOut 0.24s ease-in both; }
+.app-item { animation: appItemIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .app-sheet-out, .app-fade-out, .app-item { animation: none; } }

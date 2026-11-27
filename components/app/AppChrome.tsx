@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import InstallButton from '../InstallButton';
 import Icon, { type IconName } from '../Icon';
@@ -42,9 +42,24 @@ export default function AppChrome() {
   const t = useT(TEXT);
   const { lang, setLang } = useLang();
   const { openContact } = useSite();
-  const [sheet, setSheet] = useState(false);
+  const [sheet, setSheetRaw] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Zatvaranje ide kroz animaciju (klizi dolje), pa se tek onda skloni.
+  const setSheet = (next: boolean | ((v: boolean) => boolean)) => {
+    const want = typeof next === 'function' ? next(sheet && !closing) : next;
+    if (want) {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      setClosing(false);
+      setSheetRaw(true);
+    } else if (sheet && !closing) {
+      setClosing(true);
+      closeTimer.current = setTimeout(() => { setClosing(false); setSheetRaw(false); }, 240);
+    }
+  };
 
-  useEffect(() => setSheet(false), [pathname]);
+
+  useEffect(() => { setClosing(false); setSheetRaw(false); }, [pathname]);
 
   // Instalirana aplikacija: bez prijave samo početni ekran i stranice za prijavu.
   useEffect(() => {
@@ -68,7 +83,7 @@ export default function AppChrome() {
     { key: 'home', href: '/', label: t.home, icon: 'home', active: pathname === '/' || pathname.startsWith('/katalog') },
     { key: 'bookings', href: '/nalog', label: t.bookings, icon: 'calendar', active: pathname === '/nalog' },
     { key: 'profile', href: '/profil', label: t.profile, icon: 'user', active: pathname === '/profil' },
-    { key: 'more', label: t.more, icon: 'grid', active: sheet, onClick: () => setSheet((v) => !v) },
+    { key: 'more', label: t.more, icon: 'grid', active: sheet && !closing, onClick: () => setSheet((v) => !v) },
   ];
 
   const links: { href: string; label: string; icon: IconName; sub?: string; storeHidden?: boolean }[] = [
@@ -131,8 +146,8 @@ export default function AppChrome() {
       {/* Meni "Više" odozdo */}
       {sheet && (
         <div className="fixed inset-x-0 top-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40" role="dialog" aria-modal="true" aria-label={t.more}>
-          <button aria-label={t.close} onClick={() => setSheet(false)} className="app-fade absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="app-sheet absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-[28px] border-t border-white/10 bg-[#0a0f1e] px-4 pb-4 pt-3">
+          <button aria-label={t.close} onClick={() => setSheet(false)} className={`${closing ? 'app-fade-out' : 'app-fade'} absolute inset-0 bg-black/60 backdrop-blur-sm`} />
+          <div className={`${closing ? 'app-sheet-out' : 'app-sheet'} absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-[28px] border-t border-white/10 bg-[#0a0f1e] px-4 pb-4 pt-3`}>
             <div className="mb-3 flex items-center justify-between pl-2">
               <span className="text-lg font-extrabold text-white">{t.more}</span>
               <button onClick={() => setSheet(false)} aria-label={t.close} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-slate-300 hover:bg-white/10">
@@ -140,8 +155,8 @@ export default function AppChrome() {
               </button>
             </div>
             <div className="space-y-1.5">
-              {links.map((l) => (
-                <Link key={l.href} href={l.href} className={`app-press flex items-center gap-3 ${l.storeHidden ? 'store-hidden' : ''} rounded-2xl px-3 py-3 hover:bg-white/[0.04]`}>
+              {links.map((l, i) => (
+                <Link style={{ animationDelay: `${0.04 + i * 0.03}s` }} key={l.href} href={l.href} className={`app-item app-press flex items-center gap-3 ${l.storeHidden ? 'store-hidden' : ''} rounded-2xl px-3 py-3 hover:bg-white/[0.04]`}>
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-blue-300"><Icon name={l.icon} className="h-5 w-5" /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-semibold text-white">{l.label}</span>

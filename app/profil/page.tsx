@@ -299,6 +299,18 @@ export default function ProfilPage() {
         </section>
 
         <div className="app-rise space-y-4" style={{ animationDelay: '0.12s' }}>
+          {stats?.owner && (
+            // Panel je odvojen i drugačije obojen, da se ne pomiješa s "Moji termini".
+            <Link href="/dashboard" className="app-press flex items-center gap-3 rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-600/20 to-violet-600/15 px-4 py-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white"><Icon name="dashboard" className="h-5 w-5" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-bold text-white">{t.panel}</span>
+                <span className="block text-xs text-blue-200/80">{t.panelSub}</span>
+              </span>
+              <span className="text-lg text-blue-200">›</span>
+            </Link>
+          )}
+
           <Card>
             <Row icon="user" label={t.edit} sub={t.editSub} onClick={() => toggle('edit')} open={open === 'edit'} />
             {open === 'edit' && (
@@ -330,7 +342,6 @@ export default function ProfilPage() {
 
           <Card>
             <Row icon="calendar" label={t.myBookings} href="/nalog" />
-            {stats?.owner && <Row icon="dashboard" label={t.panel} sub={t.panelSub} href="/dashboard" />}
             <div className="flex items-center gap-3 px-4 py-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-blue-300"><Icon name="message" className="h-5 w-5" /></span>
               <span className="flex-1 text-[15px] font-semibold">{t.language}</span>

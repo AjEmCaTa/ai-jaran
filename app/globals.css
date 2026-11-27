@@ -307,6 +307,10 @@ body { transition: opacity 0.2s ease-out; }
 .app-only { display: none; }
 html.app-ui .app-only { display: block; }
 html.app-ui .web-only { display: none !important; }
+/* Instalirana aplikacija (Play Store): bez kupovine paketa i cjenovnika (pravila Google Playa o plaćanju). */
+.store-only { display: none; }
+html.app-mode .store-only { display: block; }
+html.app-mode .store-hidden { display: none !important; }
 html.app-ui { -webkit-tap-highlight-color: transparent; }
 html.app-ui body { -webkit-user-select: none; user-select: none; overscroll-behavior-x: none; }
 html.app-ui input, html.app-ui textarea, html.app-ui select, html.app-ui [contenteditable="true"] { -webkit-user-select: text; user-select: text; }

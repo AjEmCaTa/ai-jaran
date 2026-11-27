@@ -55,8 +55,8 @@ export default function AppStart() {
           setTimeout(() => !cancelled && setReady(true), Math.max(0, 700 - (Date.now() - started)));
           return;
         }
-        const { data: profile } = await supabase.from('profiles').select('business_id').eq('id', session.user.id).maybeSingle();
-        go(profile?.business_id ? '/dashboard' : '/');
+        // Svi (i vlasnici) idu na Početnu; vlasnik tamo ima karticu "Tvoj biznis" s ulazom u panel.
+        go('/');
       } catch {
         if (!cancelled) setReady(true);
       }

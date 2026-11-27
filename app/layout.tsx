@@ -41,6 +41,8 @@ export default function RootLayout({
       lang="bs"
       data-scroll-behavior="smooth"
       className="antialiased"
+      // Tamna pozadina od prvog bajta: na sporim telefonima nema bijelog ekrana dok se CSS ne učita.
+      style={{ backgroundColor: "#030712" }}
       suppressHydrationWarning
     >
       <head>

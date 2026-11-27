@@ -61,14 +61,28 @@ export default function AppChrome() {
 
   useEffect(() => { setClosing(false); setSheetRaw(false); }, [pathname]);
 
-  // Instalirana aplikacija: bez prijave samo početni ekran i stranice za prijavu.
+  // Instalirana aplikacija: bez prijave samo početni ekran i stranice za prijavu, i bez donje trake
+  // (tabovi bi ionako vraćali na prijavu). Cjenovnik se u aplikaciji ne prikazuje (pravila Google Playa).
+  const [lockedOut, setLockedOut] = useState(false);
   useEffect(() => {
     if (!document.documentElement.classList.contains('app-mode')) return;
-    if (OPEN_IN_APP.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
+    if (pathname === '/cjenovnik') {
+      router.replace('/registracija');
+      return;
+    }
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.replace('/app');
+      setLockedOut(!session);
+      if (session) return;
+      if (OPEN_IN_APP.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
+      router.replace('/app');
     });
   }, [pathname, router]);
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (document.documentElement.classList.contains('app-mode')) setLockedOut(!session);
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
   useEffect(() => {
     if (!sheet) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheet(false);
@@ -133,6 +147,8 @@ export default function AppChrome() {
         </div>
       </header>
 
+      {!lockedOut && (
+      <>
       {/* Prostor da donja traka ne prekrije kraj stranice */}
       <div aria-hidden className="h-[calc(4.5rem+env(safe-area-inset-bottom))]" />
 
@@ -157,9 +173,11 @@ export default function AppChrome() {
           })}
         </div>
       </nav>
+      </>
+      )}
 
       {/* Meni "Više" odozdo */}
-      {sheet && (
+      {sheet && !lockedOut && (
         <div className="fixed inset-x-0 top-[calc(3.5rem+env(safe-area-inset-top))] bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40" role="dialog" aria-modal="true" aria-label={t.more}>
           <button aria-label={t.close} onClick={() => setSheet(false)} className={`${closing ? 'app-fade-out' : 'app-fade'} absolute inset-0 bg-black/60 backdrop-blur-sm`} />
           <div className={`${closing ? 'app-sheet-out' : 'app-sheet'} absolute inset-x-0 bottom-0 max-h-[calc(100%-0.75rem)] overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#0a0f1e] px-4 pb-4 pt-3`}>

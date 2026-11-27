@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getOwnerContext } from '../../../utils/ownerAuth';
 import { safeHttpUrl } from '../../../utils/growthEmails';
+import { jobsEnabled } from '../../../utils/jobs';
+import { categoryOf } from '../../../utils/catalog';
 import { canEditCatalogData, PLAN_LOCK_MESSAGE, PRO_ONLY_BUSINESS_FIELDS } from '../../../utils/plan';
 
 const RESERVATION_FIELDS = 'id, business_id, user_id, customer_name, customer_phone, customer_email, service_name, reservation_date, status, created_at, price, duration_minutes';
@@ -33,21 +35,22 @@ export async function GET(request: NextRequest) {
     const lightweight = request.nextUrl.searchParams.get('scope') === 'business';
     const [businessResult, reservations, servicesResult, profileResult] = await Promise.all([
       admin.from('businesses')
-        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates, logo_url, plan, plan_until, auto_confirm, created_at')
+        .select('id, name, slug, category, city, address, phone, owner_email, work_start, work_end, work_days, google_review_url, rebook_weeks, closed_dates, logo_url, plan, plan_until, auto_confirm, jobs_mode, created_at')
         .eq('id', businessId)
         .single(),
       lightweight ? Promise.resolve([] as Record<string, unknown>[]) : loadReservations(admin, businessId),
-      admin.from('services').select('id', { count: 'exact', head: true }).eq('business_id', businessId),
+      admin.from('services').select('id, price_on_request').eq('business_id', businessId),
       admin.from('profiles').select('name').eq('id', user.id).maybeSingle(),
     ]);
 
     if (businessResult.error) throw businessResult.error;
     if (servicesResult.error) throw servicesResult.error;
 
+    const services = servicesResult.data || [];
     return NextResponse.json({
-      business: businessResult.data,
+      business: { ...businessResult.data, jobs_enabled: jobsEnabled(businessResult.data || {}, services, categoryOf) },
       reservations,
-      serviceCount: servicesResult.count || 0,
+      serviceCount: services.length,
       ownerName: typeof profileResult.data?.name === 'string' ? profileResult.data.name : '',
     });
   } catch (error) {
@@ -62,7 +65,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const allowedFields = ['name', 'category', 'city', 'address', 'phone', 'owner_email', 'work_start', 'work_end', 'work_days', 'google_review_url', 'rebook_weeks', 'closed_dates', 'auto_confirm'];
+    const allowedFields = ['name', 'category', 'city', 'address', 'phone', 'owner_email', 'work_start', 'work_end', 'work_days', 'google_review_url', 'rebook_weeks', 'closed_dates', 'auto_confirm', 'jobs_mode'];
     const changes = Object.fromEntries(
       Object.entries(body).filter(([key]) => allowedFields.includes(key)),
     );
@@ -107,6 +110,9 @@ export async function PATCH(request: NextRequest) {
       changes.rebook_weeks = weeks;
     }
     if ('auto_confirm' in changes) changes.auto_confirm = changes.auto_confirm !== false;
+    if ('jobs_mode' in changes && changes.jobs_mode !== null && changes.jobs_mode !== 'on' && changes.jobs_mode !== 'off') {
+      return NextResponse.json({ error: 'Neispravan izbor.' }, { status: 400 });
+    }
     if ('closed_dates' in changes) {
       const list = changes.closed_dates;
       if (!Array.isArray(list) || list.length > 366 || list.some((d) => typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d))) {

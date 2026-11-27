@@ -50,7 +50,9 @@ export default function MasterBillingPage() {
   const [confirming, setConfirming] = useState<Firm | null>(null);
   const [form, setForm] = useState({ plan: "starter", months: 1 });
   const [busy, setBusy] = useState(false);
-  const [filter, setFilter] = useState<"bank" | "all">("bank");
+  const [filter, setFilter] = useState<"bank" | "all">("all");
+  const [editing, setEditing] = useState<Firm | null>(null);
+  const [edit, setEdit] = useState({ plan: "pro", until: "" });
 
   const load = useCallback(async () => {
     try {
@@ -91,6 +93,35 @@ export default function MasterBillingPage() {
       });
       setNotice(`Uplata za „${confirming.name}” je potvrđena. Paket vrijedi do ${fmt(res.planUntil)}`);
       setConfirming(null);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toInput = (iso: string | null) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  const saveEdit = async (clear = false) => {
+    if (!editing) return;
+    if (!clear && !edit.until) {
+      setError("Izaberite datum isteka.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const res = await adminFetch<{ planUntil: string | null }>("/api/master/billing", {
+        method: "PATCH",
+        body: { businessId: editing.id, plan: edit.plan, until: clear ? null : edit.until },
+      });
+      setNotice(res.planUntil ? `„${editing.name}”: paket vrijedi do ${fmt(res.planUntil)}` : `„${editing.name}”: datum isteka je uklonjen.`);
+      setEditing(null);
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -177,6 +208,17 @@ export default function MasterBillingPage() {
                     </div>
                   </div>
                   {f.billing_provider !== "dodo" && f.billing_provider !== "free" && (
+                    <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className={btnGhost}
+                      onClick={() => {
+                        setEdit({ plan: f.plan === "starter" ? "starter" : "pro", until: toInput(f.plan_until) });
+                        setEditing(f);
+                      }}
+                    >
+                      Uredi datum
+                    </button>
                     <button
                       type="button"
                       className={btnGhost}
@@ -187,6 +229,7 @@ export default function MasterBillingPage() {
                     >
                       Potvrdi uplatu
                     </button>
+                    </div>
                   )}
                 </div>
               );
@@ -194,6 +237,32 @@ export default function MasterBillingPage() {
           </div>
         )}
       </section>
+
+      {editing && (
+        <Modal title={`Uredi: ${editing.name || ""}`} onClose={() => !busy && setEditing(null)}>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-300">Postavi paket i datum do kojeg firma ima pristup (npr. kraj probe ili dogovor). Plaćanje se ovdje ne evidentira; za uplatu koristi „Potvrdi uplatu”.</p>
+            <label className="block space-y-1.5">
+              <span className={labelCls}>Paket</span>
+              <select className={inputCls} value={edit.plan} onChange={(e) => setEdit((v) => ({ ...v, plan: e.target.value }))}>
+                <option value="starter">Starter</option>
+                <option value="pro">Pro</option>
+              </select>
+            </label>
+            <label className="block space-y-1.5">
+              <span className={labelCls}>Vrijedi do (uključujući taj dan)</span>
+              <input type="date" className={inputCls} value={edit.until} onChange={(e) => setEdit((v) => ({ ...v, until: e.target.value }))} />
+            </label>
+            <div className="flex flex-wrap justify-end gap-2">
+              {editing.plan_until && (
+                <button type="button" className={btnGhost} disabled={busy} onClick={() => saveEdit(true)}>Ukloni datum</button>
+              )}
+              <button type="button" className={btnGhost} disabled={busy} onClick={() => setEditing(null)}>Odustani</button>
+              <button type="button" className={btnPrimary} disabled={busy} onClick={() => saveEdit()}>{busy ? "Spremam..." : "Sačuvaj"}</button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {confirming && (
         <Modal title={`Potvrdi uplatu: ${confirming.name || ""}`} onClose={() => !busy && setConfirming(null)}>

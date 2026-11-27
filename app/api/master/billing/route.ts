@@ -60,3 +60,32 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: 'Uplata nije evidentirana.' }, { status: 500 });
   return NextResponse.json({ success: true, planUntil: until.toISOString() });
 }
+
+// Ručno uređivanje: administrator sam postavi paket i datum isteka (npr. proba do 21.12.).
+// Ne dira način plaćanja; kartične (Dodo) i trajno besplatne firme se ne uređuju ovdje.
+export async function PATCH(request: NextRequest) {
+  const auth = await requireMasterAdmin(request);
+  if ('response' in auth) return auth.response;
+  const body = await request.json().catch(() => null);
+  const id = typeof body?.businessId === 'string' && /^[0-9a-f-]{36}$/i.test(body.businessId) ? body.businessId : null;
+  const plan = body?.plan === 'starter' || body?.plan === 'pro' ? body.plan : null;
+  const rawUntil = body?.until;
+  let until: string | null = null;
+  if (rawUntil !== null) {
+    if (typeof rawUntil !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(rawUntil)) {
+      return NextResponse.json({ error: 'Izaberite datum isteka.' }, { status: 400 });
+    }
+    // Kraj tog dana po bosanskom vremenu.
+    const d = new Date(`${rawUntil}T23:59:59+01:00`);
+    if (Number.isNaN(d.getTime())) return NextResponse.json({ error: 'Neispravan datum.' }, { status: 400 });
+    until = d.toISOString();
+  }
+  if (!id || !plan) return NextResponse.json({ error: 'Izaberite firmu i paket.' }, { status: 400 });
+  const { data: firm } = await auth.admin.from('businesses').select('billing_provider').eq('id', id).maybeSingle();
+  if (!firm) return NextResponse.json({ error: 'Firma nije pronađena.' }, { status: 404 });
+  if (firm.billing_provider === 'free') return NextResponse.json({ error: 'Ova firma ima trajno besplatan pristup.' }, { status: 409 });
+  if (firm.billing_provider === 'dodo') return NextResponse.json({ error: 'Ova firma plaća karticom; datum mijenja Dodo.' }, { status: 409 });
+  const { error } = await auth.admin.from('businesses').update({ plan, plan_until: until }).eq('id', id);
+  if (error) return NextResponse.json({ error: 'Promjena nije sačuvana.' }, { status: 500 });
+  return NextResponse.json({ success: true, planUntil: until });
+}

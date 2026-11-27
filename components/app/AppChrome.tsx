@@ -26,7 +26,7 @@ const TEXT = {
   },
 };
 
-const ROOT_TABS = ['/', '/nalog', '/profil'];
+const ROOT_TABS = ['/', '/termini', '/nalog', '/profil'];
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -64,6 +64,15 @@ export default function AppChrome() {
   // Instalirana aplikacija: bez prijave samo početni ekran i stranice za prijavu, i bez donje trake
   // (tabovi bi ionako vraćali na prijavu). Cjenovnik se u aplikaciji ne prikazuje (pravila Google Playa).
   const [lockedOut, setLockedOut] = useState(false);
+  // "Moj panel" u meniju Više samo za vlasnike (i za neprijavljene, da vlasnik može doći do prijave za panel).
+  const [notOwner, setNotOwner] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return setNotOwner(false);
+      const { data } = await supabase.from('profiles').select('business_id').eq('id', session.user.id).maybeSingle();
+      setNotOwner(!data?.business_id);
+    }).catch(() => {});
+  }, [pathname]);
   useEffect(() => {
     if (!document.documentElement.classList.contains('app-mode')) return;
     if (pathname === '/cjenovnik') {
@@ -104,13 +113,13 @@ export default function AppChrome() {
 
   const tabs: { key: string; href?: string; label: string; icon: IconName; active: boolean; onClick?: () => void }[] = [
     { key: 'home', href: '/', label: t.home, icon: 'home', active: pathname === '/' || pathname.startsWith('/katalog') },
-    { key: 'bookings', href: '/nalog', label: t.bookings, icon: 'calendar', active: pathname === '/nalog' },
+    { key: 'bookings', href: '/termini', label: t.bookings, icon: 'calendar', active: pathname === '/termini' || pathname === '/nalog' },
     { key: 'profile', href: '/profil', label: t.profile, icon: 'user', active: pathname === '/profil' },
     { key: 'more', label: t.more, icon: 'grid', active: sheet && !closing, onClick: () => setSheet((v) => !v) },
   ];
 
   const links: { href: string; label: string; icon: IconName; sub?: string; storeHidden?: boolean }[] = [
-    { href: '/dashboard', label: t.panel, sub: t.panelSub, icon: 'dashboard' },
+    ...(notOwner ? [] : [{ href: '/dashboard', label: t.panel, sub: t.panelSub, icon: 'dashboard' as IconName }]),
     { href: '/za-firme', label: t.business, icon: 'building' },
     { href: '/cjenovnik', label: t.pricing, icon: 'tag', storeHidden: true },
     { href: '/o-nama', label: t.about, icon: 'users' },

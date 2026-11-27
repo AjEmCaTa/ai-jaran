@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/dashboard', '/master-panel', '/nalog', '/prijava', '/promijeni-lozinku', '/nova-lozinka', '/zaboravljena-lozinka', '/odjava', '/app', '/profil'],
+        disallow: ['/api/', '/dashboard', '/master-panel', '/nalog', '/prijava', '/promijeni-lozinku', '/nova-lozinka', '/zaboravljena-lozinka', '/odjava', '/app', '/profil', '/termini'],
       },
     ],
     sitemap: 'https://poslo.one/sitemap.xml',

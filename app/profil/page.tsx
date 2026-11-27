@@ -341,7 +341,7 @@ export default function ProfilPage() {
           </Card>
 
           <Card>
-            <Row icon="calendar" label={t.myBookings} href="/nalog" />
+            <Row icon="calendar" label={t.myBookings} href="/termini" />
             <div className="flex items-center gap-3 px-4 py-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-blue-300"><Icon name="message" className="h-5 w-5" /></span>
               <span className="flex-1 text-[15px] font-semibold">{t.language}</span>

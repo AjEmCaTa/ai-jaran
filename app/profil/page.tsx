@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { readQuick, writeQuick } from '../../utils/quickCache';
 import { createClient, type User } from '@supabase/supabase-js';
 import Icon, { type IconName } from '../../components/Icon';
 import { useLang, useT } from '../../components/site/LangProvider';
@@ -163,10 +164,16 @@ export default function ProfilPage() {
       setToken(session.access_token);
       setName(String(session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''));
       setPhone(String(session.user.user_metadata?.phone || ''));
+      const statsKey = `stats:${session.user.id}`;
+      const cachedStats = readQuick<Stats>(statsKey);
+      if (cachedStats) setStats(cachedStats);
       try {
         const res = await fetch('/api/nalog/profil', { headers: { Authorization: `Bearer ${session.access_token}` } });
         const json = await res.json();
-        if (json.success) setStats(json.data);
+        if (json.success) {
+          setStats(json.data);
+          writeQuick(statsKey, json.data);
+        }
       } catch {}
     });
   }, [router]);

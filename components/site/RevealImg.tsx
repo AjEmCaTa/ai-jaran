@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState, type ImgHTMLAttributes } from 'react';
+import { useLayoutEffect, useRef, useState, type ImgHTMLAttributes } from 'react';
 
 // Slika koja se lagano pojavi kad se učita, umjesto da naglo iskoči.
 export default function RevealImg({ className = '', onLoad, ...props }: ImgHTMLAttributes<HTMLImageElement>) {
   const ref = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
+  // Slika iz keša (npr. povratak nazad) prikaže se odmah, prije prvog iscrtavanja, bez ponovnog blijeđenja.
+  useLayoutEffect(() => {
     if (ref.current?.complete && ref.current.naturalWidth > 0) setLoaded(true);
   }, []);
 

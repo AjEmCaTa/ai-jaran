@@ -13,6 +13,7 @@ import InstallButton from "../../components/InstallButton";
 import { DEFAULT_THEME, THEME_EVENT, loadTheme, themeVars, type ThemeSettings } from "./_lib/theme";
 import { useSwipeMenu } from "./_lib/useSwipeMenu";
 import { pullPrefs } from "./_lib/prefs";
+import { readQuick, writeQuick } from "../../utils/quickCache";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
@@ -103,12 +104,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setAccessStatus("unauthenticated");
         return;
       }
+      // Ponovni ulazak u panel: odmah prikaži zadnje podatke ove firme (samo ovaj tab), a svježe stižu ispod.
+      const dashKey = `dash:${session.user.id}`;
+      const cached = readQuick<{ business: unknown; ownerName: string }>(dashKey, 30 * 60_000);
+      if (cached?.business) {
+        setBusiness(normalizeBusiness(cached.business as Parameters<typeof normalizeBusiness>[0]));
+        setOwnerName(cached.ownerName || "");
+        setAccessStatus("active");
+        setCheckingAccess(false);
+      }
       // Jedan lagan zahtjev umjesto uzastopnih upita profiles -> businesses.
       const response = await fetch("/api/dashboard?scope=business", {
         headers: { Authorization: `Bearer ${session.access_token}` },
         cache: "no-store",
       });
       const result = await response.json().catch(() => ({}));
+      if (response.status === 401 || response.status === 403) writeQuick(dashKey, null);
       if (response.status === 401) {
         setAccessStatus("unauthenticated");
       } else if (response.status === 403) {
@@ -125,6 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           setPrefsVersion((v) => v + 1);
         });
         setOwnerName(typeof result.ownerName === "string" ? result.ownerName.trim() : "");
+        writeQuick(dashKey, { business: result.business, ownerName: typeof result.ownerName === "string" ? result.ownerName.trim() : "" });
         setAccessStatus("active");
       }
     } catch (err) {

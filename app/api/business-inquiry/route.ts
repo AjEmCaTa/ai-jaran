@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 import { buildInquiryPayload, sendPushToBusiness, type PushStore } from '../../../utils/push';
 import { isPushConfigured, sendWebPush } from '../../../utils/pushSender';
 import { retryFetch } from '../../../utils/supabaseRetryFetch';
+import { isDemoBlocked, DEMO_BLOCK_MESSAGE } from '../../../utils/demoAccount';
 
 // Univerzalni upit za bilo koju firmu iz tabele `businesses`.
 // Primalac se UVIJEK uzima iz baze (businesses.owner_email) po slug-u firme,
@@ -109,6 +110,12 @@ export async function POST(request: NextRequest) {
     auth: { autoRefreshToken: false, persistSession: false },
     global: { fetch: retryFetch },
   });
+  // Prijavljen demo nalog (Google pregled) smije slati upite samo demo firmi.
+  const inquiryToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  if (inquiryToken) {
+    const { data: who } = await admin.auth.getUser(inquiryToken).catch(() => ({ data: { user: null } }));
+    if (isDemoBlocked(who?.user?.id, slug)) return fail(DEMO_BLOCK_MESSAGE, 403);
+  }
   const { data: business, error: businessError } = await admin
     .from('businesses')
     .select('id, name, owner_email, status, is_active')

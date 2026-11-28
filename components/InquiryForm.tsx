@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { BOOKING_TEXT, type BookingText } from '../utils/bookingText';
+import { storedAccessToken } from '../utils/demoAccount';
 
 // Univerzalni upit firmi (šalje na /api/business-inquiry; server određuje primaoca po slug-u).
 export default function InquiryForm({
@@ -44,7 +45,7 @@ export default function InquiryForm({
     try {
       const response = await fetch('/api/business-inquiry', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(storedAccessToken() ? { Authorization: `Bearer ${storedAccessToken()}` } : {}) },
         body: JSON.stringify({ business_slug: businessSlug, name, phone, email, message, website, ...(chosen ? { service: chosen } : {}) }),
       });
       const result = await response.json().catch(() => null);

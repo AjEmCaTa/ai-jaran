@@ -8,6 +8,7 @@ import { reservationStartMs } from '../../../utils/reservationRules';
 import { categoryOf } from '../../../utils/catalog';
 import { CHECK_OUT_TIME, isStayCategory, nightsOf, planStay } from '../../../utils/stay';
 import { retryFetch } from '../../../utils/supabaseRetryFetch';
+import { isDemoBlocked, DEMO_BLOCK_MESSAGE } from '../../../utils/demoAccount';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'missing-service-role-key';
@@ -76,6 +77,9 @@ export async function POST(request: NextRequest) {
         }
 
         const businessSlug = body.business_slug || 'dubinsko-catic';
+        if (isDemoBlocked(authData.user.id, businessSlug)) {
+            return NextResponse.json({ success: false, error: DEMO_BLOCK_MESSAGE }, { status: 403 });
+        }
 
         const businessResult = await supabase
             .from('businesses')

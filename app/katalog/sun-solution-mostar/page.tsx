@@ -8,6 +8,7 @@ import Icon from '../../../components/Icon';
 import { formatServicePrice } from '../../../utils/servicePrice';
 import { useLang } from '../../../components/site/LangProvider';
 import { categoryLabel } from '../../../utils/catalog';
+import { storedAccessToken } from '../../../utils/demoAccount';
 
 const DAY_EN: Record<string, string> = { pon: 'Mon', uto: 'Tue', sri: 'Wed', cet: 'Thu', čet: 'Thu', pet: 'Fri', sub: 'Sat', ned: 'Sun' };
 
@@ -122,7 +123,7 @@ export default function SunSolutionPage() {
     try {
       const response = await fetch('/api/business-inquiry', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(storedAccessToken() ? { Authorization: `Bearer ${storedAccessToken()}` } : {}) },
         body: JSON.stringify({
           business_slug: BUSINESS_SLUG,
           name,
